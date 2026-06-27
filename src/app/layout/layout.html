@@ -19,12 +19,16 @@
     </div>
 
     <!-- Desktop tabs -->
-    <p-tabs value="0" class="topbar-tabs">
-      <p-tablist>
-        <p-tab value="0"><i class="pi pi-home"></i> Dashboard</p-tab>
-        <p-tab value="1"><i class="pi pi-building"></i> My Properties</p-tab>
-      </p-tablist>
-    </p-tabs>
+    @if (!isAdmin()) {
+      <p-tabs [value]="activeTab" class="topbar-tabs" (valueChange)="navigateTab($any($event))">
+        <p-tablist>
+          <p-tab value="0"><i class="pi pi-home"></i> Dashboard</p-tab>
+          @if (isOwner()) {
+            <p-tab value="1"><i class="pi pi-building"></i> My Properties</p-tab>
+          }
+        </p-tablist>
+      </p-tabs>
+    }
 
     <div class="topbar-profile">
       <p-button
@@ -49,11 +53,15 @@
   <!-- Mobile drawer -->
   <p-drawer [(visible)]="drawerVisible" header="Menu" position="left" styleClass="mobile-drawer">
     <nav class="drawer-nav">
-      @for (item of navItems; track item.label) {
-        <button class="drawer-nav-item" (click)="drawerVisible = false">
-          <i [class]="item.icon"></i>
-          <span>{{ item.label }}</span>
-        </button>
+      @if (isAdmin()) {
+        <p-panelmenu [model]="adminMenuItems()" styleClass="drawer-panelmenu" />
+      } @else {
+        @for (item of navItems(); track item.label) {
+          <button class="drawer-nav-item" (click)="navigateDrawerItem(item.route)">
+            <i [class]="item.icon"></i>
+            <span>{{ item.label }}</span>
+          </button>
+        }
       }
     </nav>
     <div class="drawer-footer">
@@ -67,7 +75,14 @@
     </div>
   </p-drawer>
 
-  <main class="content">
-    <router-outlet />
-  </main>
+  <div class="main-area">
+    @if (showAdminSidebar()) {
+      <aside class="admin-sidebar">
+        <p-panelmenu [model]="adminMenuItems()" styleClass="admin-panelmenu" />
+      </aside>
+    }
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
 </div>

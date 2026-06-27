@@ -31,6 +31,7 @@ export class PropertyDetailComponent implements OnInit {
 
   property = signal<PropertyDetail | null>(null);
   notFound = signal(false);
+  loading = signal(true);
 
   get images(): PropertyImage[] {
     const p = this.property();
@@ -103,14 +104,19 @@ export class PropertyDetailComponent implements OnInit {
     const id = idParam ? parseInt(idParam, 10) : NaN;
     if (isNaN(id)) {
       this.notFound.set(true);
+      this.loading.set(false);
       return;
     }
-    const found = this.propertyService.getById(id);
-    if (!found) {
-      this.notFound.set(true);
-      return;
-    }
-    this.property.set(found);
+    this.propertyService.getById(id).subscribe({
+      next: (found) => {
+        this.property.set(found);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.notFound.set(true);
+        this.loading.set(false);
+      },
+    });
   }
 
   goBack(): void {

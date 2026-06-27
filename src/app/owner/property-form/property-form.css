@@ -1,0 +1,349 @@
+.form-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Header ── */
+.form-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.form-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--p-text-color);
+}
+
+/* ── Card ── */
+.form-card {
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-border-radius-xl);
+  overflow: hidden;
+}
+
+/* ── Sections ── */
+.form-section {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.section-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+/* ── Fields ── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.field-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--p-text-color);
+}
+
+.required {
+  color: var(--p-red-500);
+  margin-left: 0.125rem;
+}
+
+.field-error {
+  font-size: 0.75rem;
+  color: var(--p-red-500);
+}
+
+.fields-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.fields-row .field {
+  flex: 1;
+  min-width: 180px;
+}
+
+.field-grow {
+  flex: 2 !important;
+}
+
+.field-city {
+  flex: 1 !important;
+  min-width: 160px !important;
+}
+
+/* Make PrimeNG inputs fill width */
+.field input[pInputText],
+.field textarea[pTextarea] {
+  width: 100%;
+}
+
+/* ── Backend error banner ── */
+.form-error-banner {
+  display: block;
+  margin: 0 1.5rem 1rem;
+}
+
+/* ── Footer ── */
+.form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--p-content-border-color);
+  background: var(--p-content-background);
+}
+
+/* ── Thumbnail upload ── */
+.thumbnail-area {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.thumbnail-preview-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.thumbnail-preview-img {
+  width: 180px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: var(--p-border-radius-md);
+  border: 1px solid var(--p-content-border-color);
+  display: block;
+}
+
+.thumbnail-remove-btn {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+}
+
+.thumbnail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 180px;
+  height: 120px;
+  border: 2px dashed var(--p-content-border-color);
+  border-radius: var(--p-border-radius-md);
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.thumbnail-empty-icon {
+  font-size: 2rem;
+  color: var(--p-text-muted-color);
+  opacity: 0.5;
+}
+
+.thumbnail-empty-text {
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+}
+
+/* ── Hidden file input ── */
+.hidden-file-input {
+  display: none;
+}
+
+/* ── Additional images gallery ── */
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.gallery-item {
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-border-radius-md);
+  overflow: hidden;
+  background: var(--p-content-background);
+}
+
+.gallery-item-img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  display: block;
+}
+
+.gallery-item-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.5rem;
+}
+
+.gallery-caption {
+  flex: 1;
+  font-size: 0.75rem !important;
+  min-width: 0;
+  padding: 0.25rem 0.5rem !important;
+  height: auto !important;
+}
+
+.gallery-empty {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+}
+
+.gallery-empty-icon {
+  font-size: 1.25rem;
+  color: var(--p-text-muted-color);
+  opacity: 0.5;
+}
+
+.gallery-empty-text {
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+}
+
+/* ── Property deed section ── */
+.section-hint {
+  margin: -0.5rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--p-text-muted-color);
+}
+
+.deed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.deed-item,
+.deed-pending {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-border-radius-md);
+  background: var(--p-content-background);
+}
+
+.deed-pending {
+  border-color: var(--p-primary-color);
+  background: var(--p-primary-50, color-mix(in srgb, var(--p-primary-color) 8%, transparent));
+  margin-bottom: 0.75rem;
+}
+
+.deed-icon {
+  font-size: 1.25rem;
+  color: var(--p-red-500);
+  flex-shrink: 0;
+}
+
+.deed-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.deed-number {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--p-text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deed-link {
+  font-size: 0.75rem;
+  color: var(--p-primary-color);
+  text-decoration: none;
+}
+
+.deed-link:hover {
+  text-decoration: underline;
+}
+
+.deed-pending-label {
+  font-size: 0.75rem;
+  color: var(--p-primary-color);
+}
+
+.deed-empty {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+}
+
+.deed-empty-icon {
+  font-size: 1.25rem;
+  color: var(--p-text-muted-color);
+  opacity: 0.5;
+}
+
+.deed-empty-text {
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+}
+
+.field-hint {
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+}
+
+/* ── Not found ── */
+.not-found-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem 1rem;
+  text-align: center;
+}
+
+.not-found-icon {
+  font-size: 3rem;
+  color: var(--p-text-muted-color);
+  opacity: 0.5;
+}
+
+.not-found-text {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--p-text-muted-color);
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .fields-row {
+    flex-direction: column;
+  }
+
+  .field-grow,
+  .field-city {
+    flex: unset !important;
+  }
+}

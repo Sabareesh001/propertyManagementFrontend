@@ -1,0 +1,97 @@
+<div class="my-properties-container">
+
+  <!-- ── Page header ── -->
+  <div class="page-header">
+    <div class="header-title">
+      <h2 class="page-title">My Properties</h2>
+      <p class="page-subtitle">Manage your listed properties</p>
+    </div>
+    <p-button
+      label="Add Property"
+      icon="pi pi-plus"
+      (onClick)="addProperty()"
+    />
+  </div>
+
+  <!-- ── Stats row ── -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <span class="stat-number">{{ stats.total }}</span>
+      <span class="stat-label">Total</span>
+    </div>
+    <div class="stat-card stat-verified">
+      <span class="stat-number">{{ stats.verified }}</span>
+      <span class="stat-label">Verified</span>
+    </div>
+    <div class="stat-card stat-available">
+      <span class="stat-number">{{ stats.available }}</span>
+      <span class="stat-label">Available</span>
+    </div>
+    <div class="stat-card stat-pending">
+      <span class="stat-number">{{ stats.pending }}</span>
+      <span class="stat-label">Pending Review</span>
+    </div>
+  </div>
+
+  <!-- ── Filter bar ── -->
+  <div class="filter-bar">
+    <p-selectbutton
+      [options]="verificationFilterOptions"
+      [(ngModel)]="verificationFilter"
+      optionLabel="label"
+      optionValue="value"
+    />
+  </div>
+
+  <!-- ── Grid ── -->
+  @if (loading()) {
+    <div class="empty-state">
+      <p-progressspinner strokeWidth="4" [style]="{ width: '3rem', height: '3rem' }" />
+      <p class="empty-text">Loading your properties…</p>
+    </div>
+  } @else if (error()) {
+    <div class="empty-state">
+      <i class="pi pi-exclamation-triangle empty-icon"></i>
+      <p class="empty-title">Couldn't load your properties</p>
+      <p class="empty-text">Please check your connection and try again.</p>
+      <p-button label="Retry" icon="pi pi-refresh" (onClick)="loadProperties()" />
+    </div>
+  } @else if (filteredProperties.length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-building empty-icon"></i>
+      @if (properties().length === 0) {
+        <p class="empty-title">No properties yet</p>
+        <p class="empty-text">Add your first property to start listing it for tenants.</p>
+        <p-button
+          label="Add Property"
+          icon="pi pi-plus"
+          (onClick)="addProperty()"
+        />
+      } @else {
+        <p class="empty-title">No properties match the selected filter</p>
+        <p class="empty-text">Try a different status filter above.</p>
+      }
+    </div>
+  } @else {
+    <div class="property-grid">
+      @for (property of filteredProperties; track property.id) {
+        <app-property-card
+          [property]="property"
+          [clickable]="false"
+          [showListedOn]="true"
+          [showDraftStatus]="true"
+          [showEditAction]="true"
+          [showDeleteAction]="true"
+          [showSubmitAction]="true"
+          (editRequested)="editProperty($event)"
+          (deleteRequested)="confirmDelete($event)"
+          (submitRequested)="submitForVerification($event)"
+        />
+      }
+    </div>
+  }
+
+</div>
+
+<p-confirmdialog />
+<p-toast position="bottom-right" />

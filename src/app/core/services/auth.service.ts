@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
 
 export interface RegisterRequest {
   email: string;
@@ -12,14 +13,24 @@ export interface RegisterRequest {
   roleId: number;
 }
 
-export interface UserResponse {
+export interface RoleResponseDto {
   id: number;
+  name: string;
+}
+
+export interface UserResponse {
+  id: string;
   email: string;
   firstName: string;
   lastName: string;
   phone: string;
-  roleId: number;
-  isVerified: boolean;
+  dateOfBirth: string;
+  createdAt: string;
+  updatedAt: string | null;
+  role: RoleResponseDto | null;
+  roles: RoleResponseDto[];
+  verificationStatusId: number | null;
+  activeStatusId: number | null;
 }
 
 export interface LoginRequest {
@@ -29,7 +40,7 @@ export interface LoginRequest {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly baseUrl = 'http://localhost:5104/api/user';
+  private readonly baseUrl = `${API_BASE_URL}/api/user`;
 
   constructor(private http: HttpClient) {}
 
@@ -38,6 +49,11 @@ export class AuthService {
   }
 
   login(data: LoginRequest): Observable<UserResponse> {
-    return this.http.post<UserResponse>(`${this.baseUrl}/login`, data, { withCredentials: true });
+    return this.http.post<UserResponse>(`${this.baseUrl}/login`, data, WITH_CREDENTIALS);
+  }
+
+  /** POST /api/user/become-owner — adds the Owner role to the current user. */
+  becomeOwner(): Observable<UserResponse> {
+    return this.http.post<UserResponse>(`${this.baseUrl}/become-owner`, {}, WITH_CREDENTIALS);
   }
 }

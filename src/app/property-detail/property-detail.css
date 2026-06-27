@@ -380,6 +380,7 @@
   color: var(--p-orange-600);
 }
 
+
 /* ── Responsive ── */
 @media (max-width: 840px) {
   .detail-body {

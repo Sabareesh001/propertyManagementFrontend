@@ -394,6 +394,16 @@ Auth: Owner (must be property owner)
 ```
 No request body. Moves the property from Draft (or Rejected) → Submitted.
 
+**Pre-condition:** The property must have at least one attached document with `documentTypeId === 2` (Property Deed) that has not been deleted. If no deed is present the API returns **400**:
+```json
+{
+  "status": 400,
+  "detail": "A property deed document must be attached before submitting for verification."
+}
+```
+
+> **UI guidance:** Disable the "Submit for Verification" button and show a prompt ("Please upload a Property Deed document first") when `GET /api/property/{id}/documents` returns no document with `documentTypeId === 2`.
+
 **Response 200:** `PropertyResponseDto`
 
 ---
@@ -422,6 +432,39 @@ Auth: Admin
 `remarks` is optional, max 500 chars.
 
 **Response 200:** `PropertyResponseDto`
+
+---
+
+### Upload Property Image(s) (Owner)
+```
+POST /api/property/upload-image
+Auth: Owner
+Content-Type: multipart/form-data
+```
+Uploads one or more image files and returns permanent URLs to use in `CreatePropertyDto.propertyImages[].imageUrl` or `UpdatePropertyDto`.
+
+**Form field:** `files` — one or more image binaries (repeat the field for multiple files).
+
+**Accepted formats:** JPEG, PNG, GIF, WebP. Max **5 MB per file**. Total request limit 50 MB.
+
+**Response 200:**
+```json
+{
+  "urls": [
+    "http://localhost:5000/uploads/propertyimages/<uuid>.jpg",
+    "http://localhost:5000/uploads/propertyimages/<uuid>.png"
+  ]
+}
+```
+
+**Errors:**
+- 400: No files provided / unsupported image type / any single file exceeds 5 MB
+
+**Typical flow:**
+1. Owner selects images in the property form
+2. POST each batch to `/api/property/upload-image` → receive `urls[]`
+3. Map each URL into `propertyImages[].imageUrl` with `description` and `displayOrder`
+4. Include the full `propertyImages` array in the Create/Update property request body
 
 ---
 
@@ -1115,6 +1158,7 @@ Handles:
 | PUT | `/api/property/{id}/submit` | Owner | Submit property for verification |
 | GET | `/api/property/pending-verification` | Admin | List properties pending verification |
 | PUT | `/api/property/{id}/verify?approve=` | Admin | Approve/reject property |
+| POST | `/api/property/upload-image` | Owner | Upload property image(s) (multipart) |
 | POST | `/api/property/upload-document` | Owner | Upload property PDF (multipart) |
 | POST | `/api/property/{id}/documents` | Owner | Add document to property |
 | GET | `/api/property/{id}/documents` | Required | Get property documents |
@@ -1432,7 +1476,8 @@ All fields optional — only non-null fields are applied. Proposal must be Draft
 | Property Document Type ID | 1–5 |
 | Property Document Number | 4–50 chars, `^[a-zA-Z0-9\-]+$` |
 | Property Document URL | Required, valid absolute URL |
-| Upload File | PDF only, max 10 MB, `multipart/form-data` field name `file` |
+| Upload Document | PDF only, max 10 MB, `multipart/form-data` field name `file` |
+| Upload Image(s) | JPEG/PNG/GIF/WebP only, max 5 MB per file, `multipart/form-data` field name `files` (repeatable) |
 
 ---
 
@@ -1676,11 +1721,17 @@ This section maps pages a frontend app would need to the API calls that power th
 - `GET /api/property/my`
 - Show verification status, availability status, document count
 - Draft / Rejected: "Submit for Verification" → `PUT /api/property/{id}/submit`
+  - **Disable this button** (and show a tooltip/inline hint) if `documents` on the property contains no entry with `documentTypeId === 2` (Property Deed). Direct the owner to "Manage Documents" first.
 - CTA: "Add New Property", "Edit", "Delete", "Manage Documents"
 
 #### Create/Edit Property Page
 - `POST /api/property` / `PUT /api/property/{id}`
-- Image gallery manager (add/reorder/remove images by displayOrder)
+- **Image upload flow:**
+  1. Owner picks one or more images (JPEG/PNG/GIF/WebP, max 5 MB each)
+  2. POST to `POST /api/property/upload-image` (multipart, field: `files`) → receive `{ urls: [...] }`
+  3. For each URL, set `imageUrl`, an optional `description`, and a `displayOrder` integer
+  4. Include the full `propertyImages[]` array in the Create/Update body
+- Image gallery manager (add/reorder/remove images by `displayOrder`; existing images include an `id` field in the update request)
 - City selector (fetched via separate lookup if available)
 
 #### Property Documents Page (Owner)
@@ -1773,7 +1824,8 @@ This section maps pages a frontend app would need to the API calls that power th
 8. **Stripe payment** requires owner to have completed Stripe onboarding (`isOnboarded === true`)
 9. **Property must be Verified** (`verificationStatusId === 3`) and Available (`availabilityStatusId === 1`) for proposals to make sense
 10. **At least one document** required when submitting for user verification
+11. **Cannot submit property for verification** unless at least one non-deleted document with `documentTypeId === 2` (Property Deed) is attached — gate the "Submit" button on `GET /api/property/{id}/documents` containing a deed
 
 ---
 
-*Last updated: 2026-07-03*
+*Last updated: 2026-07-04*

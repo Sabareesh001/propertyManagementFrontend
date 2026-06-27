@@ -1,4 +1,9 @@
-<article class="prop-card" [class]="availabilityClass" (click)="viewProperty()">
+<article
+  class="prop-card"
+  [class]="availabilityClass"
+  [class.prop-card--clickable]="clickable"
+  (click)="handleCardClick()"
+>
 
   <!-- ── Image zone ── -->
   <div class="prop-image">
@@ -31,6 +36,14 @@
         <span>{{ verificationLabel }}</span>
       </div>
     }
+
+    <!-- rejection remarks banner (bottom of image) -->
+    @if (showRejectionBanner) {
+      <div class="rejection-banner">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ property.remarks }}</span>
+      </div>
+    }
   </div>
 
   <!-- ── Body ── -->
@@ -58,8 +71,54 @@
         <span class="stat-label">Deposit</span>
         <span class="stat-value">{{ formatCurrency(property.securityDeposit) }}</span>
       </div>
+      @if (showListedOn) {
+        <div class="stat-sep"></div>
+        <div class="stat">
+          <span class="stat-label">Listed</span>
+          <span class="stat-value">{{ formatDate(property.createdAt) }}</span>
+        </div>
+      }
     </div>
   </div>
 
+  <!-- ── Owner actions ── -->
+  @if (hasActions) {
+    <div class="prop-actions" (click)="$event.stopPropagation()">
+      @if (showSubmitAction && canSubmit) {
+        <p-button
+          label="Submit for Review"
+          icon="pi pi-send"
+          size="small"
+          severity="info"
+          [outlined]="true"
+          (onClick)="submitRequested.emit(property)"
+        />
+      }
+      @if (showEditAction && canEdit) {
+        <p-button
+          icon="pi pi-pencil"
+          size="large"
+          severity="secondary"
+          [text]="true"
+          [rounded]="true"
+          pTooltip="Edit property"
+          tooltipPosition="top"
+          (onClick)="editRequested.emit(property)"
+        />
+      }
+      @if (showDeleteAction) {
+        <p-button
+          icon="pi pi-trash"
+          size="large"
+          severity="danger"
+          [text]="true"
+          [rounded]="true"
+          pTooltip="Delete property"
+          tooltipPosition="top"
+          (onClick)="deleteRequested.emit(property)"
+        />
+      }
+    </div>
+  }
 
 </article>

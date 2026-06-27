@@ -12,8 +12,17 @@
     />
   </div>
 
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="detail-content">
+      <p-skeleton height="2.5rem" width="60%" styleClass="mb-3" />
+      <p-skeleton height="20rem" styleClass="mb-3" />
+      <p-skeleton height="10rem" />
+    </div>
+  }
+
   <!-- Not found -->
-  @if (notFound()) {
+  @if (!loading() && notFound()) {
     <div class="not-found">
       <i class="pi pi-building not-found-icon"></i>
       <h2 class="not-found-title">Property Not Found</h2>
@@ -23,7 +32,7 @@
   }
 
   <!-- Property detail -->
-  @if (!notFound() && property()) {
+  @if (!loading() && !notFound() && property()) {
     <div class="detail-content">
 
       <!-- Header: title, address, badges -->

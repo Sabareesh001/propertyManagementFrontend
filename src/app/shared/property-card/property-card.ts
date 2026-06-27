@@ -1,4 +1,4 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -26,6 +26,7 @@ export interface Property {
   availabilityStatusId: number | null;
   createdAt: string | null;
   propertyImages: PropertyImage[];
+  remarks?: string | null;
 }
 
 @Component({
@@ -40,8 +41,41 @@ export class PropertyCardComponent {
 
   @Input({ required: true }) property!: Property;
 
-  viewProperty(): void {
-    this.router.navigate(['/property', this.property.id]);
+  /** Show the "Listed on" date in the stats row */
+  @Input() showListedOn = false;
+  /** Show the delete icon button */
+  @Input() showDeleteAction = false;
+  /** Show the edit icon button (only renders when property is editable) */
+  @Input() showEditAction = false;
+  /** Show the "Submit for Review" button (only renders when property is in draft/rejected) */
+  @Input() showSubmitAction = false;
+  /** Whether clicking the card navigates to the property detail page */
+  @Input() clickable = true;
+  /** Show the Draft verification chip (hidden by default for tenant/browse views) */
+  @Input() showDraftStatus = false;
+
+  @Output() editRequested = new EventEmitter<Property>();
+  @Output() deleteRequested = new EventEmitter<Property>();
+  @Output() submitRequested = new EventEmitter<Property>();
+
+  get hasActions(): boolean {
+    return this.showDeleteAction || this.showEditAction || this.showSubmitAction;
+  }
+
+  get canEdit(): boolean {
+    const s = this.property.verificationStatusId;
+    return s === 1 || s === 4;
+  }
+
+  get canSubmit(): boolean {
+    const s = this.property.verificationStatusId;
+    return s === 1 || s === 4;
+  }
+
+  handleCardClick(): void {
+    if (this.clickable) {
+      this.router.navigate(['/property', this.property.id]);
+    }
   }
 
   get availabilityClass(): string {
@@ -64,11 +98,14 @@ export class PropertyCardComponent {
 
   get showVerificationChip(): boolean {
     const id = this.property.verificationStatusId;
-    return id !== null && id !== undefined && id !== 1;
+    if (id === null || id === undefined) return false;
+    if (id === 1) return this.showDraftStatus;
+    return true;
   }
 
   get verificationLabel(): string {
     switch (this.property.verificationStatusId) {
+      case 1: return 'Draft';
       case 2: return 'Pending';
       case 3: return 'Verified';
       case 4: return 'Rejected';
@@ -78,6 +115,7 @@ export class PropertyCardComponent {
 
   get verificationIcon(): string {
     switch (this.property.verificationStatusId) {
+      case 1: return 'pi pi-file-edit';
       case 2: return 'pi pi-clock';
       case 3: return 'pi pi-verified';
       case 4: return 'pi pi-times-circle';
@@ -87,11 +125,17 @@ export class PropertyCardComponent {
 
   get verifyChipClass(): string {
     switch (this.property.verificationStatusId) {
+      case 1: return 'chip-draft';
       case 2: return 'chip-pending';
       case 3: return 'chip-verified';
       case 4: return 'chip-rejected';
       default: return '';
     }
+  }
+
+  get showRejectionBanner(): boolean {
+    return this.property.verificationStatusId === 4 &&
+      !!this.property.remarks;
   }
 
   get thumbnailUrl(): string {
@@ -106,5 +150,14 @@ export class PropertyCardComponent {
       currency: 'INR',
       maximumFractionDigits: 0,
     }).format(value);
+  }
+
+  formatDate(iso: string | null): string {
+    if (!iso) return '—';
+    return new Intl.DateTimeFormat('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(new Date(iso));
   }
 }

@@ -29,7 +29,11 @@ export class AuthEffects {
     () =>
       this.actions$.pipe(
         ofType(AuthActions.loginSuccess),
-        tap(() => this.router.navigate(['/dashboard'])),
+        tap(({ user }) => {
+          localStorage.setItem('auth_user', JSON.stringify(user));
+          const isAdmin = user.roles?.some((r) => r.id === 3);
+          this.router.navigate([isAdmin ? '/admin/verifications/property' : '/dashboard']);
+        }),
       ),
     { dispatch: false },
   );
@@ -39,6 +43,7 @@ export class AuthEffects {
       this.actions$.pipe(
         ofType(AuthActions.logout),
         tap(() => {
+          localStorage.removeItem('auth_user');
           document.cookie = 'jwt_token=; Max-Age=0; path=/';
           this.router.navigate(['/auth/login']);
         }),

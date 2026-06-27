@@ -1,0 +1,433 @@
+<div class="form-page">
+
+  <!-- ── Header ── -->
+  <div class="form-header">
+    <p-button
+      icon="pi pi-arrow-left"
+      label="My Properties"
+      severity="secondary"
+      [text]="true"
+      size="small"
+      (onClick)="cancel()"
+    />
+    <h2 class="form-title">{{ pageTitle }}</h2>
+  </div>
+
+  <!-- ── Not found state ── -->
+  @if (notFound()) {
+    <div class="not-found-state">
+      <i class="pi pi-exclamation-circle not-found-icon"></i>
+      <p class="not-found-text">Property not found or you don't have permission to edit it.</p>
+      <p-button label="Back to My Properties" icon="pi pi-arrow-left" (onClick)="cancel()" />
+    </div>
+  } @else if (loading()) {
+    <div class="not-found-state">
+      <p-progressspinner strokeWidth="4" [style]="{ width: '3rem', height: '3rem' }" />
+      <p class="not-found-text">Loading property…</p>
+    </div>
+  } @else {
+
+    <div class="form-card">
+      <form [formGroup]="form" (ngSubmit)="save()">
+
+        <!-- Section: Basic Info -->
+        <div class="form-section">
+          <h3 class="section-title">Basic Information</h3>
+
+          <div class="field">
+            <label class="field-label" for="title">Title <span class="required">*</span></label>
+            <input
+              id="title"
+              pInputText
+              formControlName="title"
+              placeholder="e.g. Spacious 2BHK in Koramangala"
+              [class.ng-invalid]="fieldError('title')"
+              [class.ng-dirty]="fieldError('title')"
+            />
+            @if (fieldError('title')) {
+              <small class="field-error">
+                @if (form.get('title')?.errors?.['required']) { Title is required. }
+                @else if (form.get('title')?.errors?.['minlength']) { Minimum 3 characters. }
+                @else if (form.get('title')?.errors?.['maxlength']) { Maximum 150 characters. }
+              </small>
+            }
+            @for (msg of backendErrorsFor('title') ?? []; track msg) {
+              <small class="field-error">{{ msg }}</small>
+            }
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="description">Description</label>
+            <textarea
+              id="description"
+              pTextarea
+              formControlName="description"
+              placeholder="Describe the property, amenities, nearby landmarks…"
+              rows="4"
+              [autoResize]="true"
+            ></textarea>
+            @if (fieldError('description')) {
+              <small class="field-error">Maximum 2000 characters.</small>
+            }
+            @for (msg of backendErrorsFor('description') ?? []; track msg) {
+              <small class="field-error">{{ msg }}</small>
+            }
+          </div>
+        </div>
+
+        <p-divider />
+
+        <!-- Section: Location -->
+        <div class="form-section">
+          <h3 class="section-title">Location</h3>
+
+          <div class="fields-row">
+            <div class="field field-grow">
+              <label class="field-label" for="addressLine">Address <span class="required">*</span></label>
+              <input
+                id="addressLine"
+                pInputText
+                formControlName="addressLine"
+                placeholder="e.g. 12th Main, Koramangala 5th Block"
+                [class.ng-invalid]="fieldError('addressLine')"
+                [class.ng-dirty]="fieldError('addressLine')"
+              />
+              @if (fieldError('addressLine')) {
+                <small class="field-error">
+                  @if (form.get('addressLine')?.errors?.['required']) { Address is required. }
+                  @else if (form.get('addressLine')?.errors?.['minlength']) { Minimum 5 characters. }
+                </small>
+              }
+              @for (msg of backendErrorsFor('addressLine') ?? []; track msg) {
+                <small class="field-error">{{ msg }}</small>
+              }
+            </div>
+            <div class="field field-city">
+              <label class="field-label" for="cityId">City <span class="required">*</span></label>
+              <p-select
+                id="cityId"
+                formControlName="cityId"
+                [options]="cities"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Select city"
+                styleClass="w-full"
+                [class.ng-invalid]="fieldError('cityId')"
+                [class.ng-dirty]="fieldError('cityId')"
+              />
+              @if (fieldError('cityId')) {
+                <small class="field-error">City is required.</small>
+              }
+              @for (msg of backendErrorsFor('cityId') ?? []; track msg) {
+                <small class="field-error">{{ msg }}</small>
+              }
+            </div>
+          </div>
+        </div>
+
+        <p-divider />
+
+        <!-- Section: Pricing -->
+        <div class="form-section">
+          <h3 class="section-title">Pricing</h3>
+
+          <div class="fields-row">
+            <div class="field">
+              <label class="field-label" for="monthlyRent">Monthly Rent (₹) <span class="required">*</span></label>
+              <p-inputnumber
+                id="monthlyRent"
+                formControlName="monthlyRent"
+                mode="currency"
+                currency="INR"
+                locale="en-IN"
+                [min]="0"
+                placeholder="0"
+                [class.ng-invalid]="fieldError('monthlyRent')"
+                [class.ng-dirty]="fieldError('monthlyRent')"
+              />
+              @if (fieldError('monthlyRent')) {
+                <small class="field-error">Required, must be ≥ 0.</small>
+              }
+              @for (msg of backendErrorsFor('monthlyRent') ?? []; track msg) {
+                <small class="field-error">{{ msg }}</small>
+              }
+            </div>
+            <div class="field">
+              <label class="field-label" for="upfrontPayment">Upfront Payment (₹) <span class="required">*</span></label>
+              <p-inputnumber
+                id="upfrontPayment"
+                formControlName="upfrontPayment"
+                mode="currency"
+                currency="INR"
+                locale="en-IN"
+                [min]="0"
+                placeholder="0"
+                [class.ng-invalid]="fieldError('upfrontPayment')"
+                [class.ng-dirty]="fieldError('upfrontPayment')"
+              />
+              @if (fieldError('upfrontPayment')) {
+                <small class="field-error">Required, must be ≥ 0.</small>
+              }
+              @for (msg of backendErrorsFor('upfrontPayment') ?? []; track msg) {
+                <small class="field-error">{{ msg }}</small>
+              }
+            </div>
+            <div class="field">
+              <label class="field-label" for="securityDeposit">Security Deposit (₹) <span class="required">*</span></label>
+              <p-inputnumber
+                id="securityDeposit"
+                formControlName="securityDeposit"
+                mode="currency"
+                currency="INR"
+                locale="en-IN"
+                [min]="0"
+                placeholder="0"
+                [class.ng-invalid]="fieldError('securityDeposit')"
+                [class.ng-dirty]="fieldError('securityDeposit')"
+              />
+              @if (fieldError('securityDeposit')) {
+                <small class="field-error">Required, must be ≥ 0.</small>
+              }
+              @for (msg of backendErrorsFor('securityDeposit') ?? []; track msg) {
+                <small class="field-error">{{ msg }}</small>
+              }
+            </div>
+          </div>
+        </div>
+
+        <p-divider />
+
+        <!-- Section: Images -->
+        <div class="form-section">
+          <h3 class="section-title">Images</h3>
+
+          <!-- Hidden file inputs -->
+          <input
+            #thumbnailInput
+            type="file"
+            accept="image/*"
+            class="hidden-file-input"
+            (change)="onThumbnailChange($event)"
+          />
+          <input
+            #galleryInput
+            type="file"
+            accept="image/*"
+            multiple
+            class="hidden-file-input"
+            (change)="onGalleryChange($event)"
+          />
+
+          <!-- Thumbnail -->
+          <div class="field">
+            <label class="field-label">Thumbnail</label>
+            <div class="thumbnail-area">
+              @if (thumbnailUrl()) {
+                <div class="thumbnail-preview-wrap">
+                  <img [src]="thumbnailUrl()!" alt="Thumbnail preview" class="thumbnail-preview-img" />
+                  <p-button
+                    icon="pi pi-times"
+                    severity="danger"
+                    [rounded]="true"
+                    [text]="true"
+                    size="small"
+                    class="thumbnail-remove-btn"
+                    (onClick)="removeThumbnail()"
+                  />
+                </div>
+              } @else {
+                <div class="thumbnail-empty">
+                  <i class="pi pi-image thumbnail-empty-icon"></i>
+                  <span class="thumbnail-empty-text">No thumbnail</span>
+                </div>
+              }
+              <p-button
+                icon="pi pi-upload"
+                label="Choose Thumbnail"
+                severity="secondary"
+                size="small"
+                type="button"
+                (onClick)="openThumbnailPicker()"
+              />
+            </div>
+          </div>
+
+          <!-- Additional images -->
+          <div class="field">
+            <label class="field-label">Additional Images</label>
+            @if (additionalImages().length > 0) {
+              <div class="image-gallery">
+                @for (img of additionalImages(); track img.id) {
+                  <div class="gallery-item">
+                    <img [src]="img.url" [alt]="img.description || 'Property image'" class="gallery-item-img" />
+                    <div class="gallery-item-footer">
+                      <input
+                        pInputText
+                        [value]="img.description"
+                        (input)="updateImageDescription(img.id, $event)"
+                        placeholder="Caption (optional)"
+                        class="gallery-caption"
+                      />
+                      <p-button
+                        icon="pi pi-trash"
+                        severity="danger"
+                        [text]="true"
+                        [rounded]="true"
+                        size="small"
+                        type="button"
+                        (onClick)="removeImage(img.id)"
+                      />
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="gallery-empty">
+                <i class="pi pi-images gallery-empty-icon"></i>
+                <span class="gallery-empty-text">No additional images</span>
+              </div>
+            }
+            <p-button
+              icon="pi pi-plus"
+              label="Add Images"
+              severity="secondary"
+              size="small"
+              type="button"
+              (onClick)="openGalleryPicker()"
+            />
+          </div>
+        </div>
+
+        <p-divider />
+
+        <!-- Section: Property Deed -->
+        <div class="form-section">
+          <h3 class="section-title">Property Deed</h3>
+          <p class="section-hint">
+            A property deed (document type: Deed) is required before submitting for verification.
+            Upload a PDF (max 10 MB).
+          </p>
+
+          <!-- Hidden deed file input -->
+          <input
+            #deedInput
+            type="file"
+            accept="application/pdf"
+            class="hidden-file-input"
+            (change)="onDeedChange($event)"
+          />
+
+          <!-- Existing deeds (edit mode) -->
+          @if (isEdit() && existingDeeds().length > 0) {
+            <div class="field">
+              <label class="field-label">Attached Deeds</label>
+              <div class="deed-list">
+                @for (deed of existingDeeds(); track deed.id) {
+                  <div class="deed-item">
+                    <i class="pi pi-file-pdf deed-icon"></i>
+                    <div class="deed-info">
+                      <span class="deed-number">{{ deed.documentNumber || 'No number' }}</span>
+                      @if (deed.documentUrl) {
+                        <a [href]="deed.documentUrl" target="_blank" class="deed-link">View PDF</a>
+                      }
+                    </div>
+                    <p-button
+                      icon="pi pi-trash"
+                      severity="danger"
+                      [text]="true"
+                      [rounded]="true"
+                      size="small"
+                      type="button"
+                      (onClick)="markDeedForRemoval(deed.id)"
+                    />
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          @if (isEdit() && existingDeeds().length === 0 && !pendingDeed()) {
+            <div class="deed-empty">
+              <i class="pi pi-file-pdf deed-empty-icon"></i>
+              <span class="deed-empty-text">No deed attached yet</span>
+            </div>
+          }
+
+          <!-- Pending new deed -->
+          @if (pendingDeed()) {
+            <div class="deed-pending">
+              <i class="pi pi-file-pdf deed-icon"></i>
+              <div class="deed-info">
+                <span class="deed-number">{{ pendingDeed()!.previewName }}</span>
+                <span class="deed-pending-label">Ready to upload</span>
+              </div>
+              <p-button
+                icon="pi pi-times"
+                severity="secondary"
+                [text]="true"
+                [rounded]="true"
+                size="small"
+                type="button"
+                (onClick)="clearPendingDeed()"
+              />
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="deedNumber">Document Number <span class="required">*</span></label>
+              <input
+                id="deedNumber"
+                pInputText
+                [value]="pendingDeedNumber()"
+                (input)="onDeedNumberChange($any($event.target).value)"
+                placeholder="e.g. DEED-12345"
+                [class.ng-invalid]="!!deedNumberError()"
+                [class.ng-dirty]="!!deedNumberError()"
+              />
+              @if (deedNumberError()) {
+                <small class="field-error">{{ deedNumberError() }}</small>
+              }
+              <small class="field-hint">4–50 characters, letters, digits, and hyphens only.</small>
+            </div>
+          } @else {
+            <p-button
+              icon="pi pi-upload"
+              label="Upload Property Deed (PDF)"
+              severity="secondary"
+              size="small"
+              type="button"
+              (onClick)="openDeedPicker()"
+            />
+          }
+        </div>
+
+        <!-- ── Backend error banner ── -->
+        @if (backendErrorMessage()) {
+          <p-message severity="error" [text]="backendErrorMessage()!" styleClass="form-error-banner" />
+        }
+
+        <!-- ── Footer actions ── -->
+        <div class="form-footer">
+          <p-button
+            label="Cancel"
+            severity="secondary"
+            [text]="true"
+            type="button"
+            [disabled]="saving()"
+            (onClick)="cancel()"
+          />
+          <p-button
+            [label]="submitLabel"
+            icon="pi pi-check"
+            type="submit"
+            [loading]="saving()"
+          />
+        </div>
+
+      </form>
+    </div>
+
+  }
+
+</div>
+
+<p-toast position="bottom-right" />

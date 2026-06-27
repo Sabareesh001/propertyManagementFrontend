@@ -1,0 +1,172 @@
+.my-properties-container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ── Header ── */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--p-text-color);
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+}
+
+/* ── Stats ── */
+.stats-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  flex: 1;
+  min-width: 100px;
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-border-radius-xl);
+  padding: 0.875rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.stat-number {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--p-text-color);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stat-verified .stat-number { color: var(--p-green-500); }
+.stat-available .stat-number { color: var(--p-primary-color); }
+.stat-pending .stat-number { color: var(--p-orange-500); }
+
+/* ── Filter bar ── */
+.filter-bar {
+  margin-bottom: 1.5rem;
+}
+
+/* ── Grid ── */
+.property-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+}
+
+/* ── Empty state ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 5rem 2rem;
+  text-align: center;
+  color: var(--p-text-muted-color);
+}
+
+.empty-icon {
+  font-size: 3.5rem;
+  opacity: 0.3;
+}
+
+.empty-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+.empty-text {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* ── Form ── */
+.property-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+  padding: 0.25rem 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.field-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--p-text-color);
+}
+
+.required {
+  color: var(--p-red-500);
+}
+
+.field-error {
+  font-size: 0.75rem;
+  color: var(--p-red-500);
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+}
+
+.fields-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .fields-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Dialog global overrides ── */
+::ng-deep .property-dialog .p-dialog-content {
+  overflow-y: auto;
+  max-height: 65vh;
+  padding: 1.25rem 1.5rem;
+}
+
+::ng-deep .property-dialog .p-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
