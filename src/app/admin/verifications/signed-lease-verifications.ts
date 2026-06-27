@@ -16,7 +16,7 @@ import { LeaseService, LeaseResponse } from '../../core/services/lease.service';
 type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast';
 
 @Component({
-  selector: 'app-lease-verifications',
+  selector: 'app-signed-lease-verifications',
   standalone: true,
   imports: [
     CommonModule,
@@ -37,7 +37,7 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
 
     <!-- Reject dialog with remarks -->
     <p-dialog
-      header="Reject Template"
+      header="Reject Signed Lease"
       [(visible)]="rejectDialogVisible"
       [modal]="true"
       [style]="{ width: '28rem' }"
@@ -55,7 +55,7 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
           id="rejectRemarks"
           [(ngModel)]="rejectRemarks"
           rows="4"
-          placeholder="Explain why this lease is being rejected..."
+          placeholder="Explain why this signed lease is being rejected..."
           [autoResize]="false"
           style="width: 100%; resize: vertical;"
         ></textarea>
@@ -93,7 +93,7 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
     } @else if (error()) {
       <div class="error-state">
         <i class="pi pi-exclamation-circle error-icon"></i>
-        <p class="error-msg">Failed to load leases awaiting verification.</p>
+        <p class="error-msg">Failed to load signed leases awaiting verification.</p>
         <p-button label="Retry" icon="pi pi-refresh" severity="secondary" size="small" (onClick)="load()" />
       </div>
     } @else {
@@ -103,7 +103,7 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
         [rows]="10"
         [rowsPerPageOptions]="[10, 20, 50]"
         [showCurrentPageReport]="true"
-        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} leases"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} signed leases"
         styleClass="transparent-table"
         [tableStyle]="{ 'min-width': '60rem' }"
         [scrollable]="true"
@@ -158,32 +158,28 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
             </td>
             <td style="text-align: center">
               <div class="action-buttons">
-                @if (canAct(lease.statusId)) {
-                  <p-button
-                    icon="pi pi-check"
-                    severity="success"
-                    size="small"
-                    [pTooltip]="approveLabel(lease.statusId)"
-                    tooltipPosition="top"
-                    [rounded]="true"
-                    [text]="true"
-                    [loading]="actioningId() === lease.id && actionType() === 'approve'"
-                    (onClick)="approve(lease)"
-                  />
-                  <p-button
-                    icon="pi pi-times"
-                    severity="danger"
-                    size="small"
-                    pTooltip="Reject"
-                    tooltipPosition="top"
-                    [rounded]="true"
-                    [text]="true"
-                    [loading]="actioningId() === lease.id && actionType() === 'reject'"
-                    (onClick)="openRejectDialog(lease)"
-                  />
-                } @else {
-                  <span class="no-action">—</span>
-                }
+                <p-button
+                  icon="pi pi-check"
+                  severity="success"
+                  size="small"
+                  pTooltip="Activate Lease"
+                  tooltipPosition="top"
+                  [rounded]="true"
+                  [text]="true"
+                  [loading]="actioningId() === lease.id && actionType() === 'approve'"
+                  (onClick)="approve(lease)"
+                />
+                <p-button
+                  icon="pi pi-times"
+                  severity="danger"
+                  size="small"
+                  pTooltip="Reject"
+                  tooltipPosition="top"
+                  [rounded]="true"
+                  [text]="true"
+                  [loading]="actioningId() === lease.id && actionType() === 'reject'"
+                  (onClick)="openRejectDialog(lease)"
+                />
               </div>
             </td>
           </tr>
@@ -193,7 +189,7 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
           <tr>
             <td colspan="7" style="text-align: center; padding: 2rem;">
               <i class="pi pi-check-circle" style="font-size: 2rem; color: var(--p-green-500); display: block; margin-bottom: 0.5rem;"></i>
-              <span style="color: var(--p-text-muted-color);">No lease templates awaiting verification</span>
+              <span style="color: var(--p-text-muted-color);">No signed leases awaiting verification</span>
             </td>
           </tr>
         </ng-template>
@@ -363,7 +359,7 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
     }
   `],
 })
-export class LeaseVerificationsComponent implements OnInit {
+export class SignedLeaseVerificationsComponent implements OnInit {
   private leaseService = inject(LeaseService);
   private confirmationService = inject(ConfirmationService);
 
@@ -385,7 +381,7 @@ export class LeaseVerificationsComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.error.set(false);
-    this.leaseService.getPendingTemplates().subscribe({
+    this.leaseService.getPendingSigned().subscribe({
       next: (data) => {
         this.requests.set(data);
         this.loading.set(false);
@@ -397,28 +393,19 @@ export class LeaseVerificationsComponent implements OnInit {
     });
   }
 
-  /** Admin can act on Submitted (2 — verify agreement template). */
-  canAct(statusId: number | null): boolean {
-    return statusId === 2;
-  }
-
-  approveLabel(_statusId: number | null): string {
-    return 'Approve Template';
-  }
-
   approve(lease: LeaseResponse): void {
     this.confirmationService.confirm({
-      header: 'Approve Lease Template',
-      message: `Approve the template for <strong>Property #${lease.propertyId}</strong>? The tenant will then be able to sign it.`,
+      header: 'Activate Lease',
+      message: `Activate the lease for <strong>Property #${lease.propertyId}</strong>? Charges can be applied once it is active.`,
       icon: 'pi pi-check-circle',
-      acceptLabel: 'Approve',
+      acceptLabel: 'Activate',
       rejectLabel: 'Cancel',
       acceptButtonStyleClass: 'p-button-success',
       rejectButtonStyleClass: 'p-button-text p-button-secondary',
       accept: () => {
         this.actioningId.set(lease.id);
         this.actionType.set('approve');
-        this.leaseService.verifyTemplate(lease.id, true).subscribe({
+        this.leaseService.verifySigned(lease.id, true).subscribe({
           next: () => {
             this.requests.update((list) => list.filter((l) => l.id !== lease.id));
             this.clearAction();
@@ -453,7 +440,7 @@ export class LeaseVerificationsComponent implements OnInit {
     this.rejectDialogVisible = false;
     this.actioningId.set(lease.id);
     this.actionType.set('reject');
-    this.leaseService.verifyTemplate(lease.id, false, remarks).subscribe({
+    this.leaseService.verifySigned(lease.id, false, remarks).subscribe({
       next: () => {
         this.requests.update((list) => list.filter((l) => l.id !== lease.id));
         this.clearAction();

@@ -1,13 +1,20 @@
 import { Component, OnInit, OnChanges, Input, signal, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
+import { Store } from '@ngrx/store';
 import { CarouselModule } from 'primeng/carousel';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 import { TagModule } from 'primeng/tag';
 import { SkeletonModule } from 'primeng/skeleton';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 import { PropertyService, PropertyDetail } from '../core/services/property.service';
 import { PropertyImage } from '../shared/property-card/property-card';
+import { RentRequestModalComponent } from '../shared/rent-request-modal/rent-request-modal';
+import { UserResponse } from '../core/services/auth.service';
+import { selectCurrentUser, selectIsLoggedIn } from '../store/auth/auth.selectors';
 
 @Component({
   selector: 'app-property-detail',
@@ -20,7 +27,10 @@ import { PropertyImage } from '../shared/property-card/property-card';
     DividerModule,
     TagModule,
     SkeletonModule,
+    ToastModule,
+    RentRequestModalComponent,
   ],
+  providers: [MessageService],
   templateUrl: './property-detail.html',
   styleUrl: './property-detail.css',
 })
@@ -31,12 +41,18 @@ export class PropertyDetailComponent implements OnInit, OnChanges {
 
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private location = inject(Location);
   private propertyService = inject(PropertyService);
+  private store = inject(Store);
+  private messageService = inject(MessageService);
 
   property = signal<PropertyDetail | null>(null);
   notFound = signal(false);
   loading = signal(true);
   deedUrl = signal<string | null>(null);
+  rentModalVisible = signal(false);
+
+  currentUser = toSignal(this.store.select(selectCurrentUser));
 
   get images(): PropertyImage[] {
     const p = this.property();
@@ -100,6 +116,14 @@ export class PropertyDetailComponent implements OnInit, OnChanges {
     return id !== null && id !== undefined && id !== 1;
   }
 
+  get canSeeRemarks(): boolean {
+    const user = this.currentUser();
+    if (!user) return false;
+    const isAdmin = user.roles?.some(r => r.id === 3) ?? false;
+    const isOwner = user.id === this.property()?.ownerId;
+    return isAdmin || isOwner;
+  }
+
   get isAvailable(): boolean {
     return this.property()?.availabilityStatusId === 1;
   }
@@ -152,8 +176,40 @@ export class PropertyDetailComponent implements OnInit, OnChanges {
     if (url) window.open(url, '_blank', 'noopener');
   }
 
+  openRentModal(): void {
+    let isLoggedIn = false;
+    const userRef: { value: UserResponse | null } = { value: null };
+    this.store.select(selectIsLoggedIn).subscribe(v => isLoggedIn = v).unsubscribe();
+    this.store.select(selectCurrentUser).subscribe(v => userRef.value = v).unsubscribe();
+    const user = userRef.value;
+
+    if (!isLoggedIn) {
+      this.router.navigate(['/auth/login']);
+      return;
+    }
+    if (user && user.verificationStatusId !== 3) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Verification Required',
+        detail: 'You must complete identity verification before submitting a rental proposal.',
+        life: 5000,
+      });
+      return;
+    }
+    this.rentModalVisible.set(true);
+  }
+
+  onProposalSubmitted(): void {
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Proposal Submitted',
+      detail: 'Your rental proposal has been sent to the owner.',
+      life: 5000,
+    });
+  }
+
   goBack(): void {
-    this.router.navigate(['/dashboard']);
+    this.location.back();
   }
 
   formatCurrency(value: number): string {

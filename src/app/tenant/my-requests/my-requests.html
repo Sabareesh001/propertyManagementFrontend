@@ -1,0 +1,103 @@
+<p-toast />
+<p-confirmdialog />
+
+<div class="requests-container">
+  <h2 class="page-title">My Requests</h2>
+  @if (!loading() && !error()) {
+    <p-menu #filterMenu  [model]="filterMenuItems()" [popup]="true" />
+    <p-button
+      [label]="selectedStatusLabel()"
+      icon="pi pi-filter"
+      iconPos="left"
+      severity="secondary"
+      [outlined]="true"
+      size="large"
+      (onClick)="filterMenu.toggle($event)"
+    />
+  }
+
+  @if (loading()) {
+    <div class="empty-state">
+      <p-progressspinner strokeWidth="4" [style]="{ width: '3rem', height: '3rem' }" />
+      <p class="empty-text">Loading your requests…</p>
+    </div>
+  } @else if (error()) {
+    <div class="empty-state">
+      <i class="pi pi-exclamation-triangle empty-icon"></i>
+      <p class="empty-text">Couldn't load your requests. Please try again.</p>
+      <p-button label="Retry" icon="pi pi-refresh" size="small" (onClick)="load()" />
+    </div>
+  } @else if (proposals().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-file empty-icon"></i>
+      <p class="empty-text">You haven't submitted any rental proposals yet.</p>
+      <p class="empty-hint">Browse properties and click "Request to Rent" to get started.</p>
+      <p-button label="Browse Properties" icon="pi pi-search" routerLink="/dashboard" />
+    </div>
+  } @else if (filteredProposals().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-filter empty-icon"></i>
+      <p class="empty-text">No proposals match this filter.</p>
+      <p-button label="Clear Filter" icon="pi pi-times" size="small" severity="secondary" (onClick)="selectedStatus.set(null)" />
+    </div>
+  } @else {
+    
+    <div class="proposals-list">
+      @for (proposal of filteredProposals(); track proposal.id) {
+        <div class="proposal-card">
+          <div class="proposal-header">
+            <a [routerLink]="['/property', proposal.propertyId]" class="property-link">
+              <i class="pi pi-home"></i>
+              Property #{{ proposal.propertyId }}
+            </a>
+            <p-tag
+              [value]="statusLabel(proposal.statusId)"
+              [severity]="statusSeverity(proposal.statusId)"
+            />
+          </div>
+
+          <div class="proposal-details">
+            <div class="detail-item">
+              <span class="detail-label">Monthly Rent</span>
+              <span class="detail-value">{{ formatCurrency(proposal.monthlyRent) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Start Date</span>
+              <span class="detail-value">{{ formatDate(proposal.startDate) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">End Date</span>
+              <span class="detail-value">{{ formatDate(proposal.endDate) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Upfront Payment</span>
+              <span class="detail-value">{{ formatCurrency(proposal.upfrontPayment) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Security Deposit</span>
+              <span class="detail-value">{{ formatCurrency(proposal.securityDeposit) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Submitted On</span>
+              <span class="detail-value">{{ formatDate(proposal.createdAt) }}</span>
+            </div>
+          </div>
+
+          @if (canCancel(proposal.statusId)) {
+            <div class="proposal-actions">
+              <p-button
+                label="Cancel Proposal"
+                icon="pi pi-times"
+                severity="danger"
+                [outlined]="true"
+                size="small"
+                [loading]="cancellingId() === proposal.id"
+                (onClick)="confirmCancel(proposal)"
+              />
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

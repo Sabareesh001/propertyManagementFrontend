@@ -1,0 +1,130 @@
+<p-toast />
+<p-confirmdialog />
+
+<app-sign-lease-modal
+  [(visible)]="signModalVisible"
+  [lease]="signingLease()"
+  (signed)="onLeaseSigned($event)"
+/>
+
+<div class="leases-container">
+  <h2 class="page-title">Leases</h2>
+  @if (!loading() && !error()) {
+    <p-menu #filterMenu [model]="filterMenuItems()" [popup]="true" />
+    <p-button
+      [label]="selectedStatusLabel()"
+      icon="pi pi-filter"
+      iconPos="left"
+      severity="secondary"
+      [outlined]="true"
+      size="large"
+      (onClick)="filterMenu.toggle($event)"
+    />
+  }
+
+  @if (loading()) {
+    <div class="empty-state">
+      <p-progressspinner strokeWidth="4" [style]="{ width: '3rem', height: '3rem' }" />
+      <p class="empty-text">Loading your leases…</p>
+    </div>
+  } @else if (error()) {
+    <div class="empty-state">
+      <i class="pi pi-exclamation-triangle empty-icon"></i>
+      <p class="empty-text">Couldn't load your leases. Please try again.</p>
+      <p-button label="Retry" icon="pi pi-refresh" size="small" (onClick)="load()" />
+    </div>
+  } @else if (leases().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-file empty-icon"></i>
+      <p class="empty-text">You don't have any leases yet.</p>
+      <p class="empty-hint">Leases created from approved rental requests will appear here.</p>
+    </div>
+  } @else if (filteredLeases().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-filter empty-icon"></i>
+      <p class="empty-text">No leases match this filter.</p>
+      <p-button label="Clear Filter" icon="pi pi-times" size="small" severity="secondary" (onClick)="selectedStatus.set(null)" />
+    </div>
+  } @else {
+    <div class="leases-list">
+      @for (lease of filteredLeases(); track lease.id) {
+        <div class="lease-card">
+          <div class="lease-header">
+            <a [routerLink]="['/property', lease.propertyId]" class="property-link">
+              <i class="pi pi-home"></i>
+              Property #{{ lease.propertyId }}
+            </a>
+            <p-tag
+              [value]="statusLabel(lease.statusId)"
+              [severity]="statusSeverity(lease.statusId)"
+            />
+          </div>
+
+          <div class="lease-details">
+            <div class="detail-item">
+              <span class="detail-label">Monthly Rent</span>
+              <span class="detail-value">{{ formatCurrency(lease.monthlyRent) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Start Date</span>
+              <span class="detail-value">{{ formatDate(lease.startDate) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">End Date</span>
+              <span class="detail-value">{{ formatDate(lease.endDate) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Upfront Payment</span>
+              <span class="detail-value">{{ formatCurrency(lease.upfrontPayment) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Security Deposit</span>
+              <span class="detail-value">{{ formatCurrency(lease.securityDeposit) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Created On</span>
+              <span class="detail-value">{{ formatDate(lease.createdAt) }}</span>
+            </div>
+          </div>
+
+          <div class="lease-docs">
+            @if (lease.agreementDocumentUrl) {
+              <a [href]="lease.agreementDocumentUrl" target="_blank" rel="noopener" class="doc-link">
+                <i class="pi pi-file-pdf"></i> Agreement document
+              </a>
+            } @else {
+              <span class="doc-missing"><i class="pi pi-file"></i> No agreement document</span>
+            }
+            @if (lease.signedAgreementDocumentUrl) {
+              <a [href]="lease.signedAgreementDocumentUrl" target="_blank" rel="noopener" class="doc-link">
+                <i class="pi pi-verified"></i> Signed agreement
+              </a>
+            }
+          </div>
+
+          @if (canSubmit(lease) || canSign(lease)) {
+            <div class="lease-actions">
+              @if (canSubmit(lease)) {
+                <p-button
+                  label="Submit for Review"
+                  icon="pi pi-send"
+                  size="small"
+                  [loading]="actingId() === lease.id"
+                  (onClick)="confirmSubmit(lease)"
+                />
+              }
+              @if (canSign(lease)) {
+                <p-button
+                  label="Sign Lease"
+                  icon="pi pi-pencil"
+                  size="small"
+                  (onClick)="openSignModal(lease)"
+                />
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

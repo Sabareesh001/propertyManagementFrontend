@@ -59,7 +59,7 @@ export class PropertyService {
 
   /** GET /api/property/{id} — single property (public). */
   getById(id: number): Observable<PropertyDetail> {
-    return this.http.get<PropertyDetail>(`${this.baseUrl}/${id}`);
+    return this.http.get<PropertyDetail>(`${this.baseUrl}/${id}`,WITH_CREDENTIALS);
   }
 
   /** GET /api/property/my — the authenticated owner's properties. */

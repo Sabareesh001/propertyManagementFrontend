@@ -303,100 +303,134 @@
         <!-- Section: Property Deed -->
         <div class="form-section">
           <h3 class="section-title">Property Deed</h3>
-          <p class="section-hint">
-            A property deed (document type: Deed) is required before submitting for verification.
-            Upload a PDF (max 10 MB).
-          </p>
 
-          <!-- Hidden deed file input -->
-          <input
-            #deedInput
-            type="file"
-            accept="application/pdf"
-            class="hidden-file-input"
-            (change)="onDeedChange($event)"
-          />
+          @if (isVerified) {
+            <!-- Read-only deed view for verified properties -->
+            <div class="deed-locked-notice">
+              <i class="pi pi-lock"></i>
+              <span>Deed documents are locked for verified properties and cannot be modified.</span>
+            </div>
 
-          <!-- Existing deeds (edit mode) -->
-          @if (isEdit() && existingDeeds().length > 0) {
-            <div class="field">
-              <label class="field-label">Attached Deeds</label>
-              <div class="deed-list">
-                @for (deed of existingDeeds(); track deed.id) {
-                  <div class="deed-item">
-                    <i class="pi pi-file-pdf deed-icon"></i>
-                    <div class="deed-info">
-                      <span class="deed-number">{{ deed.documentNumber || 'No number' }}</span>
-                      @if (deed.documentUrl) {
-                        <a [href]="deed.documentUrl" target="_blank" class="deed-link">View PDF</a>
-                      }
+            @if (isEdit() && existingDeeds().length > 0) {
+              <div class="field">
+                <label class="field-label">Attached Deeds</label>
+                <div class="deed-list">
+                  @for (deed of existingDeeds(); track deed.id) {
+                    <div class="deed-item">
+                      <i class="pi pi-file-pdf deed-icon"></i>
+                      <div class="deed-info">
+                        <span class="deed-number">{{ deed.documentNumber || 'No number' }}</span>
+                        @if (deed.documentUrl) {
+                          <a [href]="deed.documentUrl" target="_blank" class="deed-link">View PDF</a>
+                        }
+                      </div>
                     </div>
-                    <p-button
-                      icon="pi pi-trash"
-                      severity="danger"
-                      [text]="true"
-                      [rounded]="true"
-                      size="small"
-                      type="button"
-                      (onClick)="markDeedForRemoval(deed.id)"
-                    />
-                  </div>
+                  }
+                </div>
+              </div>
+            } @else if (isEdit() && existingDeeds().length === 0) {
+              <div class="deed-empty">
+                <i class="pi pi-file-pdf deed-empty-icon"></i>
+                <span class="deed-empty-text">No deed attached</span>
+              </div>
+            }
+          } @else {
+            <!-- Editable deed section for draft / rejected properties -->
+            <p class="section-hint">
+              A property deed (document type: Deed) is required before submitting for verification.
+              Upload a PDF (max 10 MB).
+            </p>
+
+            <!-- Hidden deed file input -->
+            <input
+              #deedInput
+              type="file"
+              accept="application/pdf"
+              class="hidden-file-input"
+              (change)="onDeedChange($event)"
+            />
+
+            <!-- Existing deeds (edit mode) -->
+            @if (isEdit() && existingDeeds().length > 0) {
+              <div class="field">
+                <label class="field-label">Attached Deeds</label>
+                <div class="deed-list">
+                  @for (deed of existingDeeds(); track deed.id) {
+                    <div class="deed-item">
+                      <i class="pi pi-file-pdf deed-icon"></i>
+                      <div class="deed-info">
+                        <span class="deed-number">{{ deed.documentNumber || 'No number' }}</span>
+                        @if (deed.documentUrl) {
+                          <a [href]="deed.documentUrl" target="_blank" class="deed-link">View PDF</a>
+                        }
+                      </div>
+                      <p-button
+                        icon="pi pi-trash"
+                        severity="danger"
+                        [text]="true"
+                        [rounded]="true"
+                        size="small"
+                        type="button"
+                        (onClick)="markDeedForRemoval(deed.id)"
+                      />
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (isEdit() && existingDeeds().length === 0 && !pendingDeed()) {
+              <div class="deed-empty">
+                <i class="pi pi-file-pdf deed-empty-icon"></i>
+                <span class="deed-empty-text">No deed attached yet</span>
+              </div>
+            }
+
+            <!-- Pending new deed -->
+            @if (pendingDeed()) {
+              <div class="deed-pending">
+                <i class="pi pi-file-pdf deed-icon"></i>
+                <div class="deed-info">
+                  <span class="deed-number">{{ pendingDeed()!.previewName }}</span>
+                  <span class="deed-pending-label">Ready to upload</span>
+                </div>
+                <p-button
+                  icon="pi pi-times"
+                  severity="secondary"
+                  [text]="true"
+                  [rounded]="true"
+                  size="small"
+                  type="button"
+                  (onClick)="clearPendingDeed()"
+                />
+              </div>
+
+              <div class="field">
+                <label class="field-label" for="deedNumber">Document Number <span class="required">*</span></label>
+                <input
+                  id="deedNumber"
+                  pInputText
+                  [value]="pendingDeedNumber()"
+                  (input)="onDeedNumberChange($any($event.target).value)"
+                  placeholder="e.g. DEED-12345"
+                  [class.ng-invalid]="!!deedNumberError()"
+                  [class.ng-dirty]="!!deedNumberError()"
+                />
+                @if (deedNumberError()) {
+                  <small class="field-error">{{ deedNumberError() }}</small>
                 }
+                <small class="field-hint">4–50 characters, letters, digits, and hyphens only.</small>
               </div>
-            </div>
-          }
-
-          @if (isEdit() && existingDeeds().length === 0 && !pendingDeed()) {
-            <div class="deed-empty">
-              <i class="pi pi-file-pdf deed-empty-icon"></i>
-              <span class="deed-empty-text">No deed attached yet</span>
-            </div>
-          }
-
-          <!-- Pending new deed -->
-          @if (pendingDeed()) {
-            <div class="deed-pending">
-              <i class="pi pi-file-pdf deed-icon"></i>
-              <div class="deed-info">
-                <span class="deed-number">{{ pendingDeed()!.previewName }}</span>
-                <span class="deed-pending-label">Ready to upload</span>
-              </div>
+            } @else {
               <p-button
-                icon="pi pi-times"
+                icon="pi pi-upload"
+                label="Upload Property Deed (PDF)"
                 severity="secondary"
-                [text]="true"
-                [rounded]="true"
                 size="small"
                 type="button"
-                (onClick)="clearPendingDeed()"
+                (onClick)="openDeedPicker()"
               />
-            </div>
-
-            <div class="field">
-              <label class="field-label" for="deedNumber">Document Number <span class="required">*</span></label>
-              <input
-                id="deedNumber"
-                pInputText
-                [value]="pendingDeedNumber()"
-                (input)="onDeedNumberChange($any($event.target).value)"
-                placeholder="e.g. DEED-12345"
-                [class.ng-invalid]="!!deedNumberError()"
-                [class.ng-dirty]="!!deedNumberError()"
-              />
-              @if (deedNumberError()) {
-                <small class="field-error">{{ deedNumberError() }}</small>
-              }
-              <small class="field-hint">4–50 characters, letters, digits, and hyphens only.</small>
-            </div>
-          } @else {
-            <p-button
-              icon="pi pi-upload"
-              label="Upload Property Deed (PDF)"
-              severity="secondary"
-              size="small"
-              type="button"
-              (onClick)="openDeedPicker()"
-            />
+            }
           }
         </div>
 

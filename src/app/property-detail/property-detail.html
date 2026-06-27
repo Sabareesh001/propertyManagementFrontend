@@ -1,3 +1,5 @@
+<p-toast position="top-center" />
+
 <div class="detail-page">
 
   <!-- Back navigation (hidden when embedded in a dialog) -->
@@ -5,7 +7,7 @@
     <div class="detail-nav">
       <p-button
         icon="pi pi-arrow-left"
-        label="Back to Listings"
+        label="Back"
         severity="secondary"
         [text]="true"
         size="small"
@@ -131,7 +133,7 @@
             </div>
           </div>
 
-          @if (property()!.remarks) {
+          @if (property()!.remarks && canSeeRemarks) {
             <div class="detail-section">
               <h2 class="section-heading">Admin Remarks</h2>
               <p class="detail-remarks">{{ property()!.remarks }}</p>
@@ -188,6 +190,7 @@
                 size="large"
                 class="rent-cta"
                 [disabled]="!isAvailable"
+                (onClick)="openRentModal()"
               />
 
               @if (!isAvailable) {
@@ -211,3 +214,10 @@
   }
 
 </div>
+
+<app-rent-request-modal
+  [visible]="rentModalVisible()"
+  [property]="property()"
+  (visibleChange)="rentModalVisible.set($event)"
+  (submitted)="onProposalSubmitted()"
+/>

@@ -40,7 +40,7 @@ The system has three roles. A user registers with one role but can later gain th
 - To **list a property**: must be `Owner` + user must be `Verified`
 - To **submit a lease proposal**: must be any authenticated user + `Verified`
 - To **accept a proposal / create a lease**: must be `Owner`
-- To **sign a lease**: must be `Tenant`
+- To **sign a lease** / **upload lease agreement documents**: must be `Tenant`
 - To **apply charges**: must be `Owner` of that property
 - To **record payment**: must be `Tenant` of that lease
 - Admin-only actions: verify/reject users, verify/reject lease templates, activate leases
@@ -760,6 +760,17 @@ No request body. Moves Draft → Submitted (requires `agreementDocumentUrl` to b
 
 ---
 
+### Get Pending Templates (Admin)
+```
+GET /api/lease/pending-templates
+Auth: Admin
+```
+Returns all leases in **Submitted (2)** status whose templates are awaiting verification. Use this to populate the admin verification queue instead of polling `GET /api/lease/my-leases` and filtering client-side.
+
+**Response 200:** `LeaseResponseDto[]`
+
+---
+
 ### Verify Template (Admin)
 ```
 PUT /api/lease/{id}/verify-template?approve=true
@@ -788,6 +799,17 @@ Auth: Tenant
 Moves PendingSignature → TenantSigned.
 
 **Response 200:** `LeaseResponseDto`
+
+---
+
+### Get Pending Signed Leases (Admin)
+```
+GET /api/lease/pending-signed
+Auth: Admin
+```
+Returns all leases in **TenantSigned (4)** status whose signed agreements are awaiting verification. Use this to populate the admin signed-lease verification queue instead of polling `GET /api/lease/my-leases` and filtering client-side. Mirror of `GET /api/lease/pending-templates` for the signing stage.
+
+**Response 200:** `LeaseResponseDto[]`
 
 ---
 
@@ -829,6 +851,33 @@ GET /api/lease/{id}/documents
 Auth: Required (Owner/Tenant of lease, or Admin)
 ```
 **Response 200:** `DocumentResponseDto[]`
+
+---
+
+### Upload Lease Agreement Document (Tenant)
+```
+POST /api/lease/{id}/documents
+Auth: Tenant (must be the tenant of the lease)
+```
+Lets the tenant attach their own agreement documents to the lease (in addition to signing via `PUT /api/lease/{id}/sign`). The document is added to the lease's document collection and is returned by `GET /api/lease/{id}/documents`.
+
+**Request body:**
+```json
+{
+  "documentTypeId": 4,
+  "documentNumber": "AGR-12345",
+  "documentUrl": "https://cdn.example.com/tenant-agreement.pdf"
+}
+```
+
+**Validation:**
+- `documentTypeId`: required, must be between `1` and `5`
+- `documentNumber`: optional; when supplied, 4–50 chars, letters/digits/hyphens only
+- `documentUrl`: required, must be a valid absolute URL
+
+The lease must **not** be in `Draft (1)` or `Submitted (2)` status; otherwise the request is rejected with `400`.
+
+**Response 201:** `DocumentResponseDto`
 
 ---
 
@@ -1175,8 +1224,10 @@ Handles:
 | POST | `/api/lease` | Owner | Create lease contract |
 | PUT | `/api/lease/{id}` | Owner | Update draft lease |
 | PUT | `/api/lease/{id}/submit` | Owner | Submit lease for review |
+| GET | `/api/lease/pending-templates` | Admin | List templates pending verification |
 | PUT | `/api/lease/{id}/verify-template?approve=` | Admin | Approve/reject template |
 | PUT | `/api/lease/{id}/sign` | Tenant | Sign the lease |
+| GET | `/api/lease/pending-signed` | Admin | List signed leases pending verification |
 | PUT | `/api/lease/{id}/verify-signed?approve=` | Admin | Activate/reject signed lease |
 | GET | `/api/lease/{id}` | Required | Get lease by ID (GUID) |
 | GET | `/api/lease/my-leases` | Required | Get my leases |
@@ -1786,12 +1837,12 @@ This section maps pages a frontend app would need to the API calls that power th
 - Actions: "Approve" / "Reject" with optional remarks
 
 #### Lease Template Verification Queue
-- Need to poll `GET /api/lease/my-leases` filtered to `statusId: 2` (Submitted)
+- `GET /api/lease/pending-templates` — lists all Submitted (`statusId: 2`) templates awaiting verification
 - View agreement document URL
 - `PUT /api/lease/{id}/verify-template?approve=true/false`
 
 #### Signed Lease Activation Queue
-- Leases with `statusId: 4` (TenantSigned)
+- `GET /api/lease/pending-signed` — lists all TenantSigned (`statusId: 4`) leases awaiting verification
 - View both agreement and signed agreement URLs
 - `PUT /api/lease/{id}/verify-signed?approve=true/false`
 

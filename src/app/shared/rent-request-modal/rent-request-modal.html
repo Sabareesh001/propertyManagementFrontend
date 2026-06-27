@@ -1,0 +1,146 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [closable]="!submitting()"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '520px' }"
+  styleClass="rent-dialog"
+  header="Request to Rent"
+>
+
+  <!-- Success state -->
+  @if (success()) {
+    <div class="success-panel">
+      <i class="pi pi-check-circle success-icon"></i>
+      <h3 class="success-title">Proposal Submitted!</h3>
+      <p class="success-body">
+        Your rental proposal for <strong>{{ property?.title }}</strong> has been sent to the owner.
+        You'll be notified when they respond.
+      </p>
+      <p-button
+        label="Close"
+        icon="pi pi-times"
+        severity="secondary"
+        [fluid]="true"
+        (onClick)="close()"
+      />
+    </div>
+  }
+
+  <!-- Form state -->
+  @if (!success()) {
+    <div class="modal-body">
+
+      <!-- Property summary -->
+      <div class="property-summary">
+        <span class="summary-label">Property</span>
+        <span class="summary-value">{{ property?.title }}</span>
+      </div>
+
+      <p-divider />
+
+      <!-- Dates row -->
+      <div class="field-group">
+        <div class="field">
+          <label class="field-label">Move-in Date <span class="optional">(optional)</span></label>
+          <p-datepicker
+            [(ngModel)]="startDate"
+            (ngModelChange)="onStartDateChange()"
+            [minDate]="today"
+            dateFormat="dd M yy"
+            placeholder="Select start date"
+            [fluid]="true"
+            [showIcon]="true"
+            appendTo="body"
+          />
+        </div>
+
+        <div class="field">
+          <label class="field-label">Move-out Date <span class="optional">(optional)</span></label>
+          <p-datepicker
+            [(ngModel)]="endDate"
+            [minDate]="minEndDate"
+            dateFormat="dd M yy"
+            placeholder="Select end date"
+            [fluid]="true"
+            [showIcon]="true"
+            [disabled]="!startDate"
+            appendTo="body"
+          />
+        </div>
+      </div>
+
+      <!-- Financials -->
+      <div class="field">
+        <label class="field-label">Monthly Rent</label>
+        <p-inputnumber
+          [(ngModel)]="monthlyRent"
+          mode="currency"
+          currency="INR"
+          locale="en-IN"
+          [min]="0"
+          [fluid]="true"
+          placeholder="Propose a monthly rent"
+        />
+        <span class="field-hint">Listed at {{ formatCurrency(property?.monthlyRent ?? null) }}</span>
+      </div>
+
+      <div class="field-group">
+        <div class="field">
+          <label class="field-label">Upfront Payment <span class="optional">(optional)</span></label>
+          <p-inputnumber
+            [(ngModel)]="upfrontPayment"
+            mode="currency"
+            currency="INR"
+            locale="en-IN"
+            [min]="0"
+            [fluid]="true"
+            placeholder="0"
+          />
+        </div>
+
+        <div class="field">
+          <label class="field-label">Security Deposit <span class="optional">(optional)</span></label>
+          <p-inputnumber
+            [(ngModel)]="securityDeposit"
+            mode="currency"
+            currency="INR"
+            locale="en-IN"
+            [min]="0"
+            [fluid]="true"
+            placeholder="0"
+          />
+        </div>
+      </div>
+
+      <!-- Error -->
+      @if (errorMessage()) {
+        <p-message severity="error" [text]="errorMessage()!" styleClass="w-full" />
+      }
+
+    </div>
+
+    <!-- Footer -->
+    <ng-template #footer>
+      <div class="modal-footer">
+        <p-button
+          label="Cancel"
+          severity="secondary"
+          [text]="true"
+          (onClick)="close()"
+          [disabled]="submitting()"
+        />
+        <p-button
+          label="Submit Proposal"
+          icon="pi pi-send"
+          iconPos="right"
+          (onClick)="submitRequest()"
+          [loading]="submitting()"
+        />
+      </div>
+    </ng-template>
+  }
+
+</p-dialog>

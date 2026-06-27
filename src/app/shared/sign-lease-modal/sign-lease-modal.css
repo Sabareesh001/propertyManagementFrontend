@@ -1,0 +1,160 @@
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0.25rem 0 0.5rem;
+}
+
+.intro {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+  line-height: 1.6;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.field-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--p-text-color);
+}
+
+.required {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--p-red-500);
+}
+
+.doc-download {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--p-primary-color);
+  text-decoration: none;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 0.5rem;
+  background: var(--p-content-hover-background);
+  transition: background 0.15s;
+}
+
+.doc-download:hover {
+  background: var(--p-highlight-background);
+}
+
+.doc-download .pi-file-pdf {
+  color: var(--p-red-500);
+}
+
+.doc-download span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc-download .pi-external-link {
+  font-size: 0.75rem;
+}
+
+.doc-missing {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+}
+
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--p-primary-color);
+  border: 1px dashed var(--p-primary-color);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.upload-btn:hover {
+  background: var(--p-primary-50);
+}
+
+.upload-btn.disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.doc-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.4rem 0.4rem 0.75rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 0.5rem;
+  background: var(--p-content-hover-background);
+}
+
+.doc-chip .pi-verified {
+  color: var(--p-green-500);
+}
+
+.doc-link {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--p-primary-color);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc-link:hover {
+  text-decoration: underline;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* Success state */
+.success-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1.5rem 1rem 0.5rem;
+  text-align: center;
+}
+
+.success-icon {
+  font-size: 3rem;
+  color: var(--p-green-500);
+}
+
+.success-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--p-text-color);
+}
+
+.success-body {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--p-text-muted-color);
+  line-height: 1.6;
+  max-width: 360px;
+}

@@ -73,6 +73,7 @@ export class PropertyFormComponent implements OnInit {
 
   isEdit = signal(false);
   propertyId = signal<number | null>(null);
+  verificationStatusId = signal<number | null>(null);
   notFound = signal(false);
   loading = signal(false);
   saving = signal(false);
@@ -106,6 +107,10 @@ export class PropertyFormComponent implements OnInit {
     upfrontPayment: [null, [Validators.required, Validators.min(0)]],
     securityDeposit: [null, [Validators.required, Validators.min(0)]],
   });
+
+  get isVerified(): boolean {
+    return this.verificationStatusId() === 3;
+  }
 
   get pageTitle(): string {
     return this.isEdit() ? 'Edit Property' : 'Add New Property';
@@ -191,6 +196,7 @@ export class PropertyFormComponent implements OnInit {
             return;
           }
 
+          this.verificationStatusId.set(property.verificationStatusId);
           this.form.patchValue({
             title: property.title,
             description: property.description ?? '',

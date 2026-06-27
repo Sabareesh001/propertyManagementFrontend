@@ -223,6 +223,25 @@
 }
 
 /* ── Property deed section ── */
+.deed-locked-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--p-border-radius-md);
+  background: color-mix(in srgb, var(--p-yellow-400) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--p-yellow-400) 40%, transparent);
+  font-size: 0.875rem;
+  color: var(--p-text-color);
+  margin-bottom: 0.75rem;
+}
+
+.deed-locked-notice .pi-lock {
+  color: var(--p-yellow-500);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
 .section-hint {
   margin: -0.5rem 0 0;
   font-size: 0.8125rem;

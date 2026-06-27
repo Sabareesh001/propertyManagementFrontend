@@ -1,0 +1,109 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [closable]="!submitting()"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '540px' }"
+  styleClass="sign-lease-dialog"
+  header="Sign Lease"
+>
+
+  <!-- Success state -->
+  @if (success()) {
+    <div class="success-panel">
+      <i class="pi pi-check-circle success-icon"></i>
+      <h3 class="success-title">Lease Signed!</h3>
+      <p class="success-body">
+        Your signed agreement for <strong>Property #{{ lease?.propertyId }}</strong> has been submitted.
+        An admin will review it and activate the lease.
+      </p>
+      <p-button
+        label="Close"
+        icon="pi pi-times"
+        severity="secondary"
+        [fluid]="true"
+        (onClick)="close()"
+      />
+    </div>
+  }
+
+  <!-- Form state -->
+  @if (!success()) {
+    <div class="modal-body">
+
+      <p class="intro">
+        Download the agreement below, sign it, then upload the signed copy to complete this step.
+      </p>
+
+      <!-- Original agreement -->
+      <div class="field">
+        <label class="field-label">Agreement to sign</label>
+        @if (lease?.agreementDocumentUrl) {
+          <a [href]="lease!.agreementDocumentUrl!" target="_blank" rel="noopener" class="doc-download">
+            <i class="pi pi-file-pdf"></i>
+            <span>View / download agreement</span>
+            <i class="pi pi-external-link"></i>
+          </a>
+        } @else {
+          <span class="doc-missing"><i class="pi pi-file"></i> No agreement document available</span>
+        }
+      </div>
+
+      <p-divider />
+
+      <!-- Signed document upload -->
+      <div class="field">
+        <label class="field-label">Signed Agreement <span class="required">(required)</span></label>
+        @if (signedAgreementDocumentUrl) {
+          <div class="doc-chip">
+            <i class="pi pi-verified"></i>
+            <a [href]="signedAgreementDocumentUrl" target="_blank" rel="noopener" class="doc-link">View uploaded document</a>
+            <p-button
+              icon="pi pi-times"
+              severity="secondary"
+              [rounded]="true"
+              [text]="true"
+              size="small"
+              (onClick)="clearDocument()"
+              [disabled]="submitting()"
+            />
+          </div>
+        } @else {
+          <label class="upload-btn" [class.disabled]="uploading()">
+            <i class="pi" [class.pi-upload]="!uploading()" [class.pi-spin]="uploading()" [class.pi-spinner]="uploading()"></i>
+            <span>{{ uploading() ? 'Uploading…' : 'Upload signed PDF' }}</span>
+            <input type="file" accept="application/pdf" (change)="onDocumentSelected($event)" [disabled]="uploading()" hidden />
+          </label>
+        }
+      </div>
+
+      @if (errorMessage()) {
+        <p-message severity="error" [text]="errorMessage()!" styleClass="w-full" />
+      }
+
+    </div>
+
+    <ng-template #footer>
+      <div class="modal-footer">
+        <p-button
+          label="Cancel"
+          severity="secondary"
+          [text]="true"
+          (onClick)="close()"
+          [disabled]="submitting()"
+        />
+        <p-button
+          label="Submit Signed Lease"
+          icon="pi pi-check"
+          iconPos="right"
+          (onClick)="submitSignature()"
+          [loading]="submitting()"
+          [disabled]="!canSubmit"
+        />
+      </div>
+    </ng-template>
+  }
+
+</p-dialog>

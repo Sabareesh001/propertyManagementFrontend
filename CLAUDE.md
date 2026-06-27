@@ -33,6 +33,14 @@ ng generate service <name>     # scaffold service
 
 **PrimeNG-First Rule:** Before implementing any UI pattern (accordions, carousels, timelines, steppers, virtual scrollers, overlays, drag-and-drop, etc.), check the PrimeNG component library at https://primeng.dev first. If a PrimeNG component already covers the use case, use it — do not hand-roll a custom solution.
 
+**Mobile Responsiveness Rule:** Every UI change must be mobile-responsive. After implementing any layout or component change, review it at mobile breakpoints (≤480px, ≤768px). Checklist:
+- Use `flex-wrap: wrap` on flex rows so items stack on narrow screens.
+- Prefer `grid-template-columns: repeat(auto-fill, minmax(..., 1fr))` over fixed column counts.
+- Add `@media (max-width: 600px)` (and `768px` where needed) blocks to reduce padding, switch multi-column layouts to single-column, and ensure buttons/inputs are full-width or appropriately sized for touch.
+- Never use fixed pixel widths for containers — use `max-width` with `width: 100%`.
+- Touch targets must be at least 44px tall.
+- Test that text never overflows its container on small screens (use `overflow-wrap: break-word` or `min-width: 0` on flex children where needed).
+
 **Entry point:** `src/main.ts` → bootstraps `App` (in `src/app/app.ts`) using `appConfig` (`src/app/app.config.ts`).
 
 **Current state:** Freshly scaffolded — `app.routes.ts` has an empty routes array. All feature modules and services are yet to be built.

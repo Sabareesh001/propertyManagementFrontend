@@ -64,7 +64,7 @@ export class PropertyCardComponent {
 
   get canEdit(): boolean {
     const s = this.property.verificationStatusId;
-    return s === 1 || s === 4;
+    return s === 1 || s === 3 || s === 4;
   }
 
   get canSubmit(): boolean {

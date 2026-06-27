@@ -1,19 +1,87 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { AvatarModule } from 'primeng/avatar';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
+import { DialogModule } from 'primeng/dialog';
+import { TextareaModule } from 'primeng/textarea';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
 import { PropertyDetailComponent } from '../../property-detail/property-detail';
 import { PropertyService, PropertyDetail } from '../../core/services/property.service';
 
 @Component({
   selector: 'app-property-verifications',
   standalone: true,
-  imports: [CommonModule, TableModule, TagModule, ButtonModule, AvatarModule, TooltipModule, SkeletonModule, PropertyDetailComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TableModule,
+    TagModule,
+    ButtonModule,
+    AvatarModule,
+    TooltipModule,
+    SkeletonModule,
+    DialogModule,
+    TextareaModule,
+    ConfirmDialogModule,
+    PropertyDetailComponent,
+  ],
+  providers: [ConfirmationService],
   template: `
+    <p-confirmDialog />
+
+    <!-- Reject dialog with remarks -->
+    <p-dialog
+      header="Reject Property"
+      [(visible)]="rejectDialogVisible"
+      [modal]="true"
+      [style]="{ width: '28rem' }"
+      [closable]="true"
+      (onHide)="cancelReject()"
+    >
+      <div class="reject-dialog-body">
+        <p class="reject-dialog-hint">
+          <i class="pi pi-info-circle"></i>
+          Provide a reason for rejection. This will be visible to the property owner.
+        </p>
+        <label class="remarks-label" for="rejectRemarks">Remarks <span class="required">*</span></label>
+        <textarea
+          pTextarea
+          id="rejectRemarks"
+          [(ngModel)]="rejectRemarks"
+          rows="4"
+          placeholder="Explain why this property is being rejected..."
+          [autoResize]="false"
+          style="width: 100%; resize: vertical;"
+        ></textarea>
+        @if (remarksError()) {
+          <small class="remarks-error">Remarks are required to reject a property.</small>
+        }
+      </div>
+      <ng-template pTemplate="footer">
+        <p-button
+          label="Cancel"
+          severity="secondary"
+          [text]="true"
+          size="small"
+          (onClick)="cancelReject()"
+        />
+        <p-button
+          label="Reject Property"
+          icon="pi pi-times"
+          severity="danger"
+          size="small"
+          [loading]="actioningId() !== null && actionType() === 'reject'"
+          (onClick)="confirmReject()"
+        />
+      </ng-template>
+    </p-dialog>
+
     @if (selectedPropertyId() !== null) {
       <div class="detail-view">
         <div class="detail-back">
@@ -109,7 +177,7 @@ import { PropertyService, PropertyDetail } from '../../core/services/property.se
                     [rounded]="true"
                     [text]="true"
                     [loading]="actioningId() === req.id && actionType() === 'approve'"
-                    (onClick)="approve(req.id)"
+                    (onClick)="approve(req.id, req.title)"
                   />
                   <p-button
                     icon="pi pi-times"
@@ -120,7 +188,7 @@ import { PropertyService, PropertyDetail } from '../../core/services/property.se
                     [rounded]="true"
                     [text]="true"
                     [loading]="actioningId() === req.id && actionType() === 'reject'"
-                    (onClick)="reject(req.id)"
+                    (onClick)="openRejectDialog(req.id, req.title)"
                   />
                   <p-button
                     icon="pi pi-eye"
@@ -282,10 +350,43 @@ import { PropertyService, PropertyDetail } from '../../core/services/property.se
       color: var(--p-text-muted-color);
       margin: 0;
     }
+
+    .reject-dialog-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 0.25rem 0;
+    }
+
+    .reject-dialog-hint {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--p-text-muted-color);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .remarks-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--p-text-color);
+    }
+
+    .required {
+      color: var(--p-red-500);
+    }
+
+    .remarks-error {
+      font-size: 0.75rem;
+      color: var(--p-red-500);
+    }
   `],
 })
 export class PropertyVerificationsComponent implements OnInit {
   private propertyService = inject(PropertyService);
+  private confirmationService = inject(ConfirmationService);
 
   requests = signal<PropertyDetail[]>([]);
   loading = signal(true);
@@ -293,6 +394,11 @@ export class PropertyVerificationsComponent implements OnInit {
   selectedPropertyId = signal<number | null>(null);
   actioningId = signal<number | null>(null);
   actionType = signal<'approve' | 'reject' | null>(null);
+
+  rejectDialogVisible = false;
+  rejectRemarks = '';
+  remarksError = signal(false);
+  private pendingRejectId: number | null = null;
 
   ngOnInit(): void {
     this.load();
@@ -313,30 +419,63 @@ export class PropertyVerificationsComponent implements OnInit {
     });
   }
 
-  approve(id: number): void {
-    this.actioningId.set(id);
-    this.actionType.set('approve');
-    this.propertyService.verifyProperty(id, true).subscribe({
-      next: () => {
-        this.requests.update((list) => list.filter((p) => p.id !== id));
-        this.actioningId.set(null);
-        this.actionType.set(null);
-      },
-      error: () => {
-        this.actioningId.set(null);
-        this.actionType.set(null);
+  approve(id: number, title: string): void {
+    this.confirmationService.confirm({
+      header: 'Approve Property',
+      message: `Are you sure you want to approve <strong>${title}</strong>? It will be listed as verified and available to tenants.`,
+      icon: 'pi pi-check-circle',
+      acceptLabel: 'Approve',
+      rejectLabel: 'Cancel',
+      acceptButtonStyleClass: 'p-button-success',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
+      accept: () => {
+        this.actioningId.set(id);
+        this.actionType.set('approve');
+        this.propertyService.verifyProperty(id, true).subscribe({
+          next: () => {
+            this.requests.update((list) => list.filter((p) => p.id !== id));
+            this.actioningId.set(null);
+            this.actionType.set(null);
+          },
+          error: () => {
+            this.actioningId.set(null);
+            this.actionType.set(null);
+          },
+        });
       },
     });
   }
 
-  reject(id: number): void {
+  openRejectDialog(id: number, _title: string): void {
+    this.pendingRejectId = id;
+    this.rejectRemarks = '';
+    this.remarksError.set(false);
+    this.rejectDialogVisible = true;
+  }
+
+  cancelReject(): void {
+    this.rejectDialogVisible = false;
+    this.pendingRejectId = null;
+    this.rejectRemarks = '';
+    this.remarksError.set(false);
+  }
+
+  confirmReject(): void {
+    if (!this.rejectRemarks.trim()) {
+      this.remarksError.set(true);
+      return;
+    }
+    const id = this.pendingRejectId!;
+    this.rejectDialogVisible = false;
     this.actioningId.set(id);
     this.actionType.set('reject');
-    this.propertyService.verifyProperty(id, false).subscribe({
+    this.propertyService.verifyProperty(id, false, this.rejectRemarks.trim()).subscribe({
       next: () => {
         this.requests.update((list) => list.filter((p) => p.id !== id));
         this.actioningId.set(null);
         this.actionType.set(null);
+        this.pendingRejectId = null;
+        this.rejectRemarks = '';
       },
       error: () => {
         this.actioningId.set(null);

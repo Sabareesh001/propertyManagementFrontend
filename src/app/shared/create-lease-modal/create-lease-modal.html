@@ -1,0 +1,170 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [closable]="!submitting()"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '540px' }"
+  styleClass="create-lease-dialog"
+  header="Create Lease"
+>
+
+  <!-- Success state -->
+  @if (success()) {
+    <div class="success-panel">
+      <i class="pi pi-check-circle success-icon"></i>
+      <h3 class="success-title">Lease Created!</h3>
+      <p class="success-body">
+        A draft lease for <strong>Property #{{ proposal?.propertyId }}</strong> has been created.
+        Add an agreement document and submit it for admin review from the Leases page.
+      </p>
+      <p-button
+        label="Close"
+        icon="pi pi-times"
+        severity="secondary"
+        [fluid]="true"
+        (onClick)="close()"
+      />
+    </div>
+  }
+
+  <!-- Form state -->
+  @if (!success()) {
+    <div class="modal-body">
+
+      <div class="property-summary">
+        <span class="summary-label">Tenant</span>
+        <span class="summary-value">
+          {{ proposal?.tenant?.firstName }} {{ proposal?.tenant?.lastName }}
+          · Property #{{ proposal?.propertyId }}
+        </span>
+      </div>
+
+      <p-divider />
+
+      <!-- Dates -->
+      <div class="field-group">
+        <div class="field">
+          <label class="field-label">Start Date</label>
+          <p-datepicker
+            [(ngModel)]="startDate"
+            (ngModelChange)="onStartDateChange()"
+            [minDate]="today"
+            dateFormat="dd M yy"
+            placeholder="Select start date"
+            [fluid]="true"
+            [showIcon]="true"
+            appendTo="body"
+          />
+        </div>
+
+        <div class="field">
+          <label class="field-label">End Date</label>
+          <p-datepicker
+            [(ngModel)]="endDate"
+            [minDate]="minEndDate"
+            dateFormat="dd M yy"
+            placeholder="Select end date"
+            [fluid]="true"
+            [showIcon]="true"
+            [disabled]="!startDate"
+            appendTo="body"
+          />
+        </div>
+      </div>
+
+      <!-- Financials -->
+      <div class="field">
+        <label class="field-label">Monthly Rent</label>
+        <p-inputnumber
+          [(ngModel)]="monthlyRent"
+          mode="currency"
+          currency="INR"
+          locale="en-IN"
+          [min]="0"
+          [fluid]="true"
+        />
+      </div>
+
+      <div class="field-group">
+        <div class="field">
+          <label class="field-label">Upfront Payment</label>
+          <p-inputnumber
+            [(ngModel)]="upfrontPayment"
+            mode="currency"
+            currency="INR"
+            locale="en-IN"
+            [min]="0"
+            [fluid]="true"
+          />
+        </div>
+
+        <div class="field">
+          <label class="field-label">Security Deposit</label>
+          <p-inputnumber
+            [(ngModel)]="securityDeposit"
+            mode="currency"
+            currency="INR"
+            locale="en-IN"
+            [min]="0"
+            [fluid]="true"
+          />
+        </div>
+      </div>
+
+      <!-- Agreement document -->
+      <div class="field">
+        <label class="field-label">
+          Agreement Document <span class="optional">(optional — required before submitting)</span>
+        </label>
+        @if (agreementDocumentUrl) {
+          <div class="doc-chip">
+            <i class="pi pi-file-pdf"></i>
+            <a [href]="agreementDocumentUrl" target="_blank" rel="noopener" class="doc-link">View uploaded document</a>
+            <p-button
+              icon="pi pi-times"
+              severity="secondary"
+              [rounded]="true"
+              [text]="true"
+              size="small"
+              (onClick)="clearDocument()"
+            />
+          </div>
+        } @else {
+          <label class="upload-btn" [class.disabled]="uploading()">
+            <i class="pi" [class.pi-upload]="!uploading()" [class.pi-spin]="uploading()" [class.pi-spinner]="uploading()"></i>
+            <span>{{ uploading() ? 'Uploading…' : 'Upload PDF' }}</span>
+            <input type="file" accept="application/pdf" (change)="onDocumentSelected($event)" [disabled]="uploading()" hidden />
+          </label>
+        }
+      </div>
+
+      @if (errorMessage()) {
+        <p-message severity="error" [text]="errorMessage()!" styleClass="w-full" />
+      }
+
+    </div>
+
+    <ng-template #footer>
+      <div class="modal-footer">
+        <p-button
+          label="Cancel"
+          severity="secondary"
+          [text]="true"
+          (onClick)="close()"
+          [disabled]="submitting()"
+        />
+        <p-button
+          label="Create Lease"
+          icon="pi pi-file-edit"
+          iconPos="right"
+          (onClick)="createLease()"
+          [loading]="submitting()"
+          [disabled]="!canSubmit || uploading()"
+        />
+      </div>
+    </ng-template>
+  }
+
+</p-dialog>

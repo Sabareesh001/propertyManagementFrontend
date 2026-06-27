@@ -11,16 +11,20 @@ import { MenuItem } from 'primeng/api';
 import { Store } from '@ngrx/store';
 import { AuthActions } from '../store/auth/auth.actions';
 import { ThemeService } from '../core/services/theme.service';
-import { selectIsOwner, selectIsAdmin } from '../store/auth/auth.selectors';
+import { selectIsOwner, selectIsAdmin, selectIsLoggedIn } from '../store/auth/auth.selectors';
 
-const TAB_ROUTES = ['/dashboard', '/owner/properties', '/admin/verifications'];
+const TAB_ROUTES = ['/dashboard', '/my-requests', '/owner/properties', '/owner/received-requests', '/leases', '/admin/verifications'];
 
 const ALL_DRAWER_ITEMS = [
-  { label: 'Dashboard', icon: 'pi pi-home', route: '/dashboard', ownerOnly: false, adminOnly: false, hideForAdmin: true },
-  { label: 'My Properties', icon: 'pi pi-building', route: '/owner/properties', ownerOnly: true, adminOnly: false, hideForAdmin: false },
-  { label: 'Property Verifications', icon: 'pi pi-building', route: '/admin/verifications/property', ownerOnly: false, adminOnly: true, hideForAdmin: false },
-  { label: 'User Verifications', icon: 'pi pi-verified', route: '/admin/verifications/user', ownerOnly: false, adminOnly: true, hideForAdmin: false },
-  { label: 'Lease Verifications', icon: 'pi pi-file-check', route: '/admin/verifications/lease', ownerOnly: false, adminOnly: true, hideForAdmin: false },
+  { label: 'Dashboard', icon: 'pi pi-home', route: '/dashboard', ownerOnly: false, loggedInOnly: false, adminOnly: false, hideForAdmin: true },
+  { label: 'My Requests', icon: 'pi pi-file-edit', route: '/my-requests', ownerOnly: false, loggedInOnly: true, adminOnly: false, hideForAdmin: true },
+  { label: 'My Properties', icon: 'pi pi-building', route: '/owner/properties', ownerOnly: true, loggedInOnly: false, adminOnly: false, hideForAdmin: false },
+  { label: 'Received Requests', icon: 'pi pi-inbox', route: '/owner/received-requests', ownerOnly: true, loggedInOnly: false, adminOnly: false, hideForAdmin: false },
+  { label: 'Leases', icon: 'pi pi-file-check', route: '/leases', ownerOnly: false, loggedInOnly: true, adminOnly: false, hideForAdmin: true },
+  { label: 'Property Verifications', icon: 'pi pi-building', route: '/admin/verifications/property', ownerOnly: false, loggedInOnly: false, adminOnly: true, hideForAdmin: false },
+  { label: 'User Verifications', icon: 'pi pi-verified', route: '/admin/verifications/user', ownerOnly: false, loggedInOnly: false, adminOnly: true, hideForAdmin: false },
+  { label: 'Lease Templates', icon: 'pi pi-file-check', route: '/admin/verifications/lease', ownerOnly: false, loggedInOnly: false, adminOnly: true, hideForAdmin: false },
+  { label: 'Signed Leases', icon: 'pi pi-verified', route: '/admin/verifications/signed-lease', ownerOnly: false, loggedInOnly: false, adminOnly: true, hideForAdmin: false },
 ];
 
 @Component({
@@ -41,11 +45,13 @@ export class LayoutComponent {
 
   isOwner = toSignal(this.store.select(selectIsOwner), { initialValue: false });
   isAdmin = toSignal(this.store.select(selectIsAdmin), { initialValue: false });
+  isLoggedIn = toSignal(this.store.select(selectIsLoggedIn), { initialValue: false });
 
   navItems = computed(() =>
     ALL_DRAWER_ITEMS.filter(
       (item) =>
         (!item.ownerOnly || this.isOwner()) &&
+        (!item.loggedInOnly || this.isLoggedIn()) &&
         (!item.adminOnly || this.isAdmin()) &&
         (!item.hideForAdmin || !this.isAdmin()),
     ),
@@ -74,10 +80,20 @@ export class LayoutComponent {
             command: () => this.navigateDrawerItem('/admin/verifications/user'),
           },
           {
-            label: 'Leases',
+            label: 'Lease Templates',
             icon: 'pi pi-file-check',
-            styleClass: url.startsWith('/admin/verifications/lease') ? 'nav-item-active' : '',
+            styleClass:
+              url.startsWith('/admin/verifications/lease') &&
+              !url.startsWith('/admin/verifications/signed-lease')
+                ? 'nav-item-active'
+                : '',
             command: () => this.navigateDrawerItem('/admin/verifications/lease'),
+          },
+          {
+            label: 'Signed Leases',
+            icon: 'pi pi-verified',
+            styleClass: url.startsWith('/admin/verifications/signed-lease') ? 'nav-item-active' : '',
+            command: () => this.navigateDrawerItem('/admin/verifications/signed-lease'),
           },
         ],
       },

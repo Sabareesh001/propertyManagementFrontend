@@ -1,0 +1,149 @@
+<p-toast />
+<p-confirmdialog />
+
+<app-create-lease-modal
+  [visible]="leaseModalVisible()"
+  [proposal]="leaseProposal()"
+  (visibleChange)="leaseModalVisible.set($event)"
+  (created)="onLeaseCreated()"
+/>
+
+<div class="requests-container">
+  <h2 class="page-title">Received Requests</h2>
+  @if (!loading() && !error()) {
+    <p-menu #filterMenu [model]="filterMenuItems()" [popup]="true" />
+    <p-button
+      [label]="selectedStatusLabel()"
+      icon="pi pi-filter"
+      iconPos="left"
+      severity="secondary"
+      [outlined]="true"
+      size="large"
+      (onClick)="filterMenu.toggle($event)"
+    />
+  }
+
+  @if (loading()) {
+    <div class="empty-state">
+      <p-progressspinner strokeWidth="4" [style]="{ width: '3rem', height: '3rem' }" />
+      <p class="empty-text">Loading received requests…</p>
+    </div>
+  } @else if (error()) {
+    <div class="empty-state">
+      <i class="pi pi-exclamation-triangle empty-icon"></i>
+      <p class="empty-text">Couldn't load received requests. Please try again.</p>
+      <p-button label="Retry" icon="pi pi-refresh" size="small" (onClick)="load()" />
+    </div>
+  } @else if (proposals().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-inbox empty-icon"></i>
+      <p class="empty-text">You haven't received any rental requests yet.</p>
+      <p class="empty-hint">Requests from tenants for your properties will appear here.</p>
+      <p-button label="My Properties" icon="pi pi-home" routerLink="/owner/properties" />
+    </div>
+  } @else if (filteredProposals().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-filter empty-icon"></i>
+      <p class="empty-text">No requests match this filter.</p>
+      <p-button label="Clear Filter" icon="pi pi-times" size="small" severity="secondary" (onClick)="selectedStatus.set(null)" />
+    </div>
+  } @else {
+    <div class="proposals-list">
+      @for (proposal of filteredProposals(); track proposal.id) {
+        <div class="proposal-card">
+          <div class="proposal-header">
+            <div class="tenant-block">
+              <div class="tenant-avatar">{{ tenantInitials(proposal) }}</div>
+              <div class="tenant-info">
+                <span class="tenant-name">{{ tenantName(proposal) }}</span>
+                <a [routerLink]="['/property', proposal.propertyId]" class="property-link">
+                  <i class="pi pi-home"></i>
+                  Property #{{ proposal.propertyId }}
+                </a>
+              </div>
+            </div>
+            <p-tag
+              [value]="statusLabel(proposal.statusId)"
+              [severity]="statusSeverity(proposal.statusId)"
+            />
+          </div>
+
+          @if (proposal.tenant) {
+            <div class="tenant-contact">
+              @if (proposal.tenant.email) {
+                <span class="contact-item"><i class="pi pi-envelope"></i> {{ proposal.tenant.email }}</span>
+              }
+              @if (proposal.tenant.phone) {
+                <span class="contact-item"><i class="pi pi-phone"></i> {{ proposal.tenant.phone }}</span>
+              }
+              @if (proposal.tenant.occupation) {
+                <span class="contact-item"><i class="pi pi-briefcase"></i> {{ proposal.tenant.occupation }}</span>
+              }
+              @if (proposal.tenant.monthlyIncome !== null) {
+                <span class="contact-item"><i class="pi pi-wallet"></i> {{ formatCurrency(proposal.tenant.monthlyIncome) }}/mo income</span>
+              }
+            </div>
+          }
+
+          <div class="proposal-details">
+            <div class="detail-item">
+              <span class="detail-label">Monthly Rent</span>
+              <span class="detail-value">{{ formatCurrency(proposal.monthlyRent) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Start Date</span>
+              <span class="detail-value">{{ formatDate(proposal.startDate) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">End Date</span>
+              <span class="detail-value">{{ formatDate(proposal.endDate) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Upfront Payment</span>
+              <span class="detail-value">{{ formatCurrency(proposal.upfrontPayment) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Security Deposit</span>
+              <span class="detail-value">{{ formatCurrency(proposal.securityDeposit) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Received On</span>
+              <span class="detail-value">{{ formatDate(proposal.createdAt) }}</span>
+            </div>
+          </div>
+
+          @if (canReview(proposal.statusId)) {
+            <div class="proposal-actions">
+              <p-button
+                label="Reject"
+                icon="pi pi-times"
+                severity="danger"
+                [outlined]="true"
+                size="small"
+                [disabled]="actingId() === proposal.id"
+                (onClick)="confirmReject(proposal)"
+              />
+              <p-button
+                label="Accept"
+                icon="pi pi-check"
+                severity="success"
+                size="small"
+                [loading]="actingId() === proposal.id"
+                (onClick)="confirmAccept(proposal)"
+              />
+            </div>
+          } @else if (canCreateLease(proposal.statusId)) {
+            <div class="proposal-actions">
+              <p-button
+                label="Create Lease"
+                icon="pi pi-file-edit"
+                size="small"
+                (onClick)="openCreateLease(proposal)"
+              />
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
