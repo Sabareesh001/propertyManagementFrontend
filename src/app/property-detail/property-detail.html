@@ -1,16 +1,18 @@
 <div class="detail-page">
 
-  <!-- Back navigation -->
-  <div class="detail-nav">
-    <p-button
-      icon="pi pi-arrow-left"
-      label="Back to Listings"
-      severity="secondary"
-      [text]="true"
-      size="small"
-      (onClick)="goBack()"
-    />
-  </div>
+  <!-- Back navigation (hidden when embedded in a dialog) -->
+  @if (!embedded) {
+    <div class="detail-nav">
+      <p-button
+        icon="pi pi-arrow-left"
+        label="Back to Listings"
+        severity="secondary"
+        [text]="true"
+        size="small"
+        (onClick)="goBack()"
+      />
+    </div>
+  }
 
   <!-- Loading -->
   @if (loading()) {
@@ -160,26 +162,45 @@
               </div>
             </div>
 
-            <p-button
-              label="Request to Rent"
-              icon="pi pi-send"
-              iconPos="right"
-              [fluid]="true"
-              size="large"
-              class="rent-cta"
-              [disabled]="!isAvailable"
-            />
-
-            @if (!isAvailable) {
-              <p class="cta-note cta-note--warn">
-                <i class="pi pi-info-circle"></i>
-                This property is not currently available for rent.
-              </p>
+            @if (showDeedButton) {
+              <p-button
+                label="View Deed"
+                icon="pi pi-file"
+                iconPos="right"
+                [fluid]="true"
+                size="large"
+                severity="secondary"
+                [disabled]="!deedUrl()"
+                (onClick)="openDeed()"
+              />
+              @if (!deedUrl()) {
+                <p class="cta-note cta-note--warn">
+                  <i class="pi pi-info-circle"></i>
+                  No deed document attached to this property.
+                </p>
+              }
             } @else {
-              <p class="cta-note">
-                <i class="pi pi-lock"></i>
-                Login and complete verification to submit a proposal.
-              </p>
+              <p-button
+                label="Request to Rent"
+                icon="pi pi-send"
+                iconPos="right"
+                [fluid]="true"
+                size="large"
+                class="rent-cta"
+                [disabled]="!isAvailable"
+              />
+
+              @if (!isAvailable) {
+                <p class="cta-note cta-note--warn">
+                  <i class="pi pi-info-circle"></i>
+                  This property is not currently available for rent.
+                </p>
+              } @else {
+                <p class="cta-note">
+                  <i class="pi pi-lock"></i>
+                  Login and complete verification to submit a proposal.
+                </p>
+              }
             }
 
           </div>

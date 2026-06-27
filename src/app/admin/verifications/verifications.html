@@ -1,21 +1,9 @@
 <div class="verification-content">
   @if (section() === 'property') {
-    <div class="placeholder">
-      <i class="pi pi-building"></i>
-      <p class="label">Properties</p>
-      <p class="hint">Content coming soon.</p>
-    </div>
+    <app-property-verifications />
   } @else if (section() === 'user') {
-    <div class="placeholder">
-      <i class="pi pi-verified"></i>
-      <p class="label">Users</p>
-      <p class="hint">Content coming soon.</p>
-    </div>
+    <app-user-verifications />
   } @else if (section() === 'lease') {
-    <div class="placeholder">
-      <i class="pi pi-file-check"></i>
-      <p class="label">Leases</p>
-      <p class="hint">Content coming soon.</p>
-    </div>
+    <app-lease-verifications />
   }
 </div>

@@ -118,4 +118,18 @@ export class PropertyService {
   removeDocument(propertyId: number, documentId: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${propertyId}/documents/${documentId}`, WITH_CREDENTIALS);
   }
+
+  /** GET /api/property/pending-verification — Admin only. */
+  getPendingVerification(): Observable<PropertyDetail[]> {
+    return this.http.get<PropertyDetail[]>(`${this.baseUrl}/pending-verification`, WITH_CREDENTIALS);
+  }
+
+  /** PUT /api/property/{id}/verify?approve=true|false — Admin only. */
+  verifyProperty(id: number, approve: boolean, remarks?: string): Observable<PropertyDetail> {
+    return this.http.put<PropertyDetail>(
+      `${this.baseUrl}/${id}/verify?approve=${approve}`,
+      { remarks: remarks ?? null },
+      WITH_CREDENTIALS,
+    );
+  }
 }

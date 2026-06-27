@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, OnChanges, Input, signal, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { CarouselModule } from 'primeng/carousel';
@@ -24,7 +24,11 @@ import { PropertyImage } from '../shared/property-card/property-card';
   templateUrl: './property-detail.html',
   styleUrl: './property-detail.css',
 })
-export class PropertyDetailComponent implements OnInit {
+export class PropertyDetailComponent implements OnInit, OnChanges {
+  @Input() propertyId: number | null = null;
+  @Input() embedded = false;
+  @Input() showDeedButton = false;
+
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private propertyService = inject(PropertyService);
@@ -32,6 +36,7 @@ export class PropertyDetailComponent implements OnInit {
   property = signal<PropertyDetail | null>(null);
   notFound = signal(false);
   loading = signal(true);
+  deedUrl = signal<string | null>(null);
 
   get images(): PropertyImage[] {
     const p = this.property();
@@ -100,23 +105,51 @@ export class PropertyDetailComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const idParam = this.route.snapshot.paramMap.get('id');
-    const id = idParam ? parseInt(idParam, 10) : NaN;
-    if (isNaN(id)) {
+    this.loadProperty();
+  }
+
+  ngOnChanges(): void {
+    if (this.propertyId !== null) {
+      this.loadProperty();
+    }
+  }
+
+  private loadProperty(): void {
+    const id = this.propertyId ?? (() => {
+      const param = this.route.snapshot.paramMap.get('id');
+      return param ? parseInt(param, 10) : NaN;
+    })();
+    if (isNaN(id as number)) {
       this.notFound.set(true);
       this.loading.set(false);
       return;
     }
-    this.propertyService.getById(id).subscribe({
+    this.loading.set(true);
+    this.notFound.set(false);
+    this.deedUrl.set(null);
+    this.propertyService.getById(id as number).subscribe({
       next: (found) => {
         this.property.set(found);
         this.loading.set(false);
+        if (this.showDeedButton) {
+          this.propertyService.getDocuments(id as number).subscribe({
+            next: (docs) => {
+              const deed = docs.find((d) => d.documentTypeId === 2 && d.documentUrl);
+              this.deedUrl.set(deed?.documentUrl ?? null);
+            },
+          });
+        }
       },
       error: () => {
         this.notFound.set(true);
         this.loading.set(false);
       },
     });
+  }
+
+  openDeed(): void {
+    const url = this.deedUrl();
+    if (url) window.open(url, '_blank', 'noopener');
   }
 
   goBack(): void {
