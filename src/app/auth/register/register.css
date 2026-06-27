@@ -1,0 +1,315 @@
+/* ── Layout ─────────────────────────────────────────────────── */
+
+.auth-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100vh;
+}
+
+/* ── Left: Hero Panel ───────────────────────────────────────── */
+
+.hero-panel {
+  position: relative;
+  background-color: var(--p-blue-950);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding: 3rem;
+}
+
+.hero-grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--p-blue-400) 10%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--p-blue-400) 10%, transparent) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.hero-ghost {
+  position: absolute;
+  bottom: -3rem;
+  right: -3rem;
+  font-size: 22rem;
+  line-height: 1;
+  color: var(--p-blue-400);
+  opacity: 0.07;
+  pointer-events: none;
+  user-select: none;
+  animation: float 8s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-16px); }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  max-width: 440px;
+}
+
+.hero-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.hero-brand-icon {
+  font-size: 1.6rem;
+  color: var(--p-yellow-300);
+}
+
+.hero-wordmark {
+  font-size: 1.1rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--p-surface-0);
+  opacity: 0.9;
+}
+
+.hero-wordmark strong {
+  font-weight: 700;
+}
+
+.hero-headline {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--p-surface-0);
+  margin: 0;
+}
+
+.hero-highlight {
+  color: var(--p-yellow-300);
+  font-style: italic;
+}
+
+.hero-desc {
+  margin: 0.75rem 0 0;
+  color: var(--p-blue-200);
+  line-height: 1.6;
+}
+
+.hero-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.hero-feature {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--p-blue-100);
+}
+
+.hero-feature-icon {
+  color: var(--p-primary-400);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* ── Right: Form Panel ───────────────────────────────────────── */
+
+.form-panel {
+  background-color: var(--p-content-background);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 3rem 2rem;
+  overflow-y: auto;
+}
+
+.form-container {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+}
+
+.form-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--p-surface-900);
+  letter-spacing: -0.02em;
+}
+
+.form-subtitle {
+  margin: 0;
+  color: var(--p-text-muted-color);
+}
+
+/* Mobile brand (hidden on desktop) */
+.form-mobile-brand {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--p-blue-800);
+  margin-bottom: 2rem;
+}
+
+.form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Fields */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.field-label {
+  font-weight: 500;
+  color: var(--p-surface-700);
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.field input[pInputText] {
+  width: 100%;
+}
+
+.field-error {
+  color: var(--p-red-500);
+  margin-top: 0.25rem;
+  display: block;
+  animation: fadeSlideIn 0.15s ease-out;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.role-select {
+  width: 100%;
+  display: flex;
+}
+
+.password-hints {
+  padding-left: 1rem;
+  margin: 0.5rem 0 0;
+  color: var(--p-text-muted-color);
+}
+
+.password-hints li {
+  margin-bottom: 0.25rem;
+}
+
+/* Login link */
+.login-link {
+  text-align: center;
+  color: var(--p-text-muted-color);
+  margin: 0;
+}
+
+.login-link a {
+  color: var(--p-primary-color);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.login-link a:hover {
+  text-decoration: underline;
+}
+
+/* ── Deep overrides ─────────────────────────────────────────── */
+
+:host ::ng-deep .p-password {
+  width: 100%;
+}
+
+:host ::ng-deep .p-selectbutton {
+  width: 100%;
+  display: flex;
+}
+
+:host ::ng-deep .p-selectbutton .p-togglebutton {
+  flex: 1;
+}
+
+:host ::ng-deep .p-selectbutton .p-togglebutton:not(.p-togglebutton-checked),
+:host ::ng-deep .p-selectbutton .p-togglebutton:not(.p-togglebutton-checked) .p-togglebutton-content {
+  background: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
+  border-color: color-mix(in srgb, var(--p-primary-color) 30%, transparent);
+  color: var(--p-primary-color);
+}
+
+:host ::ng-deep .p-selectbutton .p-togglebutton:not(.p-togglebutton-checked):hover,
+:host ::ng-deep .p-selectbutton .p-togglebutton:not(.p-togglebutton-checked):hover .p-togglebutton-content {
+  background: color-mix(in srgb, var(--p-primary-color) 15%, transparent);
+  border-color: color-mix(in srgb, var(--p-primary-color) 45%, transparent);
+  color: var(--p-primary-color);
+}
+
+:host ::ng-deep .p-selectbutton .p-togglebutton.p-togglebutton-checked,
+:host ::ng-deep .p-selectbutton .p-togglebutton.p-togglebutton-checked .p-togglebutton-content {
+  background: var(--p-primary-color);
+  border-color: var(--p-primary-color);
+  color: var(--p-primary-contrast-color);
+}
+
+:host ::ng-deep .p-selectbutton .p-togglebutton.p-togglebutton-checked:hover,
+:host ::ng-deep .p-selectbutton .p-togglebutton.p-togglebutton-checked:hover .p-togglebutton-content {
+  background: var(--p-primary-hover-color);
+  border-color: var(--p-primary-hover-color);
+  color: var(--p-primary-contrast-color);
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .auth-split {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .hero-panel {
+    display: none;
+  }
+
+  .form-panel {
+    overflow-y: visible;
+    justify-content: flex-start;
+    padding-top: 3rem;
+  }
+
+  .form-mobile-brand {
+    display: flex;
+  }
+}

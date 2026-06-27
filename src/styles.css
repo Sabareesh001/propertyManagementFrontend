@@ -1,0 +1,12 @@
+/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&display=swap');
+@import "primeicons/primeicons.css";
+
+@layer tailwind-base, primeng, tailwind-utilities;
+
+body {
+  background-color: var(--p-surface-800);
+  min-height: 100vh;
+  font-family: var(--p-font-family, sans-serif);
+  margin: 0;
+}

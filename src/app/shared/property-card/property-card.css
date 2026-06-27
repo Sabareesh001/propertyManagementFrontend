@@ -1,0 +1,249 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+/* ── Card shell ── */
+.prop-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  border-left: 4px solid var(--avail-color, var(--p-content-border-color));
+  border-radius: 10px;
+  overflow: hidden;
+  transition: box-shadow 0.22s ease, transform 0.22s ease;
+  animation: card-enter 0.3s ease both;
+  cursor: pointer;
+}
+
+.prop-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px color-mix(in srgb, var(--p-text-color) 9%, transparent);
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* availability stripe color via CSS custom property */
+.avail-available   { --avail-color: var(--p-green-500); }
+.avail-occupied    { --avail-color: var(--p-orange-400); }
+.avail-unavailable { --avail-color: var(--p-red-400); }
+.avail-unknown     { --avail-color: var(--p-surface-400); }
+
+/* ── Image zone ── */
+.prop-image {
+  position: relative;
+  height: 216px;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--p-content-hover-background);
+}
+
+.prop-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.45s ease;
+}
+
+.prop-card:hover .prop-img {
+  transform: scale(1.04);
+}
+
+.prop-img-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--p-content-hover-background);
+}
+
+.placeholder-icon {
+  font-size: 3rem;
+  color: var(--p-surface-400);
+}
+
+/* bottom gradient overlay — address lives here */
+.image-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 52%);
+  display: flex;
+  align-items: flex-end;
+  padding: 0.875rem 1rem;
+  pointer-events: none;
+}
+
+.address-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.address-line i {
+  margin-top: 2px;
+  flex-shrink: 0;
+  color: var(--avail-color, rgba(255, 255, 255, 0.7));
+}
+
+/* availability pill — top-left of image */
+.avail-pill {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.625rem 0.25rem 0.5rem;
+  background: rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(6px);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.avail-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--avail-color, rgba(255, 255, 255, 0.6));
+  flex-shrink: 0;
+}
+
+/* verification chip — top-right of image */
+.verify-chip {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(6px);
+}
+
+.chip-pending {
+  background: color-mix(in srgb, var(--p-yellow-500) 82%, transparent);
+  color: var(--p-surface-900);
+}
+
+.chip-verified {
+  background: color-mix(in srgb, var(--p-green-500) 82%, transparent);
+  color: var(--p-surface-0);
+}
+
+.chip-rejected {
+  background: color-mix(in srgb, var(--p-red-500) 82%, transparent);
+  color: var(--p-surface-0);
+}
+
+/* ── Body ── */
+.prop-body {
+  flex: 1;
+  padding: 1rem 1.125rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.prop-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
+/* ── Price ── */
+.prop-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.1rem;
+  margin: 0.125rem 0;
+}
+
+.price-amount {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--p-primary-color);
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.price-period {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--p-text-muted-color);
+}
+
+/* ── Secondary stats ── */
+.prop-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--p-content-border-color);
+  margin-top: auto;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--p-text-muted-color);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.stat-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+.stat-sep {
+  width: 1px;
+  height: 2rem;
+  background: var(--p-content-border-color);
+  flex-shrink: 0;
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .prop-card,
+  .prop-img {
+    animation: none;
+    transition: none;
+  }
+}

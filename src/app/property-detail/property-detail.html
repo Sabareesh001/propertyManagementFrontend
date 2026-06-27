@@ -1,0 +1,183 @@
+<div class="detail-page">
+
+  <!-- Back navigation -->
+  <div class="detail-nav">
+    <p-button
+      icon="pi pi-arrow-left"
+      label="Back to Listings"
+      severity="secondary"
+      [text]="true"
+      size="small"
+      (onClick)="goBack()"
+    />
+  </div>
+
+  <!-- Not found -->
+  @if (notFound()) {
+    <div class="not-found">
+      <i class="pi pi-building not-found-icon"></i>
+      <h2 class="not-found-title">Property Not Found</h2>
+      <p class="not-found-sub">This property doesn't exist or has been removed.</p>
+      <p-button label="Back to Listings" icon="pi pi-arrow-left" (onClick)="goBack()" />
+    </div>
+  }
+
+  <!-- Property detail -->
+  @if (!notFound() && property()) {
+    <div class="detail-content">
+
+      <!-- Header: title, address, badges -->
+      <div class="detail-header">
+        <div class="badges-row">
+          <span class="status-badge" [class]="availabilityClass">
+            <span class="badge-dot"></span>
+            {{ availabilityLabel }}
+          </span>
+          @if (showVerification) {
+            <span class="status-badge" [class]="verificationClass">
+              <i [class]="verificationIcon"></i>
+              {{ verificationLabel }}
+            </span>
+          }
+        </div>
+
+        <h1 class="detail-title">{{ property()!.title }}</h1>
+
+        <div class="detail-address">
+          <i class="pi pi-map-marker"></i>
+          <span>{{ property()!.addressLine }}</span>
+        </div>
+      </div>
+
+      <!-- Image carousel -->
+      <div class="gallery-wrap">
+        @if (images.length > 0) {
+          <p-carousel
+            [value]="images"
+            [numVisible]="1"
+            [numScroll]="1"
+            [circular]="images.length > 1"
+            [showIndicators]="images.length > 1"
+            [showNavigators]="images.length > 1"
+            [autoplayInterval]="images.length > 1 ? 4000 : 0"
+          >
+            <ng-template #item let-img>
+              <div class="carousel-slide">
+                <img
+                  [src]="img.imageUrl"
+                  [alt]="img.description || property()!.title"
+                  class="gallery-img"
+                />
+              </div>
+            </ng-template>
+          </p-carousel>
+        } @else {
+          <div class="gallery-placeholder">
+            <i class="pi pi-building gallery-placeholder-icon"></i>
+            <span class="gallery-placeholder-text">No images available</span>
+          </div>
+        }
+      </div>
+
+      <!-- Two-column body -->
+      <div class="detail-body">
+
+        <!-- Main: description + property details -->
+        <section class="detail-main">
+
+          @if (property()!.description) {
+            <div class="detail-section">
+              <h2 class="section-heading">About this Property</h2>
+              <p class="detail-description">{{ property()!.description }}</p>
+            </div>
+          }
+
+          <div class="detail-section">
+            <h2 class="section-heading">Property Details</h2>
+            <div class="info-list">
+              <div class="info-row">
+                <span class="info-icon-wrap"><i class="pi pi-calendar"></i></span>
+                <span class="info-label">Listed on</span>
+                <span class="info-value">{{ formatDate(property()!.createdAt) }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-icon-wrap"><i class="pi pi-map-marker"></i></span>
+                <span class="info-label">Address</span>
+                <span class="info-value">{{ property()!.addressLine }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-icon-wrap"><i class="pi pi-tag"></i></span>
+                <span class="info-label">Availability</span>
+                <span class="info-value">{{ availabilityLabel }}</span>
+              </div>
+              @if (showVerification) {
+                <div class="info-row">
+                  <span class="info-icon-wrap"><i class="pi pi-shield"></i></span>
+                  <span class="info-label">Verification</span>
+                  <span class="info-value">{{ verificationLabel }}</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          @if (property()!.remarks) {
+            <div class="detail-section">
+              <h2 class="section-heading">Admin Remarks</h2>
+              <p class="detail-remarks">{{ property()!.remarks }}</p>
+            </div>
+          }
+
+        </section>
+
+        <!-- Sidebar: pricing + CTA -->
+        <aside class="detail-sidebar">
+          <div class="pricing-card">
+
+            <div class="price-hero">
+              <span class="price-main">{{ formatCurrency(property()!.monthlyRent) }}</span>
+              <span class="price-period">&thinsp;/ month</span>
+            </div>
+
+            <p-divider />
+
+            <div class="price-breakdown">
+              <div class="price-row">
+                <span class="price-label">Upfront Payment</span>
+                <span class="price-val">{{ formatCurrency(property()!.upfrontPayment) }}</span>
+              </div>
+              <div class="price-row">
+                <span class="price-label">Security Deposit</span>
+                <span class="price-val">{{ formatCurrency(property()!.securityDeposit) }}</span>
+              </div>
+            </div>
+
+            <p-button
+              label="Request to Rent"
+              icon="pi pi-send"
+              iconPos="right"
+              [fluid]="true"
+              size="large"
+              class="rent-cta"
+              [disabled]="!isAvailable"
+            />
+
+            @if (!isAvailable) {
+              <p class="cta-note cta-note--warn">
+                <i class="pi pi-info-circle"></i>
+                This property is not currently available for rent.
+              </p>
+            } @else {
+              <p class="cta-note">
+                <i class="pi pi-lock"></i>
+                Login and complete verification to submit a proposal.
+              </p>
+            }
+
+          </div>
+        </aside>
+
+      </div>
+    </div>
+  }
+
+</div>

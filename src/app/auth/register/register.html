@@ -1,0 +1,172 @@
+<div class="auth-split">
+
+  <!-- LEFT: Brand hero panel -->
+  <div class="hero-panel">
+    <div class="hero-grid-overlay"></div>
+
+    <div class="hero-content">
+      <div class="hero-brand">
+        <i class="pi pi-building hero-brand-icon"></i>
+        <span class="hero-wordmark">Prop<strong>Manager</strong></span>
+      </div>
+
+      <div class="hero-copy">
+        <h2 class="hero-headline">
+          Your properties.<br>
+          Your tenants.<br>
+          <span class="hero-highlight">One place.</span>
+        </h2>
+        <p class="hero-desc">
+          The complete platform for managing rentals — from listing to lease to payment.
+        </p>
+      </div>
+
+      <ul class="hero-features">
+        <li class="hero-feature">
+          <i class="pi pi-home hero-feature-icon"></i>
+          <span>Verified property listings</span>
+        </li>
+        <li class="hero-feature">
+          <i class="pi pi-file hero-feature-icon"></i>
+          <span>End-to-end lease management</span>
+        </li>
+        <li class="hero-feature">
+          <i class="pi pi-shield hero-feature-icon"></i>
+          <span>Secure payment tracking</span>
+        </li>
+      </ul>
+    </div>
+
+    <i class="pi pi-building hero-ghost"></i>
+  </div>
+
+  <!-- RIGHT: Form panel -->
+  <div class="form-panel">
+    <div class="form-mobile-brand">
+      <i class="pi pi-building"></i>
+      <span>PropManager</span>
+    </div>
+
+    <div class="form-container">
+      <div class="form-header">
+        <h1 class="form-title">Create your account</h1>
+        <p class="form-subtitle">Join PropManager to find or list properties</p>
+      </div>
+
+      @if (successMessage) {
+        <p-message severity="success" [text]="successMessage" styleClass="w-full" />
+      }
+
+      @if (errorMessage) {
+        <p-message severity="error" [text]="errorMessage" styleClass="w-full" />
+      }
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="form-body">
+        <!-- Role selection -->
+        <div class="field">
+          <label class="field-label">I want to</label>
+          <p-selectbutton
+            formControlName="roleId"
+            [options]="roleOptions"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="role-select"
+          />
+        </div>
+
+        <p-divider />
+
+        <!-- Name row -->
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label" for="firstName">First Name</label>
+            <input pInputText id="firstName" formControlName="firstName" autocomplete="given-name" />
+            @if (fieldError('firstName')) {
+              <small class="field-error">{{ fieldError('firstName') }}</small>
+            }
+          </div>
+          <div class="field">
+            <label class="field-label" for="lastName">Last Name</label>
+            <input pInputText id="lastName" formControlName="lastName" autocomplete="family-name" />
+            @if (fieldError('lastName')) {
+              <small class="field-error">{{ fieldError('lastName') }}</small>
+            }
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="field">
+          <label class="field-label" for="email">Email Address</label>
+          <input pInputText id="email" formControlName="email" type="email" autocomplete="email" class="w-full" />
+          @if (fieldError('email')) {
+            <small class="field-error">{{ fieldError('email') }}</small>
+          }
+        </div>
+
+        <!-- Phone -->
+        <div class="field">
+          <label class="field-label" for="phone">Phone Number</label>
+          <input pInputText id="phone" formControlName="phone" type="tel" autocomplete="tel" class="w-full" />
+          @if (fieldError('phone')) {
+            <small class="field-error">{{ fieldError('phone') }}</small>
+          }
+        </div>
+
+        <!-- Date of Birth -->
+        <div class="field">
+          <label class="field-label" for="dateOfBirth">Date of Birth</label>
+          <p-datepicker
+            inputId="dateOfBirth"
+            formControlName="dateOfBirth"
+            [maxDate]="maxDob"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            appendTo="body"
+            [fluid]="true"
+          />
+          @if (fieldError('dateOfBirth')) {
+            <small class="field-error">{{ fieldError('dateOfBirth') }}</small>
+          }
+        </div>
+
+        <!-- Password -->
+        <div class="field">
+          <label class="field-label" for="password">Password</label>
+          <p-password
+            inputId="password"
+            formControlName="password"
+            [toggleMask]="true"
+            autocomplete="new-password"
+            [fluid]="true"
+          >
+            <ng-template pTemplate="footer">
+              <p-divider />
+              <ul class="password-hints">
+                <li>At least 12 characters</li>
+                <li>Uppercase &amp; lowercase letters</li>
+                <li>At least one digit</li>
+                <li>At least one special character</li>
+              </ul>
+            </ng-template>
+          </p-password>
+          @if (fieldError('password')) {
+            <small class="field-error">{{ fieldError('password') }}</small>
+          }
+        </div>
+
+        <p-button
+          type="submit"
+          label="Create Account"
+          icon="pi pi-user-plus"
+          [loading]="loading"
+          [fluid]="true"
+        />
+      </form>
+
+      <p class="login-link">
+        Already have an account?&nbsp;<a routerLink="/auth/login">Sign in</a>
+      </p>
+    </div>
+  </div>
+
+</div>

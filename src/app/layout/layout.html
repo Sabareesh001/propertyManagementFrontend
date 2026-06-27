@@ -1,0 +1,73 @@
+<div class="layout">
+  <header class="topbar">
+    <!-- Mobile hamburger -->
+    <p-button
+      class="menu-toggle"
+      icon="pi pi-bars"
+      severity="secondary"
+      [text]="true"
+      (onClick)="drawerVisible = true"
+    />
+
+    <div class="topbar-logo">
+      <span class="logo-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+        </svg>
+      </span>
+      <span class="logo-text">PropManage</span>
+    </div>
+
+    <!-- Desktop tabs -->
+    <p-tabs value="0" class="topbar-tabs">
+      <p-tablist>
+        <p-tab value="0"><i class="pi pi-home"></i> Dashboard</p-tab>
+        <p-tab value="1"><i class="pi pi-building"></i> My Properties</p-tab>
+      </p-tablist>
+    </p-tabs>
+
+    <div class="topbar-profile">
+      <p-button
+        [icon]="themeService.isDark() ? 'pi pi-sun' : 'pi pi-moon'"
+        severity="secondary"
+        [text]="true"
+        size="large"
+        [rounded]="true"
+        (onClick)="themeService.toggle()"
+        [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+      />
+      <p-splitbutton
+        label="Profile"
+        icon="pi pi-user"
+        [model]="profileMenuItems"
+        severity="secondary"
+        size="large"
+      />
+    </div>
+  </header>
+
+  <!-- Mobile drawer -->
+  <p-drawer [(visible)]="drawerVisible" header="Menu" position="left" styleClass="mobile-drawer">
+    <nav class="drawer-nav">
+      @for (item of navItems; track item.label) {
+        <button class="drawer-nav-item" (click)="drawerVisible = false">
+          <i [class]="item.icon"></i>
+          <span>{{ item.label }}</span>
+        </button>
+      }
+    </nav>
+    <div class="drawer-footer">
+      <p-button
+        label="Logout"
+        icon="pi pi-sign-out"
+        severity="danger"
+        [text]="true"
+        (onClick)="logout()"
+      />
+    </div>
+  </p-drawer>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

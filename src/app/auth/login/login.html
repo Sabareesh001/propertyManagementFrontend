@@ -1,0 +1,99 @@
+<div class="auth-split">
+
+  <!-- LEFT: Brand hero panel -->
+  <div class="hero-panel">
+    <div class="hero-grid-overlay"></div>
+
+    <div class="hero-content">
+      <div class="hero-brand">
+        <i class="pi pi-building hero-brand-icon"></i>
+        <span class="hero-wordmark">Prop<strong>Manager</strong></span>
+      </div>
+
+      <div class="hero-copy">
+        <h2 class="hero-headline">
+          Your properties.<br>
+          Your tenants.<br>
+          <span class="hero-highlight">One place.</span>
+        </h2>
+        <p class="hero-desc">
+          The complete platform for managing rentals — from listing to lease to payment.
+        </p>
+      </div>
+
+      <ul class="hero-features">
+        <li class="hero-feature">
+          <i class="pi pi-home hero-feature-icon"></i>
+          <span>Verified property listings</span>
+        </li>
+        <li class="hero-feature">
+          <i class="pi pi-file hero-feature-icon"></i>
+          <span>End-to-end lease management</span>
+        </li>
+        <li class="hero-feature">
+          <i class="pi pi-shield hero-feature-icon"></i>
+          <span>Secure payment tracking</span>
+        </li>
+      </ul>
+    </div>
+
+    <i class="pi pi-building hero-ghost"></i>
+  </div>
+
+  <!-- RIGHT: Form panel -->
+  <div class="form-panel">
+    <div class="form-mobile-brand">
+      <i class="pi pi-building"></i>
+      <span>PropManager</span>
+    </div>
+
+    <div class="form-container">
+      <div class="form-header">
+        <h1 class="form-title">Welcome back</h1>
+        <p class="form-subtitle">Sign in to your account to continue</p>
+      </div>
+
+      @if (errorMessage$ | async; as err) {
+        <p-message severity="error" [text]="err" styleClass="w-full" />
+      }
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="form-body">
+        <div class="field">
+          <label class="field-label" for="email">Email Address</label>
+          <input pInputText id="email" formControlName="email" type="email" autocomplete="email" class="w-full" />
+          @if (fieldError('email')) {
+            <small class="field-error">{{ fieldError('email') }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="password">Password</label>
+          <p-password
+            inputId="password"
+            formControlName="password"
+            [toggleMask]="true"
+            [feedback]="false"
+            autocomplete="current-password"
+            [fluid]="true"
+          />
+          @if (fieldError('password')) {
+            <small class="field-error">{{ fieldError('password') }}</small>
+          }
+        </div>
+
+        <p-button
+          type="submit"
+          label="Sign In"
+          icon="pi pi-sign-in"
+          [loading]="(loading$ | async) ?? false"
+          [fluid]="true"
+        />
+      </form>
+
+      <p class="register-link">
+        Don't have an account?&nbsp;<a routerLink="/auth/register">Create one</a>
+      </p>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,411 @@
+:host {
+  display: block;
+}
+
+.detail-page {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+/* ── Back nav ── */
+.detail-nav {
+  margin-bottom: 1.5rem;
+}
+
+/* ── Not found ── */
+.not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.875rem;
+  padding: 5rem 1rem;
+  text-align: center;
+}
+
+.not-found-icon {
+  font-size: 3.5rem;
+  color: var(--p-surface-400);
+}
+
+.not-found-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--p-text-color);
+}
+
+.not-found-sub {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--p-text-muted-color);
+}
+
+/* ── Header ── */
+.detail-header {
+  margin-bottom: 1.5rem;
+}
+
+.badges-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.875rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+/* availability colours */
+.badge-available {
+  background: color-mix(in srgb, var(--p-green-500) 14%, transparent);
+  color: var(--p-green-600);
+  border: 1px solid color-mix(in srgb, var(--p-green-500) 30%, transparent);
+}
+.badge-occupied {
+  background: color-mix(in srgb, var(--p-orange-400) 14%, transparent);
+  color: var(--p-orange-600);
+  border: 1px solid color-mix(in srgb, var(--p-orange-400) 30%, transparent);
+}
+.badge-unavailable {
+  background: color-mix(in srgb, var(--p-red-400) 14%, transparent);
+  color: var(--p-red-600);
+  border: 1px solid color-mix(in srgb, var(--p-red-400) 30%, transparent);
+}
+.badge-unknown {
+  background: var(--p-content-hover-background);
+  color: var(--p-text-muted-color);
+  border: 1px solid var(--p-content-border-color);
+}
+
+/* verification colours */
+.badge-pending {
+  background: color-mix(in srgb, var(--p-yellow-400) 15%, transparent);
+  color: var(--p-yellow-700);
+  border: 1px solid color-mix(in srgb, var(--p-yellow-400) 30%, transparent);
+}
+.badge-verified {
+  background: color-mix(in srgb, var(--p-blue-500) 12%, transparent);
+  color: var(--p-blue-600);
+  border: 1px solid color-mix(in srgb, var(--p-blue-500) 25%, transparent);
+}
+.badge-rejected {
+  background: color-mix(in srgb, var(--p-red-500) 12%, transparent);
+  color: var(--p-red-600);
+  border: 1px solid color-mix(in srgb, var(--p-red-500) 25%, transparent);
+}
+
+.detail-title {
+  margin: 0 0 0.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--p-text-color);
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.detail-address {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  color: var(--p-text-muted-color);
+  font-size: 0.9375rem;
+}
+
+.detail-address i {
+  margin-top: 3px;
+  flex-shrink: 0;
+  color: var(--p-primary-color);
+}
+
+/* ── Gallery ── */
+.gallery-wrap {
+  margin-bottom: 2.5rem;
+  border-radius: 14px;
+  background: var(--p-surface-ground);
+}
+
+.carousel-slide {
+  width: 100%;
+}
+
+.gallery-img {
+  width: 100%;
+  height: 480px;
+  object-fit: cover;
+  display: block;
+  border-radius: 14px;
+}
+
+/* override carousel internals so image fills edge-to-edge */
+:host ::ng-deep .p-carousel-content,
+:host ::ng-deep .p-carousel-items-content,
+:host ::ng-deep .p-carousel-items-container,
+:host ::ng-deep .p-carousel-item {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+:host ::ng-deep .p-carousel-item {
+  flex: 0 0 100% !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+:host ::ng-deep .p-carousel-indicators {
+  padding: 0.75rem 0 0.5rem;
+  gap: 0.4rem;
+}
+
+:host ::ng-deep .p-carousel-indicator button {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--p-content-border-color);
+  transition: background 0.2s, width 0.2s;
+}
+
+:host ::ng-deep .p-carousel-indicator.p-carousel-indicator-active button {
+  width: 22px;
+  border-radius: 4px;
+  background: var(--p-primary-color);
+}
+
+.gallery-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  height: 340px;
+  background: var(--p-content-hover-background);
+}
+
+.gallery-placeholder-icon {
+  font-size: 4rem;
+  color: var(--p-surface-400);
+}
+
+.gallery-placeholder-text {
+  font-size: 0.9375rem;
+  color: var(--p-text-muted-color);
+}
+
+/* ── Two-column body ── */
+.detail-body {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+/* ── Main content ── */
+.detail-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.section-heading {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+  padding-bottom: 0.625rem;
+  border-bottom: 1px solid var(--p-content-border-color);
+}
+
+.detail-description {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: var(--p-text-color);
+}
+
+.detail-remarks {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--p-text-muted-color);
+  font-style: italic;
+}
+
+/* ── Info list ── */
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: 28px 130px 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--p-content-border-color);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--p-primary-color);
+  font-size: 0.9rem;
+}
+
+.info-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--p-text-muted-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.info-value {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--p-text-color);
+}
+
+/* ── Sidebar ── */
+.detail-sidebar {
+  position: sticky;
+  top: 1.5rem;
+}
+
+.pricing-card {
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 14px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 4px 24px color-mix(in srgb, var(--p-text-color) 6%, transparent);
+}
+
+.price-hero {
+  display: flex;
+  align-items: baseline;
+  gap: 0.1rem;
+}
+
+.price-main {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--p-primary-color);
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.price-period {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--p-text-muted-color);
+}
+
+.price-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.price-label {
+  font-size: 0.8125rem;
+  color: var(--p-text-muted-color);
+}
+
+.price-val {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+.rent-cta {
+  margin-top: 0.25rem;
+}
+
+.cta-note {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+  line-height: 1.5;
+}
+
+.cta-note i {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.cta-note--warn {
+  color: var(--p-orange-600);
+}
+
+/* ── Responsive ── */
+@media (max-width: 840px) {
+  .detail-body {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-sidebar {
+    position: static;
+    order: -1;
+  }
+
+  .detail-title {
+    font-size: 1.5rem;
+  }
+
+  .gallery-img {
+    height: 260px;
+  }
+}
+
+@media (max-width: 480px) {
+  .detail-page {
+    padding: 1rem 0.875rem 2rem;
+  }
+
+  .detail-title {
+    font-size: 1.25rem;
+  }
+}

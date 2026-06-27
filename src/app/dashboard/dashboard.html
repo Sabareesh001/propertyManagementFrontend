@@ -1,0 +1,32 @@
+<div class="dashboard-container">
+  <div class="listings-header">
+    <h2 class="section-title">Property Listings</h2>
+    <p-iconfield>
+      <p-inputicon styleClass="pi pi-search" />
+      <input
+        pInputText
+        type="text"
+        placeholder="Search by title or location…"
+        class="search-input"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+      />
+    </p-iconfield>
+  </div>
+
+  @if (filteredProperties().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-search empty-icon"></i>
+      <p class="empty-text">No properties match "<strong>{{ searchQuery() }}</strong>"</p>
+    </div>
+  } @else {
+    <div class="property-grid">
+      @for (property of filteredProperties(); track property.id) {
+        <app-property-card [property]="property" />
+      }
+    </div>
+  }
+</div>
+
+<p-scrolltop size="large" [threshold]="400" />
+

@@ -1,0 +1,65 @@
+<article class="prop-card" [class]="availabilityClass" (click)="viewProperty()">
+
+  <!-- ── Image zone ── -->
+  <div class="prop-image">
+    @if (thumbnailUrl) {
+      <img [src]="thumbnailUrl" [alt]="property.title" class="prop-img" />
+    } @else {
+      <div class="prop-img-placeholder">
+        <i class="pi pi-building placeholder-icon"></i>
+      </div>
+    }
+
+    <!-- bottom gradient + address -->
+    <div class="image-overlay">
+      <div class="address-line">
+        <i class="pi pi-map-marker"></i>
+        <span>{{ property.addressLine }}</span>
+      </div>
+    </div>
+
+    <!-- availability dot label (top-left) -->
+    <div class="avail-pill">
+      <span class="avail-dot"></span>
+      <span class="avail-label">{{ availabilityLabel }}</span>
+    </div>
+
+    <!-- verification chip (top-right) -->
+    @if (showVerificationChip) {
+      <div class="verify-chip" [class]="verifyChipClass">
+        <i [class]="verificationIcon"></i>
+        <span>{{ verificationLabel }}</span>
+      </div>
+    }
+  </div>
+
+  <!-- ── Body ── -->
+  <div class="prop-body">
+    <h3
+      class="prop-title"
+      [pTooltip]="property.title.length > 36 ? property.title : ''"
+      tooltipPosition="top"
+    >
+      {{ property.title }}
+    </h3>
+
+    <div class="prop-price">
+      <span class="price-amount">{{ formatCurrency(property.monthlyRent) }}</span>
+      <span class="price-period">&thinsp;/ month</span>
+    </div>
+
+    <div class="prop-stats">
+      <div class="stat">
+        <span class="stat-label">Upfront</span>
+        <span class="stat-value">{{ formatCurrency(property.upfrontPayment) }}</span>
+      </div>
+      <div class="stat-sep"></div>
+      <div class="stat">
+        <span class="stat-label">Deposit</span>
+        <span class="stat-value">{{ formatCurrency(property.securityDeposit) }}</span>
+      </div>
+    </div>
+  </div>
+
+
+</article>
