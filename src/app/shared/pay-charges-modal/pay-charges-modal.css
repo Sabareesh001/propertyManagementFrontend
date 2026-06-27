@@ -1,0 +1,190 @@
+:host ::ng-deep .pay-charges-dialog {
+  width: 34rem;
+  max-width: calc(100vw - 2rem);
+}
+
+.no-charges {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  color: var(--p-text-muted-color);
+}
+
+.no-charges-icon {
+  font-size: 2rem;
+  color: var(--p-green-500);
+}
+
+.no-charges-text {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.section-label {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+.allocation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.allocation-row {
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  transition: border-color 0.15s;
+}
+
+.allocation-row.selected {
+  border-color: var(--p-primary-color);
+}
+
+.allocation-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.allocation-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.allocation-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+.allocation-meta {
+  font-size: 0.8125rem;
+  color: var(--p-text-muted-color);
+}
+
+.allocation-desc {
+  font-size: 0.8125rem;
+  color: var(--p-text-muted-color);
+  overflow-wrap: break-word;
+}
+
+.allocation-amount {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--p-content-border-color);
+}
+
+.field-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+.field-error {
+  font-size: 0.75rem;
+  color: var(--p-red-500);
+}
+
+.total-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--p-content-hover-background);
+}
+
+.total-label {
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+}
+
+.total-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--p-text-color);
+}
+
+/* ── Step 2: Stripe ─────────────────────────────────────── */
+.pay-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.pay-summary-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.pay-summary-label {
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+}
+
+.pay-summary-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--p-text-color);
+}
+
+.pay-summary-sub {
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+}
+
+.element-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 0;
+  color: var(--p-text-muted-color);
+}
+
+.element-loading-text {
+  font-size: 0.875rem;
+}
+
+.stripe-element-host {
+  min-height: 0;
+}
+
+.secure-note {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 1rem 0 0;
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+}
+
+:host ::ng-deep .p-message {
+  margin-top: 0.75rem;
+}
+
+.w-full,
+:host ::ng-deep .w-full {
+  width: 100%;
+}
+
+:host ::ng-deep .w-full .p-inputnumber-input {
+  width: 100%;
+}

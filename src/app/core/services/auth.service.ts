@@ -52,6 +52,11 @@ export class AuthService {
     return this.http.post<UserResponse>(`${this.baseUrl}/login`, data, WITH_CREDENTIALS);
   }
 
+  /** GET /api/user/{id} — fetch a user's public profile by id. */
+  getUserById(id: string): Observable<UserResponse> {
+    return this.http.get<UserResponse>(`${this.baseUrl}/${id}`, WITH_CREDENTIALS);
+  }
+
   /** POST /api/user/become-owner — adds the Owner role to the current user. */
   becomeOwner(): Observable<UserResponse> {
     return this.http.post<UserResponse>(`${this.baseUrl}/become-owner`, {}, WITH_CREDENTIALS);

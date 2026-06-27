@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -37,6 +37,7 @@ export class LeasesComponent implements OnInit {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private store = inject(Store);
+  private router = inject(Router);
 
   private currentUser = toSignal(this.store.select(selectCurrentUser), { initialValue: null });
 
@@ -135,6 +136,10 @@ export class LeasesComponent implements OnInit {
   canSign(lease: LeaseResponse): boolean {
     const user = this.currentUser();
     return lease.statusId === 3 && !!user && lease.tenantId === user.id;
+  }
+
+  openLease(lease: LeaseResponse): void {
+    this.router.navigate(['/leases', lease.id]);
   }
 
   openSignModal(lease: LeaseResponse): void {

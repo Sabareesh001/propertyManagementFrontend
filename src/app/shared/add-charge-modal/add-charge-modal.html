@@ -1,0 +1,102 @@
+<p-dialog
+  header="Apply Charge"
+  [visible]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="!submitting()"
+  styleClass="add-charge-dialog"
+  (onHide)="close()"
+>
+  <div class="form-grid">
+    <div class="form-field">
+      <label class="field-label" for="chargeType">Charge Type</label>
+      <p-select
+        inputId="chargeType"
+        [(ngModel)]="chargeTypeId"
+        [options]="chargeTypes"
+        optionLabel="name"
+        optionValue="id"
+        placeholder="Select a charge type"
+        appendTo="body"
+        [disabled]="submitting()"
+        styleClass="w-full"
+      >
+        <ng-template #item let-type>
+          <span class="type-option"><i [class]="type.icon"></i> {{ type.name }}</span>
+        </ng-template>
+      </p-select>
+    </div>
+
+    <div class="form-field">
+      <label class="field-label" for="chargeAmount">Amount (₹)</label>
+      <p-inputnumber
+        inputId="chargeAmount"
+        [(ngModel)]="amount"
+        mode="currency"
+        currency="INR"
+        locale="en-IN"
+        [min]="1"
+        [maxFractionDigits]="2"
+        placeholder="0.00"
+        [disabled]="submitting()"
+        styleClass="w-full"
+      />
+    </div>
+
+    <div class="form-field">
+      <label class="field-label" for="chargeDueDate">Due Date</label>
+      <p-datepicker
+        inputId="chargeDueDate"
+        [(ngModel)]="dueDate"
+        [minDate]="minDueDate"
+        dateFormat="dd M yy"
+        [showIcon]="true"
+        appendTo="body"
+        placeholder="Select due date"
+        [disabled]="submitting()"
+        styleClass="w-full"
+      />
+      <span class="field-hint">The due date cannot be in the past.</span>
+    </div>
+
+    <div class="form-field">
+      <label class="field-label" for="chargeDescription">Description (optional)</label>
+      <textarea
+        pTextarea
+        id="chargeDescription"
+        [(ngModel)]="description"
+        rows="3"
+        maxlength="500"
+        placeholder="e.g. August 2026 rent"
+        [disabled]="submitting()"
+        class="w-full"
+      ></textarea>
+      <span class="field-hint">{{ description.length }}/500</span>
+    </div>
+
+    @if (errorMessage()) {
+      <p-message severity="error" [text]="errorMessage()!" styleClass="w-full" />
+    }
+  </div>
+
+  <ng-template #footer>
+    <p-button
+      label="Cancel"
+      severity="secondary"
+      [text]="true"
+      size="small"
+      [disabled]="submitting()"
+      (onClick)="close()"
+    />
+    <p-button
+      label="Apply Charge"
+      icon="pi pi-plus"
+      size="small"
+      [loading]="submitting()"
+      [disabled]="!canSubmit"
+      (onClick)="submit()"
+    />
+  </ng-template>
+</p-dialog>

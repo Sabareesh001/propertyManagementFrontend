@@ -1,0 +1,121 @@
+::ng-deep .verify-user-dialog {
+  width: 34rem;
+  max-width: calc(100vw - 2rem);
+}
+
+.dialog-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+  line-height: 1.5;
+  margin: 0 0 1rem;
+}
+
+.dialog-intro i {
+  color: var(--p-primary-color);
+  margin-top: 0.15rem;
+}
+
+.document-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.document-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-border-radius);
+}
+
+.document-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.document-row-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+.field-hint {
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+}
+
+.type-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.file-picker {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+}
+
+.file-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  color: var(--p-text-color);
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+.file-name i {
+  color: var(--p-red-500);
+}
+
+.file-placeholder {
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+}
+
+.row-error {
+  font-size: 0.75rem;
+  color: var(--p-red-500);
+}
+
+.w-full {
+  width: 100%;
+}
+
+::ng-deep .submit-error {
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 600px) {
+  .file-picker {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .file-picker ::ng-deep .p-button {
+    width: 100%;
+    min-height: 44px;
+  }
+}

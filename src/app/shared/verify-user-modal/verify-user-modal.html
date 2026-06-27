@@ -1,0 +1,137 @@
+<p-dialog
+  header="Get Verified"
+  [visible]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="!submitting()"
+  styleClass="verify-user-dialog"
+  (onHide)="close()"
+>
+  <p class="dialog-intro">
+    <i class="pi pi-shield"></i>
+    Submit at least one identity document (PDF, max 10 MB). An admin will review your
+    request before you can list properties or submit lease proposals.
+  </p>
+
+  <div class="document-rows">
+    @for (row of rows(); track $index) {
+      <div class="document-row">
+        <div class="document-row-header">
+          <span class="document-row-title">Document {{ $index + 1 }}</span>
+          @if (rows().length > 1) {
+            <p-button
+              icon="pi pi-trash"
+              severity="danger"
+              [text]="true"
+              [rounded]="true"
+              size="small"
+              [disabled]="submitting()"
+              (onClick)="removeRow($index)"
+            />
+          }
+        </div>
+
+        <div class="form-field">
+          <label class="field-label" [for]="'docType' + $index">Document Type</label>
+          <p-select
+            [inputId]="'docType' + $index"
+            [ngModel]="row.documentTypeId"
+            (ngModelChange)="updateRow($index, { documentTypeId: $event })"
+            [options]="documentTypes"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Select a document type"
+            appendTo="body"
+            [disabled]="submitting()"
+            styleClass="w-full"
+          >
+            <ng-template #item let-type>
+              <span class="type-option"><i [class]="type.icon"></i> {{ type.name }}</span>
+            </ng-template>
+          </p-select>
+        </div>
+
+        <div class="form-field">
+          <label class="field-label" [for]="'docNumber' + $index">Document Number</label>
+          <input
+            pInputText
+            [id]="'docNumber' + $index"
+            [ngModel]="row.documentNumber"
+            (ngModelChange)="updateRow($index, { documentNumber: $event })"
+            placeholder="e.g. ABCDE1234F"
+            maxlength="50"
+            [disabled]="submitting()"
+            class="w-full"
+          />
+          <span class="field-hint">4–50 characters: letters, digits, and hyphens.</span>
+        </div>
+
+        <div class="form-field">
+          <label class="field-label" [for]="'docFile' + $index">Document File (PDF)</label>
+          <input
+            type="file"
+            [id]="'docFile' + $index"
+            accept="application/pdf"
+            hidden
+            #fileInput
+            (change)="onFileChange($index, $event)"
+          />
+          <div class="file-picker">
+            <p-button
+              [label]="row.file ? 'Replace PDF' : 'Choose PDF'"
+              icon="pi pi-upload"
+              severity="secondary"
+              [outlined]="true"
+              size="small"
+              [disabled]="submitting()"
+              (onClick)="fileInput.click()"
+            />
+            @if (row.file) {
+              <span class="file-name"><i class="pi pi-file-pdf"></i> {{ row.file.name }}</span>
+            } @else {
+              <span class="file-placeholder">No file selected</span>
+            }
+          </div>
+        </div>
+
+        @if (row.error) {
+          <small class="row-error">{{ row.error }}</small>
+        }
+      </div>
+    }
+  </div>
+
+  <p-button
+    label="Add Another Document"
+    icon="pi pi-plus"
+    [text]="true"
+    size="small"
+    [disabled]="submitting()"
+    (onClick)="addRow()"
+  />
+
+  @if (errorMessage()) {
+    <p-message severity="error" [text]="errorMessage()!" styleClass="w-full submit-error" />
+  }
+
+  <ng-template #footer>
+    <p-button
+      label="Cancel"
+      severity="secondary"
+      [text]="true"
+      size="small"
+      [disabled]="submitting()"
+      (onClick)="close()"
+    />
+    <p-button
+      label="Submit for Review"
+      icon="pi pi-send"
+      size="small"
+      [loading]="submitting()"
+      [disabled]="!canSubmit"
+      (onClick)="submit()"
+    />
+  </ng-template>
+</p-dialog>

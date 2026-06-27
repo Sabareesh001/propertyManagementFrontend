@@ -48,9 +48,15 @@
   } @else {
     <div class="leases-list">
       @for (lease of filteredLeases(); track lease.id) {
-        <div class="lease-card">
+        <div
+          class="lease-card lease-card-clickable"
+          role="link"
+          tabindex="0"
+          (click)="openLease(lease)"
+          (keydown.enter)="openLease(lease)"
+        >
           <div class="lease-header">
-            <a [routerLink]="['/property', lease.propertyId]" class="property-link">
+            <a [routerLink]="['/property', lease.propertyId]" class="property-link" (click)="$event.stopPropagation()">
               <i class="pi pi-home"></i>
               Property #{{ lease.propertyId }}
             </a>
@@ -89,21 +95,28 @@
 
           <div class="lease-docs">
             @if (lease.agreementDocumentUrl) {
-              <a [href]="lease.agreementDocumentUrl" target="_blank" rel="noopener" class="doc-link">
+              <a [href]="lease.agreementDocumentUrl" target="_blank" rel="noopener" class="doc-link" (click)="$event.stopPropagation()">
                 <i class="pi pi-file-pdf"></i> Agreement document
               </a>
             } @else {
               <span class="doc-missing"><i class="pi pi-file"></i> No agreement document</span>
             }
             @if (lease.signedAgreementDocumentUrl) {
-              <a [href]="lease.signedAgreementDocumentUrl" target="_blank" rel="noopener" class="doc-link">
+              <a [href]="lease.signedAgreementDocumentUrl" target="_blank" rel="noopener" class="doc-link" (click)="$event.stopPropagation()">
                 <i class="pi pi-verified"></i> Signed agreement
               </a>
             }
           </div>
 
-          @if (canSubmit(lease) || canSign(lease)) {
-            <div class="lease-actions">
+          <div class="lease-actions" (click)="$event.stopPropagation()">
+              <p-button
+                [label]="lease.statusId === 5 ? 'Manage Charges & Payments' : 'View Details'"
+                [icon]="lease.statusId === 5 ? 'pi pi-wallet' : 'pi pi-eye'"
+                size="small"
+                severity="secondary"
+                [outlined]="true"
+                [routerLink]="['/leases', lease.id]"
+              />
               @if (canSubmit(lease)) {
                 <p-button
                   label="Submit for Review"
@@ -121,8 +134,7 @@
                   (onClick)="openSignModal(lease)"
                 />
               }
-            </div>
-          }
+          </div>
         </div>
       }
     </div>

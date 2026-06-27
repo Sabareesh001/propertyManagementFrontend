@@ -1,0 +1,44 @@
+:host ::ng-deep .add-charge-dialog {
+  width: 30rem;
+  max-width: calc(100vw - 2rem);
+}
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding-top: 0.25rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+.field-hint {
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+}
+
+.type-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.w-full,
+:host ::ng-deep .w-full {
+  width: 100%;
+}
+
+:host ::ng-deep .w-full .p-inputnumber-input,
+:host ::ng-deep .w-full .p-datepicker-input {
+  width: 100%;
+}

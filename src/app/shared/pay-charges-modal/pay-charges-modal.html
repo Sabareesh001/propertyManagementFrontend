@@ -1,0 +1,153 @@
+<p-dialog
+  [header]="step() === 'select' ? 'Pay Charges' : 'Complete Payment'"
+  [visible]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="!busy()"
+  styleClass="pay-charges-dialog"
+  (onHide)="close()"
+>
+  <!-- ── Step 1: choose charges ─────────────────────────────── -->
+  @if (step() === 'select') {
+    @if (rows().length === 0) {
+      <div class="no-charges">
+        <i class="pi pi-check-circle no-charges-icon"></i>
+        <p class="no-charges-text">There are no outstanding charges to pay right now.</p>
+      </div>
+    } @else {
+      <p class="section-label">Select the charges you want to pay</p>
+
+      <div class="allocation-list">
+        @for (row of rows(); track row.charge.id) {
+          <div class="allocation-row" [class.selected]="row.selected">
+            <div class="allocation-main">
+              <p-checkbox
+                [binary]="true"
+                [ngModel]="row.selected"
+                (ngModelChange)="toggleRow(row, $event)"
+                [disabled]="busy()"
+                [inputId]="'alloc-' + row.charge.id"
+              />
+              <label class="allocation-info" [for]="'alloc-' + row.charge.id">
+                <span class="allocation-title">{{ row.charge.chargeTypeName || 'Charge' }}</span>
+                <span class="allocation-meta">
+                  Due {{ formatDate(row.charge.dueDate) }} · Balance {{ formatCurrency(row.charge.balanceDue) }}
+                </span>
+                @if (row.charge.description) {
+                  <span class="allocation-desc">{{ row.charge.description }}</span>
+                }
+              </label>
+              <p-tag
+                [value]="row.charge.statusName || ''"
+                [severity]="row.charge.statusId === 4 ? 'danger' : row.charge.statusId === 2 ? 'warn' : 'info'"
+              />
+            </div>
+            @if (row.selected) {
+              <div class="allocation-amount">
+                <label class="field-label" [for]="'amount-' + row.charge.id">Amount to pay (₹)</label>
+                <p-inputnumber
+                  [inputId]="'amount-' + row.charge.id"
+                  [ngModel]="row.amount"
+                  (ngModelChange)="updateAmount(row, $event)"
+                  mode="currency"
+                  currency="INR"
+                  locale="en-IN"
+                  [min]="1"
+                  [max]="row.charge.balanceDue"
+                  [maxFractionDigits]="2"
+                  [disabled]="busy()"
+                  styleClass="w-full"
+                />
+                @if (row.amount !== null && row.amount > row.charge.balanceDue) {
+                  <span class="field-error">Cannot exceed the balance due of {{ formatCurrency(row.charge.balanceDue) }}.</span>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="total-bar">
+        <span class="total-label">Total payment ({{ selectedCount() }} charge{{ selectedCount() === 1 ? '' : 's' }})</span>
+        <span class="total-value">{{ formatCurrency(totalAmount()) }}</span>
+      </div>
+    }
+  }
+
+  <!-- ── Step 2: Stripe payment form ────────────────────────── -->
+  @if (step() === 'pay') {
+    <div class="pay-summary">
+      <div class="pay-summary-line">
+        <span class="pay-summary-label">Amount</span>
+        <span class="pay-summary-value">{{ formatCurrency(intent()?.amount ?? null) }}</span>
+      </div>
+      @if (intent(); as i) {
+        @if (i.platformFee > 0) {
+          <div class="pay-summary-line">
+            <span class="pay-summary-label">Includes platform fee</span>
+            <span class="pay-summary-sub">{{ formatCurrency(i.platformFee) }}</span>
+          </div>
+        }
+      }
+    </div>
+
+    <p-divider />
+
+    @if (mountingElement()) {
+      <div class="element-loading">
+        <p-progressspinner strokeWidth="4" [style]="{ width: '2rem', height: '2rem' }" />
+        <span class="element-loading-text">Loading secure payment form…</span>
+      </div>
+    }
+    <div #paymentElement class="stripe-element-host"></div>
+
+    <p class="secure-note"><i class="pi pi-lock"></i> Payments are processed securely by Stripe.</p>
+  }
+
+  @if (errorMessage()) {
+    <p-message severity="error" [text]="errorMessage()!" styleClass="w-full" />
+  }
+
+  <ng-template #footer>
+    @if (step() === 'select') {
+      <p-button
+        label="Cancel"
+        severity="secondary"
+        [text]="true"
+        size="small"
+        [disabled]="busy()"
+        (onClick)="close()"
+      />
+      @if (rows().length > 0) {
+        <p-button
+          label="Proceed to Pay"
+          icon="pi pi-credit-card"
+          size="small"
+          [loading]="creatingIntent()"
+          [disabled]="!allocationsValid || busy()"
+          (onClick)="proceedToPay()"
+        />
+      }
+    } @else {
+      <p-button
+        label="Back"
+        icon="pi pi-arrow-left"
+        severity="secondary"
+        [text]="true"
+        size="small"
+        [disabled]="busy()"
+        (onClick)="backToSelect()"
+      />
+      <p-button
+        [label]="'Pay ' + formatCurrency(intent()?.amount ?? totalAmount())"
+        icon="pi pi-lock"
+        size="small"
+        [loading]="paying()"
+        [disabled]="mountingElement() || busy()"
+        (onClick)="confirmPayment()"
+      />
+    }
+  </ng-template>
+</p-dialog>

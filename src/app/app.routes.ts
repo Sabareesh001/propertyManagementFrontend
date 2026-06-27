@@ -10,6 +10,7 @@ import { PropertyFormComponent } from './owner/property-form/property-form';
 import { MyRequestsComponent } from './tenant/my-requests/my-requests';
 import { ReceivedRequestsComponent } from './owner/received-requests/received-requests';
 import { LeasesComponent } from './leases/leases';
+import { LeaseDetailComponent } from './leases/lease-detail/lease-detail';
 import { authGuard } from './core/guards/auth.guard';
 import { ownerGuard } from './core/guards/owner.guard';
 import { adminGuard } from './core/guards/admin.guard';
@@ -26,6 +27,7 @@ export const routes: Routes = [
       { path: 'dashboard', component: DashboardComponent, canActivate: [nonAdminGuard] },
       { path: 'my-requests', component: MyRequestsComponent, canActivate: [authGuard, nonAdminGuard,] },
       { path: 'leases', component: LeasesComponent, canActivate: [authGuard, nonAdminGuard] },
+      { path: 'leases/:id', component: LeaseDetailComponent, canActivate: [authGuard, nonAdminGuard] },
       { path: 'property/:id', component: PropertyDetailComponent },
       {
         path: 'owner/properties',

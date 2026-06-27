@@ -151,3 +151,15 @@
     flex: 1;
   }
 }
+
+.lease-card-clickable {
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.lease-card-clickable:hover,
+.lease-card-clickable:focus-visible {
+  border-color: var(--p-primary-color);
+  box-shadow: var(--p-focus-ring-shadow, 0 0 0 1px var(--p-primary-color));
+  outline: none;
+}

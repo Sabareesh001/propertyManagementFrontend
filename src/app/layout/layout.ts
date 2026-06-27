@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -7,10 +7,14 @@ import { SplitButton } from 'primeng/splitbutton';
 import { Button } from 'primeng/button';
 import { Drawer } from 'primeng/drawer';
 import { PanelMenu } from 'primeng/panelmenu';
+import { Message } from 'primeng/message';
 import { MenuItem } from 'primeng/api';
 import { Store } from '@ngrx/store';
 import { AuthActions } from '../store/auth/auth.actions';
 import { ThemeService } from '../core/services/theme.service';
+import { StripeService } from '../core/services/stripe.service';
+import { UserVerificationService, VerificationStatus } from '../core/services/user-verification.service';
+import { VerifyUserModalComponent } from '../shared/verify-user-modal/verify-user-modal';
 import { selectIsOwner, selectIsAdmin, selectIsLoggedIn } from '../store/auth/auth.selectors';
 
 const TAB_ROUTES = ['/dashboard', '/my-requests', '/owner/properties', '/owner/received-requests', '/leases', '/admin/verifications'];
@@ -30,13 +34,15 @@ const ALL_DRAWER_ITEMS = [
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, Tabs, TabList, Tab, SplitButton, Button, Drawer, PanelMenu],
+  imports: [RouterOutlet, Tabs, TabList, Tab, SplitButton, Button, Drawer, PanelMenu, Message, VerifyUserModalComponent],
   templateUrl: './layout.html',
   styleUrl: './layout.css',
 })
 export class LayoutComponent {
   private store = inject(Store);
   private router = inject(Router);
+  private stripeService = inject(StripeService);
+  private userVerificationService = inject(UserVerificationService);
   themeService = inject(ThemeService);
 
   drawerVisible = false;
@@ -46,6 +52,36 @@ export class LayoutComponent {
   isOwner = toSignal(this.store.select(selectIsOwner), { initialValue: false });
   isAdmin = toSignal(this.store.select(selectIsAdmin), { initialValue: false });
   isLoggedIn = toSignal(this.store.select(selectIsLoggedIn), { initialValue: false });
+
+  /** null = status unknown/not fetched yet; true/false = fetched. */
+  private stripeOnboarded = signal<boolean | null>(null);
+  private stripeStatusRequested = false;
+  onboardLoading = signal(false);
+
+  showStripeReminder = computed(
+    () => this.isOwner() && !this.isAdmin() && this.stripeOnboarded() === false,
+  );
+
+  /** null = status unknown/not fetched yet. */
+  private verificationStatus = signal<VerificationStatus | null>(null);
+  private verificationStatusRequested = false;
+  verifyModalVisible = false;
+
+  showVerifyReminder = computed(() => {
+    const status = this.verificationStatus();
+    return !this.isAdmin() && (status === 'Unverified' || status === 'Rejected');
+  });
+  showVerifyPending = computed(
+    () => !this.isAdmin() && this.verificationStatus() === 'Pending',
+  );
+  verifyReminderText = computed(() =>
+    this.verificationStatus() === 'Rejected'
+      ? 'Your identity verification was rejected. Please resubmit your documents.'
+      : 'Verify your identity to list properties or submit lease proposals.',
+  );
+  verifyButtonLabel = computed(() =>
+    this.verificationStatus() === 'Rejected' ? 'Resubmit Documents' : 'Get Verified',
+  );
 
   navItems = computed(() =>
     ALL_DRAWER_ITEMS.filter(
@@ -109,6 +145,28 @@ export class LayoutComponent {
   ];
 
   constructor() {
+    effect(() => {
+      if (this.isLoggedIn() && !this.isAdmin() && !this.verificationStatusRequested) {
+        this.verificationStatusRequested = true;
+        this.userVerificationService.getStatus().subscribe({
+          next: (res) => this.verificationStatus.set(res.status),
+          // Leave status unknown — better no banner than a wrong one.
+          error: () => this.verificationStatus.set(null),
+        });
+      }
+    });
+
+    effect(() => {
+      if (this.isOwner() && !this.stripeStatusRequested) {
+        this.stripeStatusRequested = true;
+        this.stripeService.getStatus().subscribe({
+          next: (status) => this.stripeOnboarded.set(status.isOnboarded),
+          // No Stripe account yet — the owner still needs to onboard.
+          error: () => this.stripeOnboarded.set(false),
+        });
+      }
+    });
+
     this.syncTabFromUrl(this.router.url);
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
@@ -131,6 +189,25 @@ export class LayoutComponent {
   navigateDrawerItem(route: string): void {
     this.router.navigate([route]);
     this.drawerVisible = false;
+  }
+
+  openVerifyModal(): void {
+    this.verifyModalVisible = true;
+  }
+
+  onVerificationSubmitted(): void {
+    this.verificationStatus.set('Pending');
+  }
+
+  startStripeOnboarding(): void {
+    if (this.onboardLoading()) return;
+    this.onboardLoading.set(true);
+    this.stripeService.onboard().subscribe({
+      next: (res) => {
+        window.location.href = res.onboardingUrl;
+      },
+      error: () => this.onboardLoading.set(false),
+    });
   }
 
   logout() {

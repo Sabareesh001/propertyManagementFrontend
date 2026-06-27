@@ -57,6 +57,59 @@
     </div>
   </header>
 
+  <!-- Identity verification reminder (unverified/rejected users) -->
+  @if (showVerifyReminder()) {
+    <p-message severity="warn" icon="pi pi-exclamation-triangle" styleClass="stripe-reminder">
+      <div class="stripe-reminder-body">
+        <span class="stripe-reminder-text">
+          <strong>Action required:</strong> {{ verifyReminderText() }}
+        </span>
+        <p-button
+          [label]="verifyButtonLabel()"
+          icon="pi pi-verified"
+          severity="warn"
+          size="small"
+          (onClick)="openVerifyModal()"
+        />
+      </div>
+    </p-message>
+  }
+
+  <!-- Verification pending indicator -->
+  @if (showVerifyPending()) {
+    <p-message severity="info" icon="pi pi-clock" styleClass="stripe-reminder">
+      <div class="stripe-reminder-body">
+        <span class="stripe-reminder-text">
+          Your identity verification is under review. You'll be able to list properties and submit lease proposals once approved.
+        </span>
+      </div>
+    </p-message>
+  }
+
+  <!-- Stripe onboarding reminder (owners only) -->
+  @if (showStripeReminder()) {
+    <p-message severity="warn" icon="pi pi-exclamation-triangle" styleClass="stripe-reminder">
+      <div class="stripe-reminder-body">
+        <span class="stripe-reminder-text">
+          <strong>Action required:</strong> Onboard on Stripe to receive payments before you can create leases.
+        </span>
+        <p-button
+          label="Set Up Stripe Payouts"
+          icon="pi pi-external-link"
+          severity="warn"
+          size="small"
+          [loading]="onboardLoading()"
+          (onClick)="startStripeOnboarding()"
+        />
+      </div>
+    </p-message>
+  }
+
+  <app-verify-user-modal
+    [(visible)]="verifyModalVisible"
+    (submitted)="onVerificationSubmitted()"
+  />
+
   <!-- Mobile drawer -->
   <p-drawer [(visible)]="drawerVisible" header="Menu" position="left" styleClass="mobile-drawer">
     <nav class="drawer-nav">

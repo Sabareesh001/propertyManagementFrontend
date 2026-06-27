@@ -1,0 +1,282 @@
+<p-toast />
+
+<app-add-charge-modal
+  [(visible)]="addChargeVisible"
+  [leaseId]="leaseId"
+  (created)="onChargeCreated($event)"
+/>
+
+<app-pay-charges-modal
+  [(visible)]="payChargesVisible"
+  [leaseId]="leaseId"
+  [charges]="payableCharges()"
+  (paid)="onPaymentComplete()"
+/>
+
+<div class="lease-detail-container">
+  @if (loading()) {
+    <div class="empty-state">
+      <p-progressspinner strokeWidth="4" [style]="{ width: '3rem', height: '3rem' }" />
+      <p class="empty-text">Loading lease details…</p>
+    </div>
+  } @else if (error() || !lease()) {
+    <div class="empty-state">
+      <i class="pi pi-exclamation-triangle empty-icon"></i>
+      <p class="empty-text">Couldn't load this lease. It may not exist, or you may not have access.</p>
+      <div class="empty-actions">
+        <p-button label="Retry" icon="pi pi-refresh" size="small" (onClick)="load()" />
+        <p-button label="Back to Leases" icon="pi pi-arrow-left" size="small" severity="secondary" [outlined]="true" routerLink="/leases" />
+      </div>
+    </div>
+  } @else {
+    <!-- ── Header ─────────────────────────────────────────────── -->
+    <div class="page-header">
+      <p-button
+        icon="pi pi-arrow-left"
+        severity="secondary"
+        [text]="true"
+        size="small"
+        routerLink="/leases"
+        pTooltip="Back to leases"
+      />
+      <div class="header-title">
+        <h2 class="page-title">Lease for Property #{{ lease()!.propertyId }}</h2>
+        <span class="header-sub">
+          {{ formatDate(lease()!.startDate) }} – {{ formatDate(lease()!.endDate) }}
+          · You are the {{ isTenant() ? 'tenant' : 'owner' }}
+        </span>
+      </div>
+      <p-tag
+        [value]="leaseStatusLabel(lease()!.statusId)"
+        [severity]="leaseStatusSeverity(lease()!.statusId)"
+      />
+    </div>
+
+    <!-- ── Lease summary ──────────────────────────────────────── -->
+    <div class="section-card">
+      <div class="lease-summary-grid">
+        <div class="detail-item">
+          <span class="detail-label">Monthly Rent</span>
+          <span class="detail-value">{{ formatCurrency(lease()!.monthlyRent) }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Upfront Payment</span>
+          <span class="detail-value">{{ formatCurrency(lease()!.upfrontPayment) }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Security Deposit</span>
+          <span class="detail-value">{{ formatCurrency(lease()!.securityDeposit) }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Property</span>
+          <a [routerLink]="['/property', lease()!.propertyId]" class="detail-link">
+            <i class="pi pi-home"></i> View property
+          </a>
+        </div>
+        @if (lease()!.agreementDocumentUrl) {
+          <div class="detail-item">
+            <span class="detail-label">Agreement</span>
+            <a [href]="lease()!.agreementDocumentUrl" target="_blank" rel="noopener" class="detail-link">
+              <i class="pi pi-file-pdf"></i> View document
+            </a>
+          </div>
+        }
+        @if (lease()!.signedAgreementDocumentUrl) {
+          <div class="detail-item">
+            <span class="detail-label">Signed Agreement</span>
+            <a [href]="lease()!.signedAgreementDocumentUrl" target="_blank" rel="noopener" class="detail-link">
+              <i class="pi pi-verified"></i> View document
+            </a>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- ── Financial summary ──────────────────────────────────── -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">Total Charged</span>
+        <span class="stat-value">{{ formatCurrency(totalCharged()) }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Total Paid</span>
+        <span class="stat-value stat-paid">{{ formatCurrency(totalPaid()) }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Outstanding</span>
+        <span class="stat-value" [class.stat-due]="totalOutstanding() > 0">{{ formatCurrency(totalOutstanding()) }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Overdue Charges</span>
+        <span class="stat-value" [class.stat-due]="overdueCount() > 0">{{ overdueCount() }}</span>
+      </div>
+    </div>
+
+    <!-- ── Charges ────────────────────────────────────────────── -->
+    <div class="section-card">
+      <div class="section-header">
+        <h3 class="section-title"><i class="pi pi-receipt"></i> Charges</h3>
+        <div class="section-actions">
+          <p-selectbutton
+            [options]="chargeFilterOptions"
+            [ngModel]="chargeFilter()"
+            (ngModelChange)="chargeFilter.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            [allowEmpty]="false"
+            size="small"
+          />
+          @if (isOwner()) {
+            <p-button
+              label="Apply Charge"
+              icon="pi pi-plus"
+              size="small"
+              [disabled]="!isActive()"
+              [pTooltip]="isActive() ? '' : 'Charges can only be applied to an Active lease'"
+              tooltipPosition="left"
+              (onClick)="addChargeVisible.set(true)"
+            />
+          }
+          @if (isTenant()) {
+            <p-button
+              label="Pay with Stripe"
+              icon="pi pi-credit-card"
+              size="small"
+              [disabled]="payableCharges().length === 0"
+              [pTooltip]="payableCharges().length === 0 ? 'No outstanding charges to pay' : ''"
+              tooltipPosition="left"
+              (onClick)="payChargesVisible.set(true)"
+            />
+          }
+        </div>
+      </div>
+
+      @if (charges().length === 0) {
+        <div class="empty-inline">
+          <i class="pi pi-receipt empty-icon"></i>
+          <p class="empty-text">No charges yet.</p>
+          @if (isOwner() && !isActive()) {
+            <p class="empty-hint">Charges can be applied once the lease becomes Active.</p>
+          }
+        </div>
+      } @else if (filteredCharges().length === 0) {
+        <div class="empty-inline">
+          <p class="empty-text">No charges match this filter.</p>
+        </div>
+      } @else {
+        <p-table
+          [value]="filteredCharges()"
+          [rowHover]="true"
+          responsiveLayout="scroll"
+          styleClass="charges-table"
+        >
+          <ng-template #header>
+            <tr>
+              <th>Type</th>
+              <th>Description</th>
+              <th>Due Date</th>
+              <th class="num-col">Amount</th>
+              <th class="num-col">Paid</th>
+              <th class="num-col">Balance</th>
+              <th>Status</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-charge>
+            <tr>
+              <td class="cell-strong">{{ charge.chargeTypeName || '—' }}</td>
+              <td class="cell-desc">{{ charge.description || '—' }}</td>
+              <td>{{ formatDate(charge.dueDate) }}</td>
+              <td class="num-col">{{ formatCurrency(charge.amount) }}</td>
+              <td class="num-col">{{ formatCurrency(charge.amountPaid) }}</td>
+              <td class="num-col" [class.balance-due]="charge.balanceDue > 0 && charge.statusId !== 5">
+                {{ formatCurrency(charge.balanceDue) }}
+              </td>
+              <td>
+                <p-tag [value]="charge.statusName || '—'" [severity]="chargeStatusSeverity(charge.statusId)" />
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      }
+    </div>
+
+    <!-- ── Payments ───────────────────────────────────────────── -->
+    <div class="section-card">
+      <div class="section-header">
+        <h3 class="section-title"><i class="pi pi-wallet"></i> Payment History</h3>
+      </div>
+
+      @if (payments().length === 0) {
+        <div class="empty-inline">
+          <i class="pi pi-wallet empty-icon"></i>
+          <p class="empty-text">No payments recorded yet.</p>
+        </div>
+      } @else {
+        <p-table
+          [value]="payments()"
+          dataKey="id"
+          [rowHover]="true"
+          responsiveLayout="scroll"
+          styleClass="payments-table"
+        >
+          <ng-template #header>
+            <tr>
+              <th style="width: 3rem"></th>
+              <th>Paid On</th>
+              <th class="num-col">Amount</th>
+              <th>Method</th>
+              <th>Reference</th>
+              <th>Status</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-payment let-expanded="expanded">
+            <tr>
+              <td>
+                <p-button
+                  type="button"
+                  [pRowToggler]="payment"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="secondary"
+                  size="small"
+                  [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                  pTooltip="View charge allocations"
+                />
+              </td>
+              <td>{{ formatDateTime(payment.paidAt || payment.createdAt) }}</td>
+              <td class="num-col cell-strong">{{ formatCurrency(payment.amount) }}</td>
+              <td>{{ payment.paymentMethodName || '—' }}</td>
+              <td class="cell-ref">{{ payment.transactionRef || '—' }}</td>
+              <td>
+                <p-tag [value]="payment.statusName || '—'" [severity]="paymentStatusSeverity(payment.statusId)" />
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template #expandedrow let-payment>
+            <tr>
+              <td colspan="6" class="allocations-cell">
+                <div class="allocations-box">
+                  <span class="allocations-title">Applied to charges</span>
+                  @for (alloc of payment.chargeAllocations; track alloc.chargeId) {
+                    <div class="allocation-line">
+                      <span class="allocation-charge">
+                        <i class="pi pi-receipt"></i>
+                        {{ chargeForId(alloc.chargeId)?.chargeTypeName || 'Charge' }}
+                        @if (chargeForId(alloc.chargeId)?.description) {
+                          <span class="allocation-charge-desc">— {{ chargeForId(alloc.chargeId)?.description }}</span>
+                        }
+                      </span>
+                      <span class="allocation-applied">{{ formatCurrency(alloc.amountApplied) }}</span>
+                    </div>
+                  } @empty {
+                    <span class="empty-hint">No allocation details available.</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      }
+    </div>
+  }
+</div>
