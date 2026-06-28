@@ -1,0 +1,250 @@
+<div class="owner-dashboard-container">
+  @if (loading()) {
+    <div class="empty-state">
+      <p-progressspinner strokeWidth="4" [style]="{ width: '3rem', height: '3rem' }" />
+      <p class="empty-text">Loading your dashboard…</p>
+    </div>
+  } @else if (error()) {
+    <div class="empty-state">
+      <i class="pi pi-exclamation-triangle empty-icon"></i>
+      <p class="empty-text">Couldn't load your dashboard. Please try again.</p>
+      <div class="empty-actions">
+        <p-button label="Retry" icon="pi pi-refresh" size="small" (onClick)="load()" />
+      </div>
+    </div>
+  } @else {
+    <!-- ── Header ─────────────────────────────────────────────── -->
+    <div class="page-header">
+      <div class="header-title">
+        <h2 class="page-title">Owner Dashboard</h2>
+        <span class="header-sub">Your earnings, payments and portfolio at a glance</span>
+      </div>
+      <p-button
+        icon="pi pi-refresh"
+        label="Refresh"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        (onClick)="load()"
+      />
+    </div>
+
+    <!-- ── Earnings summary ───────────────────────────────────── -->
+    <div class="stats-grid">
+      <div class="stat-card stat-card-accent">
+        <span class="stat-label"><i class="pi pi-wallet"></i> Collected</span>
+        <span class="stat-value stat-paid">{{ formatCurrency(totalCollected()) }}</span>
+        <span class="stat-hint">Received across all leases</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label"><i class="pi pi-clock"></i> Outstanding</span>
+        <span class="stat-value" [class.stat-due]="totalOutstanding() > 0">
+          {{ formatCurrency(totalOutstanding()) }}
+        </span>
+        <span class="stat-hint">Owed by tenants</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label"><i class="pi pi-exclamation-circle"></i> Overdue</span>
+        <span class="stat-value" [class.stat-due]="overdueAmount() > 0">
+          {{ formatCurrency(overdueAmount()) }}
+        </span>
+        <span class="stat-hint">Past their due date</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label"><i class="pi pi-chart-bar"></i> Total Billed</span>
+        <span class="stat-value">{{ formatCurrency(totalBilled()) }}</span>
+        <span class="stat-hint">Charges raised to date</span>
+      </div>
+    </div>
+
+    <!-- ── Portfolio quick stats ──────────────────────────────── -->
+    <div class="stats-grid">
+      <a class="stat-card stat-card-link" routerLink="/owner/properties">
+        <span class="stat-label"><i class="pi pi-building"></i> Properties</span>
+        <span class="stat-value">{{ propertyCount() }}</span>
+        <span class="stat-hint">{{ occupiedCount() }} occupied</span>
+      </a>
+      <a class="stat-card stat-card-link" routerLink="/leases">
+        <span class="stat-label"><i class="pi pi-file-check"></i> Active Leases</span>
+        <span class="stat-value">{{ activeLeaseCount() }}</span>
+        <span class="stat-hint">View all leases</span>
+      </a>
+      <a class="stat-card stat-card-link" routerLink="/owner/received-requests">
+        <span class="stat-label"><i class="pi pi-inbox"></i> Pending Requests</span>
+        <span class="stat-value" [class.stat-due]="pendingRequestCount() > 0">
+          {{ pendingRequestCount() }}
+        </span>
+        <span class="stat-hint">Awaiting your review</span>
+      </a>
+      <div class="stat-card">
+        <span class="stat-label"><i class="pi pi-check-circle"></i> Occupancy</span>
+        <span class="stat-value">
+          {{ occupiedCount() }}<span class="stat-value-sub">/{{ propertyCount() }}</span>
+        </span>
+        <span class="stat-hint">Properties with a tenant</span>
+      </div>
+    </div>
+
+    <!-- ── Stripe payout status ───────────────────────────────── -->
+    <div class="section-card">
+      <div class="section-header">
+        <h3 class="section-title"><i class="pi pi-credit-card"></i> Payouts</h3>
+        @if (stripe()?.isOnboarded) {
+          <p-tag value="Ready for payouts" severity="success" icon="pi pi-check-circle" />
+        } @else {
+          <p-tag value="Setup required" severity="warn" icon="pi pi-exclamation-triangle" />
+        }
+      </div>
+
+      @if (stripe()?.isOnboarded) {
+        <div class="payout-body">
+          <div class="payout-flags">
+            <span class="payout-flag">
+              <i class="pi" [class.pi-check-circle]="stripe()?.chargesEnabled" [class.flag-on]="stripe()?.chargesEnabled" [class.pi-times-circle]="!stripe()?.chargesEnabled" [class.flag-off]="!stripe()?.chargesEnabled"></i>
+              Charges enabled
+            </span>
+            <span class="payout-flag">
+              <i class="pi" [class.pi-check-circle]="stripe()?.payoutsEnabled" [class.flag-on]="stripe()?.payoutsEnabled" [class.pi-times-circle]="!stripe()?.payoutsEnabled" [class.flag-off]="!stripe()?.payoutsEnabled"></i>
+              Payouts enabled
+            </span>
+            <span class="payout-flag">
+              <i class="pi" [class.pi-check-circle]="stripe()?.detailsSubmitted" [class.flag-on]="stripe()?.detailsSubmitted" [class.pi-times-circle]="!stripe()?.detailsSubmitted" [class.flag-off]="!stripe()?.detailsSubmitted"></i>
+              Details submitted
+            </span>
+          </div>
+          <p class="payout-note">
+            Tenant payments are settled to your connected Stripe account.
+            @if (stripe()?.stripeAccountId) {
+              <span class="payout-account">Account: {{ stripe()!.stripeAccountId }}</span>
+            }
+          </p>
+        </div>
+      } @else {
+        <div class="payout-body">
+          <p class="payout-note">
+            Connect a Stripe account to receive rent payments from your tenants. You won't be able
+            to collect online payments until onboarding is complete.
+          </p>
+          <p-button
+            label="Set Up Stripe Payouts"
+            icon="pi pi-external-link"
+            size="small"
+            [loading]="onboardLoading()"
+            (onClick)="startStripeOnboarding()"
+          />
+        </div>
+      }
+    </div>
+
+    <!-- ── Outstanding charges ────────────────────────────────── -->
+    <div class="section-card">
+      <div class="section-header">
+        <h3 class="section-title"><i class="pi pi-receipt"></i> Outstanding Charges</h3>
+        @if (outstandingRows().length) {
+          <span class="section-count">{{ outstandingRows().length }} unpaid</span>
+        }
+      </div>
+
+      @if (outstandingRows().length === 0) {
+        <div class="empty-inline">
+          <i class="pi pi-check-circle empty-icon"></i>
+          <p class="empty-text">Nothing outstanding — every charge is settled.</p>
+        </div>
+      } @else {
+        <p-table [value]="outstandingRows()" [rowHover]="true" responsiveLayout="scroll">
+          <ng-template #header>
+            <tr>
+              <th>Property</th>
+              <th>Type</th>
+              <th>Due Date</th>
+              <th class="num-col">Amount</th>
+              <th class="num-col">Balance</th>
+              <th>Status</th>
+              <th class="action-col"></th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-row>
+            <tr>
+              <td class="cell-strong">{{ row.propertyTitle }}</td>
+              <td>{{ row.charge.chargeTypeName || '—' }}</td>
+              <td>{{ formatDate(row.charge.dueDate) }}</td>
+              <td class="num-col">{{ formatCurrency(row.charge.amount) }}</td>
+              <td class="num-col balance-due">{{ formatCurrency(row.charge.balanceDue) }}</td>
+              <td>
+                <p-tag
+                  [value]="row.charge.statusName || '—'"
+                  [severity]="chargeStatusSeverity(row.charge.statusId)"
+                />
+              </td>
+              <td class="action-col">
+                <p-button
+                  icon="pi pi-arrow-up-right"
+                  severity="secondary"
+                  [text]="true"
+                  size="small"
+                  pTooltip="Open lease"
+                  tooltipPosition="left"
+                  [routerLink]="['/leases', row.leaseId]"
+                />
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      }
+    </div>
+
+    <!-- ── Recent payments ────────────────────────────────────── -->
+    <div class="section-card">
+      <div class="section-header">
+        <h3 class="section-title"><i class="pi pi-wallet"></i> Recent Payments</h3>
+      </div>
+
+      @if (recentPayments().length === 0) {
+        <div class="empty-inline">
+          <i class="pi pi-wallet empty-icon"></i>
+          <p class="empty-text">No payments received yet.</p>
+        </div>
+      } @else {
+        <p-table [value]="recentPayments()" [rowHover]="true" responsiveLayout="scroll">
+          <ng-template #header>
+            <tr>
+              <th>Property</th>
+              <th>Paid On</th>
+              <th class="num-col">Amount</th>
+              <th>Method</th>
+              <th>Reference</th>
+              <th>Status</th>
+              <th class="action-col"></th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-row>
+            <tr>
+              <td class="cell-strong">{{ row.propertyTitle }}</td>
+              <td>{{ formatDateTime(row.payment.paidAt || row.payment.createdAt) }}</td>
+              <td class="num-col cell-strong">{{ formatCurrency(row.payment.amount) }}</td>
+              <td>{{ row.payment.paymentMethodName || '—' }}</td>
+              <td class="cell-ref">{{ row.payment.transactionRef || '—' }}</td>
+              <td>
+                <p-tag
+                  [value]="row.payment.statusName || '—'"
+                  [severity]="paymentStatusSeverity(row.payment.statusId)"
+                />
+              </td>
+              <td class="action-col">
+                <p-button
+                  icon="pi pi-arrow-up-right"
+                  severity="secondary"
+                  [text]="true"
+                  size="small"
+                  pTooltip="Open lease"
+                  tooltipPosition="left"
+                  [routerLink]="['/leases', row.leaseId]"
+                />
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,157 @@
+<div class="finance-page">
+  <div class="finance-header">
+    <div>
+      <h1 class="finance-title">Revenue &amp; Financial Overview</h1>
+      <p class="finance-subtitle">Company earnings, payment volume and collections across the platform.</p>
+    </div>
+    <div class="header-actions">
+      <p-select
+        [options]="rangeOptions"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="range()"
+        (ngModelChange)="range.set($event)"
+        [disabled]="loading() || error()"
+        styleClass="range-select"
+      />
+      <p-button
+        icon="pi pi-refresh"
+        label="Refresh"
+        severity="secondary"
+        size="small"
+        [outlined]="true"
+        [loading]="loading()"
+        (onClick)="load()"
+      />
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="kpi-grid">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <p-skeleton height="6rem" />
+      }
+    </div>
+    <div class="panel-grid">
+      <p-skeleton height="16rem" />
+      <p-skeleton height="16rem" />
+    </div>
+  } @else if (error()) {
+    <div class="error-state">
+      <i class="pi pi-chart-bar error-icon"></i>
+      <p class="state-title">Revenue data isn't available yet</p>
+      <p class="state-msg">
+        The platform-wide finance endpoints (<code>GET /api/admin/payments</code> and
+        <code>GET /api/admin/charges</code>) aren't reachable. Once the backend exposes them,
+        this dashboard populates automatically.
+      </p>
+      <p-button label="Retry" icon="pi pi-refresh" severity="secondary" size="small" (onClick)="load()" />
+    </div>
+  } @else {
+    <!-- Headline KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card accent">
+        <span class="kpi-label"><i class="pi pi-building-columns"></i> Company Revenue</span>
+        <span class="kpi-value">{{ money(companyRevenue()) }}</span>
+        <span class="kpi-hint">
+          @if (hasFeeData()) {
+            Platform fees on {{ completedCount() }} completed payment(s)
+          } @else {
+            No platform-fee data reported
+          }
+        </span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label"><i class="pi pi-wallet"></i> Gross Payment Volume</span>
+        <span class="kpi-value">{{ money(grossVolume()) }}</span>
+        <span class="kpi-hint">Total processed through the platform</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label"><i class="pi pi-check-circle"></i> Collected from Charges</span>
+        <span class="kpi-value">{{ money(totalCollected()) }}</span>
+        <span class="kpi-hint">{{ collectionRate() }}% of {{ money(totalCharged()) }} charged</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label"><i class="pi pi-exclamation-triangle"></i> Outstanding Balance</span>
+        <span class="kpi-value">{{ money(totalOutstanding()) }}</span>
+        <span class="kpi-hint">Unpaid across active charges</span>
+      </div>
+    </div>
+
+    <!-- Payment status counts -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <span class="kpi-label"><i class="pi pi-list"></i> Transactions</span>
+        <span class="kpi-value">{{ paymentCount() }}</span>
+        <span class="kpi-hint">{{ successRate() }}% success rate</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label"><i class="pi pi-check"></i> Completed</span>
+        <span class="kpi-value">{{ completedCount() }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label"><i class="pi pi-clock"></i> Pending</span>
+        <span class="kpi-value">{{ pendingCount() }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label"><i class="pi pi-times-circle"></i> Failed / Refunded</span>
+        <span class="kpi-value">{{ failedCount() }} / {{ refundedCount() }}</span>
+      </div>
+    </div>
+
+    <!-- Breakdowns -->
+    <div class="panel-grid">
+      <!-- Monthly revenue trend -->
+      <div class="panel">
+        <h2 class="panel-title">Company Revenue — Last 12 Months</h2>
+        @for (bar of byMonth(); track bar.name) {
+          <div class="bar-row">
+            <div class="bar-head">
+              <span class="bar-name">{{ bar.name }}</span>
+              <span class="bar-value">{{ money(bar.primary) }} · {{ bar.count }}</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill" [style.width.%]="bar.pct"></div></div>
+          </div>
+        }
+      </div>
+
+      <!-- By payment method -->
+      <div class="panel">
+        <h2 class="panel-title">Volume by Payment Method</h2>
+        @if (byMethod().length === 0) {
+          <p class="state-msg">No completed payments in this period.</p>
+        }
+        @for (bar of byMethod(); track bar.name) {
+          <div class="bar-row">
+            <div class="bar-head">
+              <span class="bar-name">{{ bar.name }}</span>
+              <span class="bar-value">{{ money(bar.primary) }} · {{ bar.count }} txn</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill" [style.width.%]="bar.pct"></div></div>
+          </div>
+        }
+      </div>
+
+      <!-- By charge type -->
+      <div class="panel">
+        <h2 class="panel-title">Charges by Type — Charged vs Collected</h2>
+        @if (byChargeType().length === 0) {
+          <p class="state-msg">No charges in this period.</p>
+        }
+        @for (bar of byChargeType(); track bar.name) {
+          <div class="bar-row">
+            <div class="bar-head">
+              <span class="bar-name">{{ bar.name }}</span>
+              <span class="bar-value">
+                {{ money(bar.secondary ?? 0) }} / {{ money(bar.primary) }}
+              </span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" [style.width.%]="bar.pct"></div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

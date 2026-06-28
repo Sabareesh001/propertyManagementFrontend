@@ -9,6 +9,7 @@ import { MyPropertiesComponent } from './owner/my-properties/my-properties';
 import { PropertyFormComponent } from './owner/property-form/property-form';
 import { MyRequestsComponent } from './tenant/my-requests/my-requests';
 import { ReceivedRequestsComponent } from './owner/received-requests/received-requests';
+import { OwnerDashboardComponent } from './owner/owner-dashboard/owner-dashboard';
 import { LeasesComponent } from './leases/leases';
 import { LeaseDetailComponent } from './leases/lease-detail/lease-detail';
 import { authGuard } from './core/guards/auth.guard';
@@ -16,6 +17,7 @@ import { ownerGuard } from './core/guards/owner.guard';
 import { adminGuard } from './core/guards/admin.guard';
 import { nonAdminGuard } from './core/guards/non-admin.guard';
 import { VerificationsComponent } from './admin/verifications/verifications';
+import { FinanceComponent } from './admin/finance/finance';
 
 export const routes: Routes = [
   { path: 'auth/register', component: RegisterComponent },
@@ -29,6 +31,11 @@ export const routes: Routes = [
       { path: 'leases', component: LeasesComponent, canActivate: [authGuard, nonAdminGuard] },
       { path: 'leases/:id', component: LeaseDetailComponent, canActivate: [authGuard, nonAdminGuard] },
       { path: 'property/:id', component: PropertyDetailComponent },
+      {
+        path: 'owner/dashboard',
+        component: OwnerDashboardComponent,
+        canActivate: [authGuard, ownerGuard],
+      },
       {
         path: 'owner/properties',
         component: MyPropertiesComponent,
@@ -55,6 +62,12 @@ export const routes: Routes = [
         canActivate: [authGuard, adminGuard],
       },
       { path: 'admin/verifications', redirectTo: 'admin/verifications/property', pathMatch: 'full' },
+      {
+        path: 'admin/finance/:section',
+        component: FinanceComponent,
+        canActivate: [authGuard, adminGuard],
+      },
+      { path: 'admin/finance', redirectTo: 'admin/finance/revenue', pathMatch: 'full' },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },

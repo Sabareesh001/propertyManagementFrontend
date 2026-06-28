@@ -54,6 +54,16 @@
   color: var(--p-text-muted-color);
 }
 
+.field-error {
+  font-size: 0.75rem;
+  color: var(--p-red-500);
+}
+
+.required-star {
+  color: var(--p-red-500);
+  font-size: 0.875rem;
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;

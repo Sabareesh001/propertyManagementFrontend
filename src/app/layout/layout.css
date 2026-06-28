@@ -138,6 +138,15 @@
   bottom: 1.5rem;
   left: 1rem;
   right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.drawer-footer ::ng-deep .drawer-footer-btn {
+  width: 100%;
+  justify-content: flex-start;
+  min-height: 44px;
 }
 
 /* ── Main area ── */
@@ -317,6 +326,10 @@
   .admin-sidebar {
     display: none;
   }
+
+  .content {
+    padding: 1rem;
+  }
 }
 
 @media (max-width: 600px) {
@@ -328,5 +341,9 @@
   .stripe-reminder-body ::ng-deep .p-button {
     width: 100%;
     min-height: 44px;
+  }
+
+  .content {
+    padding: 0.75rem;
   }
 }

@@ -1,0 +1,436 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+/* ---- Page scaffolding ---- */
+.finance-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 1.25rem;
+  padding: 1.25rem;
+}
+
+.finance-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.finance-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--p-text-color);
+  margin: 0;
+}
+
+.finance-subtitle {
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+  margin: 0.25rem 0 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ---- KPI cards ---- */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-content-border-radius, 8px);
+  background: var(--p-content-background);
+}
+
+.kpi-card.accent {
+  border-color: var(--p-primary-color);
+  background: var(--p-primary-50);
+}
+
+.kpi-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--p-text-muted-color);
+}
+
+.kpi-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--p-text-color);
+  overflow-wrap: break-word;
+}
+
+.kpi-card.accent .kpi-value {
+  color: var(--p-primary-color);
+}
+
+.kpi-hint {
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+}
+
+/* ---- Breakdown panels ---- */
+.panel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-content-border-radius, 8px);
+  background: var(--p-content-background);
+}
+
+.panel-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+  margin: 0;
+}
+
+.bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.bar-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.bar-name {
+  color: var(--p-text-color);
+  font-weight: 500;
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+.bar-value {
+  color: var(--p-text-muted-color);
+  white-space: nowrap;
+}
+
+.bar-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--p-surface-200);
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--p-primary-color);
+}
+
+.bar-fill.alt {
+  background: var(--p-green-500);
+}
+
+.bar-fill.warn {
+  background: var(--p-orange-500);
+}
+
+/* ---- Filter toolbar ---- */
+.filter-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 1rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-content-border-radius, 8px);
+  background: var(--p-content-background);
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.filter-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--p-text-muted-color);
+}
+
+.filter-grow {
+  flex: 1 1 220px;
+}
+
+.filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+/* PrimeNG number inputs render an inner <input> with an intrinsic (~185px)
+   width that ignores the host's configured width (9rem here). Without this
+   the inner input breaks out of its box and overlaps the neighbouring filter
+   at every screen size. Pin the inner input (and date input) to the host. */
+.filter-bar ::ng-deep .p-inputnumber {
+  max-width: 100%;
+}
+
+.filter-bar ::ng-deep .p-inputnumber input,
+.filter-bar ::ng-deep .p-datepicker input {
+  width: 100%;
+  min-width: 0;
+}
+
+/* ---- Summary strip below the toolbar ---- */
+.summary-strip {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0.25rem;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-item .label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--p-text-muted-color);
+}
+
+.summary-item .value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--p-text-color);
+}
+
+/* ---- Table (transparent, matches admin verifications) ---- */
+:host ::ng-deep .transparent-table {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+:host ::ng-deep .transparent-table .p-datatable-table-container,
+:host ::ng-deep .transparent-table .p-datatable-header,
+:host ::ng-deep .transparent-table .p-datatable-footer,
+:host ::ng-deep .transparent-table .p-paginator {
+  background: transparent;
+}
+
+:host ::ng-deep .transparent-table .p-paginator {
+  border-top: 1px solid var(--p-content-border-color);
+  flex-shrink: 0;
+}
+
+:host ::ng-deep .transparent-table .p-datatable-thead > tr > th {
+  background: transparent;
+  border-bottom: 1px solid var(--p-content-border-color);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--p-text-muted-color);
+}
+
+:host ::ng-deep .transparent-table .p-datatable-tbody > tr {
+  background: transparent;
+}
+
+:host ::ng-deep .transparent-table .p-datatable-tbody > tr > td {
+  border-bottom: 1px solid var(--p-content-border-color);
+  font-size: 0.85rem;
+}
+
+:host ::ng-deep .transparent-table .p-datatable-tbody > tr:hover > td {
+  background: var(--p-content-hover-background);
+}
+
+.cell-strong {
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+.cell-muted {
+  color: var(--p-text-muted-color);
+}
+
+.cell-sub {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--p-text-muted-color);
+}
+
+.mono {
+  font-family: var(--p-font-family-mono, ui-monospace, monospace);
+  font-size: 0.78rem;
+}
+
+.num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.revenue-amount {
+  color: var(--p-green-600);
+  font-weight: 600;
+}
+
+.alloc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem 1rem;
+}
+
+.alloc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.8rem;
+}
+
+/* ---- States ---- */
+.loading-state {
+  flex: 1;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.error-state,
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 2.5rem;
+  color: var(--p-red-500);
+}
+
+.empty-icon {
+  font-size: 2.5rem;
+  color: var(--p-text-muted-color);
+}
+
+.state-msg {
+  font-size: 0.9rem;
+  color: var(--p-text-muted-color);
+  margin: 0;
+  max-width: 34rem;
+  line-height: 1.5;
+}
+
+.state-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+  margin: 0;
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 600px) {
+  .finance-page {
+    padding: 0.85rem;
+    gap: 1rem;
+  }
+
+  .kpi-value {
+    font-size: 1.35rem;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-field,
+  .filter-grow {
+    width: 100%;
+  }
+
+  /* .filter-grow uses flex-grow to fill horizontal space on desktop; once the
+     bar stacks vertically that same grow stretches the field's height and
+     leaves a big gap. Reset it so stacked fields size to their content. */
+  .filter-grow {
+    flex: 0 0 auto;
+  }
+
+  /* Let the dropdowns / search / date picker fill the stacked filter fields
+     (they otherwise keep their desktop min-width and look cramped). */
+  .filter-field ::ng-deep .p-select,
+  .filter-field ::ng-deep .p-datepicker,
+  .filter-field ::ng-deep .p-iconfield,
+  .filter-field ::ng-deep .p-inputtext {
+    width: 100%;
+  }
+
+  .filter-actions {
+    margin-left: 0;
+    justify-content: stretch;
+  }
+
+  .filter-actions ::ng-deep .p-button {
+    flex: 1;
+  }
+
+  .summary-strip {
+    gap: 1rem;
+  }
+
+  /* On short mobile viewports the flex table would otherwise collapse to
+     near-zero height beneath the stacked filter bar. Keep it usable and let
+     the whole page scroll (:host has overflow-y: auto). */
+  :host ::ng-deep .transparent-table {
+    min-height: 22rem;
+  }
+}

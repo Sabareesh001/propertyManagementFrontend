@@ -1,0 +1,263 @@
+.owner-dashboard-container {
+  padding: 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+.header-sub {
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+}
+
+/* ── Stat cards ─────────────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  background: var(--p-content-background);
+}
+
+.stat-card-accent {
+  border-color: var(--p-primary-color);
+}
+
+.stat-card-link {
+  text-decoration: none;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.stat-card-link:hover {
+  border-color: var(--p-primary-color);
+  transform: translateY(-2px);
+}
+
+.stat-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--p-text-color);
+}
+
+.stat-value-sub {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--p-text-muted-color);
+}
+
+.stat-hint {
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+}
+
+.stat-paid {
+  color: var(--p-green-500);
+}
+
+.stat-due {
+  color: var(--p-red-500);
+}
+
+/* ── Cards & sections ───────────────────────────────────── */
+.section-card {
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  background: var(--p-content-background);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-count {
+  font-size: 0.8125rem;
+  color: var(--p-text-muted-color);
+}
+
+/* ── Payouts ────────────────────────────────────────────── */
+.payout-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  align-items: flex-start;
+}
+
+.payout-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+}
+
+.payout-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.875rem;
+  color: var(--p-text-color);
+}
+
+.flag-on {
+  color: var(--p-green-500);
+}
+
+.flag-off {
+  color: var(--p-red-500);
+}
+
+.payout-note {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+  line-height: 1.5;
+}
+
+.payout-account {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+/* ── Tables ─────────────────────────────────────────────── */
+.num-col {
+  text-align: right;
+}
+
+.action-col {
+  width: 3rem;
+  text-align: right;
+}
+
+.cell-strong {
+  font-weight: 600;
+}
+
+.cell-ref {
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.balance-due {
+  color: var(--p-red-500);
+  font-weight: 600;
+}
+
+/* ── Empty / loading states ─────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 4rem 2rem;
+  color: var(--p-text-muted-color);
+}
+
+.empty-inline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  color: var(--p-text-muted-color);
+}
+
+.empty-icon {
+  font-size: 2.5rem;
+  opacity: 0.4;
+}
+
+.empty-text {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.empty-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ── Mobile ─────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .owner-dashboard-container {
+    padding: 1rem;
+  }
+
+  .section-card {
+    padding: 1rem;
+  }
+
+  .page-title {
+    font-size: 1.25rem;
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+  }
+
+  .page-header {
+    align-items: stretch;
+  }
+}

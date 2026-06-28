@@ -569,10 +569,10 @@ Auth: Required (any verified user)
   "securityDeposit": 72000.00
 }
 ```
-All financial and date fields are optional — the proposal can be a simple expression of interest. When provided:
-- `startDate`: must be today or later
+All fields are **required** — a proposal must include full lease terms to be created:
+- `startDate`: must be today or later (cannot be in the past)
 - `endDate`: must be > `startDate` and at least 1 month after
-- All amounts ≥ 0
+- `monthlyRent`, `upfrontPayment`, `securityDeposit`: all required, must be ≥ 0 (can be 0 but must be explicitly provided)
 
 **Response 201:** `LeaseProposalResponseDto`
 
@@ -614,7 +614,7 @@ Auth: Owner (must own the property)
 PUT /api/leaseproposal/{id}
 Auth: Required (must be the tenant who created the proposal)
 ```
-Partial update on a Draft proposal. All fields optional.
+Full replace of a Draft proposal — all fields are **required** on every update call.
 
 **Request body:**
 ```json
@@ -626,7 +626,7 @@ Partial update on a Draft proposal. All fields optional.
   "securityDeposit": 69000.00
 }
 ```
-Only non-null provided fields are applied. Proposal must be in **Draft** status.
+All five fields must be provided. Same validation rules as Create apply (`startDate` not in the past, `endDate` ≥ 1 month after `startDate`, amounts ≥ 0). Proposal must be in **Draft** status.
 
 **Response 200:** `LeaseProposalResponseDto`
 

@@ -1,0 +1,241 @@
+<div class="finance-page">
+  <div class="finance-header">
+    <div>
+      <h1 class="finance-title">Charges</h1>
+      <p class="finance-subtitle">Every charge applied to a lease across the platform.</p>
+    </div>
+    <div class="header-actions">
+      <p-button
+        icon="pi pi-download"
+        label="Export CSV"
+        severity="secondary"
+        size="small"
+        [outlined]="true"
+        [disabled]="loading() || error() || filteredCount() === 0"
+        (onClick)="exportCsv()"
+      />
+      <p-button
+        icon="pi pi-refresh"
+        label="Refresh"
+        severity="secondary"
+        size="small"
+        [outlined]="true"
+        [loading]="loading()"
+        (onClick)="load()"
+      />
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+        <p-skeleton height="2.75rem" />
+      }
+    </div>
+  } @else if (error()) {
+    <div class="error-state">
+      <i class="pi pi-receipt error-icon"></i>
+      <p class="state-title">Charges aren't available yet</p>
+      <p class="state-msg">
+        This view needs a platform-wide charges endpoint (<code>GET /api/admin/charges</code>).
+        The current API only exposes charges per lease to that lease's owner/tenant.
+      </p>
+      <p-button label="Retry" icon="pi pi-refresh" severity="secondary" size="small" (onClick)="load()" />
+    </div>
+  } @else {
+    <!-- Filters -->
+    <div class="filter-bar">
+      <div class="filter-field filter-grow">
+        <label class="filter-label">Search</label>
+        <p-iconfield iconPosition="left">
+          <p-inputicon styleClass="pi pi-search" />
+          <input
+            pInputText
+            type="text"
+            [ngModel]="search()"
+            (ngModelChange)="search.set($event)"
+            placeholder="Type, description, property, tenant, owner…"
+            style="width: 100%"
+          />
+        </p-iconfield>
+      </div>
+
+      <div class="filter-field">
+        <label class="filter-label">Charge type</label>
+        <p-select
+          [options]="typeOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="type()"
+          (ngModelChange)="type.set($event)"
+          [style]="{ 'min-width': '11rem' }"
+        />
+      </div>
+
+      <div class="filter-field">
+        <label class="filter-label">Status</label>
+        <p-select
+          [options]="statusOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="status()"
+          (ngModelChange)="status.set($event)"
+          [style]="{ 'min-width': '11rem' }"
+        />
+      </div>
+
+      <div class="filter-field">
+        <label class="filter-label">Due date range</label>
+        <p-datepicker
+          selectionMode="range"
+          [ngModel]="dateRange()"
+          (ngModelChange)="dateRange.set($event)"
+          [readonlyInput]="true"
+          [showButtonBar]="true"
+          dateFormat="dd M yy"
+          placeholder="Any date"
+          [style]="{ 'min-width': '14rem' }"
+        />
+      </div>
+
+      <div class="filter-field">
+        <label class="filter-label">Min amount</label>
+        <p-inputnumber
+          [ngModel]="amountMin()"
+          (ngModelChange)="amountMin.set($event)"
+          mode="currency"
+          currency="INR"
+          locale="en-IN"
+          [min]="0"
+          placeholder="0"
+          [style]="{ width: '9rem' }"
+        />
+      </div>
+
+      <div class="filter-field">
+        <label class="filter-label">Max amount</label>
+        <p-inputnumber
+          [ngModel]="amountMax()"
+          (ngModelChange)="amountMax.set($event)"
+          mode="currency"
+          currency="INR"
+          locale="en-IN"
+          [min]="0"
+          placeholder="Any"
+          [style]="{ width: '9rem' }"
+        />
+      </div>
+
+      <div class="filter-field">
+        <label class="filter-label">Outstanding only</label>
+        <p-toggleswitch [ngModel]="onlyOutstanding()" (ngModelChange)="onlyOutstanding.set($event)" />
+      </div>
+
+      <div class="filter-actions">
+        <p-button
+          icon="pi pi-filter-slash"
+          label="Clear"
+          severity="secondary"
+          [text]="true"
+          size="small"
+          [disabled]="!hasActiveFilters()"
+          (onClick)="resetFilters()"
+        />
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-strip">
+      <div class="summary-item">
+        <span class="label">Charges</span>
+        <span class="value">{{ filteredCount() }}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Total Charged</span>
+        <span class="value">{{ money(totalCharged()) }}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Collected</span>
+        <span class="value">{{ money(totalCollected()) }}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Outstanding</span>
+        <span class="value">{{ money(totalOutstanding()) }}</span>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <p-table
+      [value]="filtered()"
+      dataKey="id"
+      [paginator]="true"
+      [rows]="15"
+      [rowsPerPageOptions]="[15, 30, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first}–{last} of {totalRecords}"
+      styleClass="transparent-table"
+      [tableStyle]="{ 'min-width': '68rem' }"
+      [scrollable]="true"
+      scrollHeight="flex"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="chargeTypeName">Type <p-sortIcon field="chargeTypeName" /></th>
+          <th>Property / Tenant</th>
+          <th>Owner</th>
+          <th class="num" pSortableColumn="amount">Amount <p-sortIcon field="amount" /></th>
+          <th class="num">Paid</th>
+          <th class="num" pSortableColumn="balanceDue">Balance <p-sortIcon field="balanceDue" /></th>
+          <th style="text-align: center" pSortableColumn="statusId">Status <p-sortIcon field="statusId" /></th>
+          <th pSortableColumn="dueDate">Due <p-sortIcon field="dueDate" /></th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-c>
+        <tr>
+          <td>
+            <span class="cell-strong">{{ c.chargeTypeName || '—' }}</span>
+            @if (c.description) {
+              <span class="cell-sub">{{ c.description }}</span>
+            }
+          </td>
+          <td>
+            <span class="cell-strong">{{ c.propertyTitle || '—' }}</span>
+            <span class="cell-sub">{{ c.tenantName }}</span>
+          </td>
+          <td class="cell-muted">{{ c.ownerName || '—' }}</td>
+          <td class="num cell-strong">{{ moneyPrecise(c.amount) }}</td>
+          <td class="num cell-muted">{{ moneyPrecise(c.amountPaid) }}</td>
+          <td class="num">
+            @if (c.balanceDue > 0) {
+              <span class="cell-strong">{{ moneyPrecise(c.balanceDue) }}</span>
+            } @else {
+              <span class="cell-muted">{{ moneyPrecise(0) }}</span>
+            }
+          </td>
+          <td style="text-align: center">
+            <p-tag [value]="c.statusName || 'Unknown'" [severity]="severity(c.statusId)" />
+          </td>
+          <td class="cell-muted">{{ date(c.dueDate) }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8">
+            <div class="empty-state">
+              <i class="pi pi-inbox empty-icon"></i>
+              <p class="state-msg">
+                @if (hasActiveFilters()) {
+                  No charges match the current filters.
+                } @else {
+                  No charges have been applied yet.
+                }
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+</div>

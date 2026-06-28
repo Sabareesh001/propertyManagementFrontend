@@ -40,7 +40,7 @@ import { PropertyService, PropertyDetail } from '../../core/services/property.se
       header="Reject Property"
       [(visible)]="rejectDialogVisible"
       [modal]="true"
-      [style]="{ width: '28rem' }"
+      [style]="{ width: '28rem', 'max-width': '92vw' }"
       [closable]="true"
       (onHide)="cancelReject()"
     >
@@ -222,6 +222,7 @@ import { PropertyService, PropertyDetail } from '../../core/services/property.se
       display: flex;
       flex: 1;
       min-height: 0;
+      min-width: 0;
     }
 
     :host ::ng-deep .transparent-table {
@@ -229,6 +230,7 @@ import { PropertyService, PropertyDetail } from '../../core/services/property.se
       display: flex;
       flex-direction: column;
       min-height: 0;
+      min-width: 0;
     }
 
     :host ::ng-deep .transparent-table .p-datatable-table-container,

@@ -40,7 +40,7 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
       header="Reject Signed Lease"
       [(visible)]="rejectDialogVisible"
       [modal]="true"
-      [style]="{ width: '28rem' }"
+      [style]="{ width: '28rem', 'max-width': '92vw' }"
       [closable]="true"
       (onHide)="cancelReject()"
     >
@@ -201,6 +201,7 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
       display: flex;
       flex: 1;
       min-height: 0;
+      min-width: 0;
     }
 
     :host ::ng-deep .transparent-table {
@@ -208,6 +209,7 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
       display: flex;
       flex-direction: column;
       min-height: 0;
+      min-width: 0;
     }
 
     :host ::ng-deep .transparent-table .p-datatable-table-container,

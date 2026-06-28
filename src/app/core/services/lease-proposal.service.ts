@@ -5,11 +5,11 @@ import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
 
 export interface CreateLeaseProposalPayload {
   propertyId: number;
-  startDate?: string | null;
-  endDate?: string | null;
-  monthlyRent?: number | null;
-  upfrontPayment?: number | null;
-  securityDeposit?: number | null;
+  startDate: string;
+  endDate: string;
+  monthlyRent: number;
+  upfrontPayment: number;
+  securityDeposit: number;
 }
 
 export interface TenantDetails {

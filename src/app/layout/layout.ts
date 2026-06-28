@@ -17,10 +17,11 @@ import { UserVerificationService, VerificationStatus } from '../core/services/us
 import { VerifyUserModalComponent } from '../shared/verify-user-modal/verify-user-modal';
 import { selectIsOwner, selectIsAdmin, selectIsLoggedIn } from '../store/auth/auth.selectors';
 
-const TAB_ROUTES = ['/dashboard', '/my-requests', '/owner/properties', '/owner/received-requests', '/leases', '/admin/verifications'];
+const TAB_ROUTES = ['/dashboard', '/owner/dashboard', '/my-requests', '/owner/properties', '/owner/received-requests', '/leases'];
 
 const ALL_DRAWER_ITEMS = [
   { label: 'Dashboard', icon: 'pi pi-home', route: '/dashboard', ownerOnly: false, loggedInOnly: false, adminOnly: false, hideForAdmin: true },
+  { label: 'Overview', icon: 'pi pi-chart-line', route: '/owner/dashboard', ownerOnly: true, loggedInOnly: false, adminOnly: false, hideForAdmin: false },
   { label: 'My Requests', icon: 'pi pi-file-edit', route: '/my-requests', ownerOnly: false, loggedInOnly: true, adminOnly: false, hideForAdmin: true },
   { label: 'My Properties', icon: 'pi pi-building', route: '/owner/properties', ownerOnly: true, loggedInOnly: false, adminOnly: false, hideForAdmin: false },
   { label: 'Received Requests', icon: 'pi pi-inbox', route: '/owner/received-requests', ownerOnly: true, loggedInOnly: false, adminOnly: false, hideForAdmin: false },
@@ -29,6 +30,9 @@ const ALL_DRAWER_ITEMS = [
   { label: 'User Verifications', icon: 'pi pi-verified', route: '/admin/verifications/user', ownerOnly: false, loggedInOnly: false, adminOnly: true, hideForAdmin: false },
   { label: 'Lease Templates', icon: 'pi pi-file-check', route: '/admin/verifications/lease', ownerOnly: false, loggedInOnly: false, adminOnly: true, hideForAdmin: false },
   { label: 'Signed Leases', icon: 'pi pi-verified', route: '/admin/verifications/signed-lease', ownerOnly: false, loggedInOnly: false, adminOnly: true, hideForAdmin: false },
+  { label: 'Revenue', icon: 'pi pi-chart-line', route: '/admin/finance/revenue', ownerOnly: false, loggedInOnly: false, adminOnly: true, hideForAdmin: false },
+  { label: 'Transactions', icon: 'pi pi-credit-card', route: '/admin/finance/transactions', ownerOnly: false, loggedInOnly: false, adminOnly: true, hideForAdmin: false },
+  { label: 'Charges', icon: 'pi pi-receipt', route: '/admin/finance/charges', ownerOnly: false, loggedInOnly: false, adminOnly: true, hideForAdmin: false },
 ];
 
 @Component({
@@ -130,6 +134,31 @@ export class LayoutComponent {
             icon: 'pi pi-verified',
             styleClass: url.startsWith('/admin/verifications/signed-lease') ? 'nav-item-active' : '',
             command: () => this.navigateDrawerItem('/admin/verifications/signed-lease'),
+          },
+        ],
+      },
+      {
+        label: 'Finance',
+        icon: 'pi pi-wallet',
+        expanded: true,
+        items: [
+          {
+            label: 'Revenue',
+            icon: 'pi pi-chart-line',
+            styleClass: url.startsWith('/admin/finance/revenue') ? 'nav-item-active' : '',
+            command: () => this.navigateDrawerItem('/admin/finance/revenue'),
+          },
+          {
+            label: 'Transactions',
+            icon: 'pi pi-credit-card',
+            styleClass: url.startsWith('/admin/finance/transactions') ? 'nav-item-active' : '',
+            command: () => this.navigateDrawerItem('/admin/finance/transactions'),
+          },
+          {
+            label: 'Charges',
+            icon: 'pi pi-receipt',
+            styleClass: url.startsWith('/admin/finance/charges') ? 'nav-item-active' : '',
+            command: () => this.navigateDrawerItem('/admin/finance/charges'),
           },
         ],
       },

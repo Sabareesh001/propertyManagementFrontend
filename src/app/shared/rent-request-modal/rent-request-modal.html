@@ -44,7 +44,7 @@
       <!-- Dates row -->
       <div class="field-group">
         <div class="field">
-          <label class="field-label">Move-in Date <span class="optional">(optional)</span></label>
+          <label class="field-label">Move-in Date <span class="required-star">*</span></label>
           <p-datepicker
             [(ngModel)]="startDate"
             (ngModelChange)="onStartDateChange()"
@@ -53,12 +53,16 @@
             placeholder="Select start date"
             [fluid]="true"
             [showIcon]="true"
+            [invalid]="startDateInvalid"
             appendTo="body"
           />
+          @if (startDateInvalid) {
+            <span class="field-error">Move-in date is required.</span>
+          }
         </div>
 
         <div class="field">
-          <label class="field-label">Move-out Date <span class="optional">(optional)</span></label>
+          <label class="field-label">Move-out Date <span class="required-star">*</span></label>
           <p-datepicker
             [(ngModel)]="endDate"
             [minDate]="minEndDate"
@@ -67,14 +71,24 @@
             [fluid]="true"
             [showIcon]="true"
             [disabled]="!startDate"
+            [invalid]="endDateInvalid"
             appendTo="body"
           />
+          @if (endDateInvalid) {
+            <span class="field-error">
+              @if (!startDate) { Select a move-in date first. }
+              @else { Move-out date is required. }
+            </span>
+          }
+          @if (!endDateInvalid && startDate) {
+            <span class="field-hint">Must be at least 1 month after move-in.</span>
+          }
         </div>
       </div>
 
       <!-- Financials -->
       <div class="field">
-        <label class="field-label">Monthly Rent</label>
+        <label class="field-label">Monthly Rent <span class="required-star">*</span></label>
         <p-inputnumber
           [(ngModel)]="monthlyRent"
           mode="currency"
@@ -83,13 +97,18 @@
           [min]="0"
           [fluid]="true"
           placeholder="Propose a monthly rent"
+          [invalid]="monthlyRentInvalid"
         />
-        <span class="field-hint">Listed at {{ formatCurrency(property?.monthlyRent ?? null) }}</span>
+        @if (monthlyRentInvalid) {
+          <span class="field-error">Monthly rent is required and must be 0 or more.</span>
+        } @else {
+          <span class="field-hint">Listed at {{ formatCurrency(property?.monthlyRent ?? null) }}</span>
+        }
       </div>
 
       <div class="field-group">
         <div class="field">
-          <label class="field-label">Upfront Payment <span class="optional">(optional)</span></label>
+          <label class="field-label">Upfront Payment <span class="required-star">*</span></label>
           <p-inputnumber
             [(ngModel)]="upfrontPayment"
             mode="currency"
@@ -98,11 +117,17 @@
             [min]="0"
             [fluid]="true"
             placeholder="0"
+            [invalid]="upfrontPaymentInvalid"
           />
+          @if (upfrontPaymentInvalid) {
+            <span class="field-error">Upfront payment is required (enter 0 if none).</span>
+          } @else {
+            <span class="field-hint">Listed at {{ formatCurrency(property?.upfrontPayment ?? null) }}</span>
+          }
         </div>
 
         <div class="field">
-          <label class="field-label">Security Deposit <span class="optional">(optional)</span></label>
+          <label class="field-label">Security Deposit <span class="required-star">*</span></label>
           <p-inputnumber
             [(ngModel)]="securityDeposit"
             mode="currency"
@@ -111,7 +136,13 @@
             [min]="0"
             [fluid]="true"
             placeholder="0"
+            [invalid]="securityDepositInvalid"
           />
+          @if (securityDepositInvalid) {
+            <span class="field-error">Security deposit is required (enter 0 if none).</span>
+          } @else {
+            <span class="field-hint">Listed at {{ formatCurrency(property?.securityDeposit ?? null) }}</span>
+          }
         </div>
       </div>
 

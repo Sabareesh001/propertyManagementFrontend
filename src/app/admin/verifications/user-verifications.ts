@@ -49,7 +49,7 @@ interface PendingRow extends UserVerificationResponse {
       header="Reject Verification"
       [(visible)]="rejectDialogVisible"
       [modal]="true"
-      [style]="{ width: '28rem' }"
+      [style]="{ width: '28rem', 'max-width': '92vw' }"
       [closable]="true"
       (onHide)="cancelReject()"
     >
@@ -213,6 +213,7 @@ interface PendingRow extends UserVerificationResponse {
       display: flex;
       flex: 1;
       min-height: 0;
+      min-width: 0;
     }
 
     :host ::ng-deep .transparent-table {
@@ -220,6 +221,7 @@ interface PendingRow extends UserVerificationResponse {
       display: flex;
       flex-direction: column;
       min-height: 0;
+      min-width: 0;
     }
 
     :host ::ng-deep .transparent-table .p-datatable-table-container,

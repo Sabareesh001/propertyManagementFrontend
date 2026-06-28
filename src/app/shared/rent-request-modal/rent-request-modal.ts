@@ -32,7 +32,7 @@ export class RentRequestModalComponent implements OnChanges {
   @Input() visible = false;
   @Input() property: PropertyDetail | null = null;
   @Output() visibleChange = new EventEmitter<boolean>();
-  @Output() submitted = new EventEmitter<void>();
+  @Output() proposalSubmitted = new EventEmitter<void>();
 
   private leaseProposalService = inject(LeaseProposalService);
 
@@ -48,6 +48,8 @@ export class RentRequestModalComponent implements OnChanges {
   submitting = signal(false);
   errorMessage = signal<string | null>(null);
   success = signal(false);
+  /** Tracks whether the user has attempted to submit — gates showing field errors. */
+  formTouched = signal(false);
 
   ngOnChanges(): void {
     if (this.visible && this.property) {
@@ -64,6 +66,7 @@ export class RentRequestModalComponent implements OnChanges {
     this.errorMessage.set(null);
     this.success.set(false);
     this.submitting.set(false);
+    this.formTouched.set(false);
   }
 
   onStartDateChange(): void {
@@ -83,18 +86,52 @@ export class RentRequestModalComponent implements OnChanges {
     this.visibleChange.emit(false);
   }
 
+  // --- Per-field validity getters (only active after first submit attempt) ---
+
+  get startDateInvalid(): boolean {
+    return this.formTouched() && !this.startDate;
+  }
+
+  get endDateInvalid(): boolean {
+    return this.formTouched() && !this.endDate;
+  }
+
+  get monthlyRentInvalid(): boolean {
+    return this.formTouched() && (this.monthlyRent === null || this.monthlyRent < 0);
+  }
+
+  get upfrontPaymentInvalid(): boolean {
+    return this.formTouched() && (this.upfrontPayment === null || this.upfrontPayment < 0);
+  }
+
+  get securityDepositInvalid(): boolean {
+    return this.formTouched() && (this.securityDeposit === null || this.securityDeposit < 0);
+  }
+
+  private isFormValid(): boolean {
+    if (!this.startDate) return false;
+    if (!this.endDate) return false;
+    if (this.monthlyRent === null || this.monthlyRent < 0) return false;
+    if (this.upfrontPayment === null || this.upfrontPayment < 0) return false;
+    if (this.securityDeposit === null || this.securityDeposit < 0) return false;
+    return true;
+  }
+
   submitRequest(): void {
     if (!this.property) return;
+    this.formTouched.set(true);
+    if (!this.isFormValid()) return;
+
     this.submitting.set(true);
     this.errorMessage.set(null);
 
     const payload = {
       propertyId: this.property.id,
-      startDate: this.startDate ? this.toIsoDate(this.startDate) : null,
-      endDate: this.endDate ? this.toIsoDate(this.endDate) : null,
-      monthlyRent: this.monthlyRent,
-      upfrontPayment: this.upfrontPayment,
-      securityDeposit: this.securityDeposit,
+      startDate: this.toIsoDate(this.startDate!),
+      endDate: this.toIsoDate(this.endDate!),
+      monthlyRent: this.monthlyRent!,
+      upfrontPayment: this.upfrontPayment!,
+      securityDeposit: this.securityDeposit!,
     };
 
     this.leaseProposalService.create(payload).pipe(
@@ -103,7 +140,7 @@ export class RentRequestModalComponent implements OnChanges {
       next: () => {
         this.submitting.set(false);
         this.success.set(true);
-        this.submitted.emit();
+        this.proposalSubmitted.emit();
       },
       error: (err) => {
         this.submitting.set(false);
