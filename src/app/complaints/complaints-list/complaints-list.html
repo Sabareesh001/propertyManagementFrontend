@@ -1,0 +1,126 @@
+<p-toast />
+
+@if (canFile()) {
+  <app-file-complaint-modal [(visible)]="fileModalVisible" (created)="onCreated($event)" />
+}
+
+<div class="complaints-container">
+  <div class="page-header">
+    <div class="header-title">
+      <h2 class="page-title">{{ pageTitle }}</h2>
+      @if (!loading() && !error() && complaints().length > 0) {
+        <span class="header-sub">{{ openCount() }} open · {{ complaints().length }} total</span>
+      }
+    </div>
+    <div class="header-actions">
+      @if (!loading() && !error()) {
+        <p-menu #filterMenu [model]="filterMenuItems()" [popup]="true" />
+        <p-button
+          [label]="selectedStatusLabel()"
+          icon="pi pi-filter"
+          iconPos="left"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="filterMenu.toggle($event)"
+        />
+      }
+      @if (canFile()) {
+        <p-button label="File a Complaint" icon="pi pi-plus" (onClick)="fileModalVisible.set(true)" />
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="empty-state">
+      <p-progressspinner strokeWidth="4" [style]="{ width: '3rem', height: '3rem' }" />
+      <p class="empty-text">Loading complaints…</p>
+    </div>
+  } @else if (error()) {
+    <div class="empty-state">
+      <i class="pi pi-exclamation-triangle empty-icon"></i>
+      <p class="empty-text">Couldn't load complaints. Please try again.</p>
+      <p-button label="Retry" icon="pi pi-refresh" size="small" (onClick)="load()" />
+    </div>
+  } @else if (complaints().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-flag empty-icon"></i>
+      <p class="empty-text">{{ emptyText }}</p>
+      @if (canFile()) {
+        <p class="empty-hint">Have an issue with your rental? Raise it here and track the resolution.</p>
+        <p-button label="File a Complaint" icon="pi pi-plus" (onClick)="fileModalVisible.set(true)" />
+      }
+    </div>
+  } @else if (filteredComplaints().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-filter empty-icon"></i>
+      <p class="empty-text">No complaints match this filter.</p>
+      <p-button label="Clear Filter" icon="pi pi-times" size="small" severity="secondary" (onClick)="selectedStatus.set(null)" />
+    </div>
+  } @else {
+    <div class="complaints-list">
+      @for (complaint of filteredComplaints(); track complaint.id) {
+        <div class="complaint-card">
+          <div class="complaint-header">
+            <a [routerLink]="['/complaints', complaint.id]" class="complaint-subject">
+              {{ complaint.subject }}
+            </a>
+            <p-tag [value]="statusLabel(complaint.statusId)" [severity]="statusSeverity(complaint.statusId)" />
+          </div>
+
+          <div class="complaint-badges">
+            <span class="category-chip">
+              <i class="pi pi-tag"></i> {{ categoryName(complaint.categoryId) }}
+            </span>
+            <p-tag
+              [value]="priorityLabel(complaint.priorityId) + ' priority'"
+              [severity]="prioritySeverity(complaint.priorityId)"
+              [rounded]="true"
+            />
+            <a [routerLink]="['/property', complaint.propertyId]" class="property-link">
+              <i class="pi pi-home"></i>
+              {{ complaint.propertyTitle || 'Property #' + complaint.propertyId }}
+            </a>
+          </div>
+
+          @if (complaint.description) {
+            <p class="complaint-desc">{{ complaint.description }}</p>
+          }
+
+          <div class="complaint-details">
+            @if (showTenant()) {
+              <div class="detail-item">
+                <span class="detail-label">Filed By</span>
+                <span class="detail-value">{{ complaint.tenantName || '—' }}</span>
+              </div>
+            }
+            <div class="detail-item">
+              <span class="detail-label">Filed On</span>
+              <span class="detail-value">{{ formatDate(complaint.createdAt) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Last Update</span>
+              <span class="detail-value">{{ formatDate(complaint.updatedAt || complaint.createdAt) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Messages</span>
+              <span class="detail-value">
+                <i class="pi pi-comments"></i> {{ complaint.commentCount }}
+              </span>
+            </div>
+          </div>
+
+          <div class="complaint-actions">
+            <p-button
+              [label]="showTenant() ? 'View & Respond' : 'View Details'"
+              icon="pi pi-arrow-right"
+              iconPos="right"
+              [outlined]="true"
+              size="small"
+              [routerLink]="['/complaints', complaint.id]"
+            />
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -35,6 +35,10 @@
           }
           @if (isLoggedIn()) {
             <p-tab value="5"><i class="pi pi-file-check"></i> Leases</p-tab>
+            <p-tab value="6"><i class="pi pi-flag"></i> My Complaints</p-tab>
+          }
+          @if (isOwner()) {
+            <p-tab value="7"><i class="pi pi-flag-fill"></i> Property Complaints</p-tab>
           }
         </p-tablist>
       </p-tabs>

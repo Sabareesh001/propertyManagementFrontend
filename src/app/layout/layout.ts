@@ -17,7 +17,7 @@ import { UserVerificationService, VerificationStatus } from '../core/services/us
 import { VerifyUserModalComponent } from '../shared/verify-user-modal/verify-user-modal';
 import { selectIsOwner, selectIsAdmin, selectIsLoggedIn } from '../store/auth/auth.selectors';
 
-const TAB_ROUTES = ['/dashboard', '/owner/dashboard', '/my-requests', '/owner/properties', '/owner/received-requests', '/leases'];
+const TAB_ROUTES = ['/dashboard', '/owner/dashboard', '/my-requests', '/owner/properties', '/owner/received-requests', '/leases', '/complaints', '/owner/complaints'];
 
 const ALL_DRAWER_ITEMS = [
   { label: 'Dashboard', icon: 'pi pi-home', route: '/dashboard', ownerOnly: false, loggedInOnly: false, adminOnly: false, hideForAdmin: true },
@@ -26,6 +26,8 @@ const ALL_DRAWER_ITEMS = [
   { label: 'My Properties', icon: 'pi pi-building', route: '/owner/properties', ownerOnly: true, loggedInOnly: false, adminOnly: false, hideForAdmin: false },
   { label: 'Received Requests', icon: 'pi pi-inbox', route: '/owner/received-requests', ownerOnly: true, loggedInOnly: false, adminOnly: false, hideForAdmin: false },
   { label: 'Leases', icon: 'pi pi-file-check', route: '/leases', ownerOnly: false, loggedInOnly: true, adminOnly: false, hideForAdmin: true },
+  { label: 'My Complaints', icon: 'pi pi-flag', route: '/complaints', ownerOnly: false, loggedInOnly: true, adminOnly: false, hideForAdmin: true },
+  { label: 'Property Complaints', icon: 'pi pi-flag-fill', route: '/owner/complaints', ownerOnly: true, loggedInOnly: false, adminOnly: false, hideForAdmin: false },
   { label: 'Property Verifications', icon: 'pi pi-building', route: '/admin/verifications/property', ownerOnly: false, loggedInOnly: false, adminOnly: true, hideForAdmin: false },
   { label: 'User Verifications', icon: 'pi pi-verified', route: '/admin/verifications/user', ownerOnly: false, loggedInOnly: false, adminOnly: true, hideForAdmin: false },
   { label: 'Lease Templates', icon: 'pi pi-file-check', route: '/admin/verifications/lease', ownerOnly: false, loggedInOnly: false, adminOnly: true, hideForAdmin: false },
@@ -161,6 +163,12 @@ export class LayoutComponent {
             command: () => this.navigateDrawerItem('/admin/finance/charges'),
           },
         ],
+      },
+      {
+        label: 'Complaints',
+        icon: 'pi pi-flag',
+        styleClass: url.startsWith('/admin/complaints') ? 'nav-item-active' : '',
+        command: () => this.navigateDrawerItem('/admin/complaints'),
       },
     ];
   });

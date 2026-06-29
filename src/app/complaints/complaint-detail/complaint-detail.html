@@ -1,0 +1,211 @@
+<p-toast />
+
+<div class="complaint-detail-container">
+  <a class="back-link" [routerLink]="backLink()">
+    <i class="pi pi-arrow-left"></i> Back to complaints
+  </a>
+
+  @if (loading()) {
+    <div class="empty-state">
+      <p-progressspinner strokeWidth="4" [style]="{ width: '3rem', height: '3rem' }" />
+      <p class="empty-text">Loading complaint…</p>
+    </div>
+  } @else if (error() || !complaint()) {
+    <div class="empty-state">
+      <i class="pi pi-exclamation-triangle empty-icon"></i>
+      <p class="empty-text">Couldn't load this complaint.</p>
+      <p-button label="Retry" icon="pi pi-refresh" size="small" (onClick)="load()" />
+    </div>
+  } @else {
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-title">
+        <h2 class="page-title">{{ complaint()!.subject }}</h2>
+        <div class="header-badges">
+          <p-tag [value]="statusLabel(complaint()!.statusId)" [severity]="statusSeverity(complaint()!.statusId)" />
+          <p-tag
+            [value]="priorityLabel(complaint()!.priorityId) + ' priority'"
+            [severity]="prioritySeverity(complaint()!.priorityId)"
+            [rounded]="true"
+          />
+          <span class="category-chip">
+            <i class="pi pi-tag"></i> {{ categoryName(complaint()!.categoryId) }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action bar -->
+    @if (canStartWork() || canResolve() || canCancel() || canClose() || canReopen()) {
+      <div class="action-bar">
+        @if (canStartWork()) {
+          <p-button label="Start Working" icon="pi pi-play" size="small" (onClick)="startWork()" />
+        }
+        @if (canResolve()) {
+          <p-button label="Mark Resolved" icon="pi pi-check" severity="success" size="small" (onClick)="resolve()" />
+        }
+        @if (canClose()) {
+          <p-button label="Close (Satisfied)" icon="pi pi-check-circle" severity="success" size="small" (onClick)="close()" />
+        }
+        @if (canReopen()) {
+          <p-button label="Reopen" icon="pi pi-replay" severity="warn" [outlined]="true" size="small" (onClick)="reopen()" />
+        }
+        @if (canCancel()) {
+          <p-button label="Cancel Complaint" icon="pi pi-times" severity="danger" [outlined]="true" size="small" (onClick)="cancel()" />
+        }
+      </div>
+    }
+
+    <!-- Meta -->
+    <div class="section-card">
+      <div class="meta-grid">
+        <div class="detail-item">
+          <span class="detail-label">Property</span>
+          <a [routerLink]="['/property', complaint()!.propertyId]" class="detail-link">
+            <i class="pi pi-home"></i>
+            {{ complaint()!.propertyTitle || 'Property #' + complaint()!.propertyId }}
+          </a>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Filed By</span>
+          <span class="detail-value">{{ complaint()!.tenantName || '—' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Filed On</span>
+          <span class="detail-value">{{ formatDateTime(complaint()!.createdAt) }}</span>
+        </div>
+        @if (complaint()!.resolvedAt) {
+          <div class="detail-item">
+            <span class="detail-label">Resolved On</span>
+            <span class="detail-value">{{ formatDateTime(complaint()!.resolvedAt) }}</span>
+          </div>
+        }
+        @if (complaint()!.leaseId) {
+          <div class="detail-item">
+            <span class="detail-label">Lease</span>
+            <a [routerLink]="['/leases', complaint()!.leaseId]" class="detail-link">
+              <i class="pi pi-file-check"></i> View lease
+            </a>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="section-card">
+      <h3 class="section-title"><i class="pi pi-align-left"></i> Description</h3>
+      <p class="description-text">{{ complaint()!.description }}</p>
+      @if (complaint()!.attachmentUrl) {
+        <a [href]="complaint()!.attachmentUrl!" target="_blank" rel="noopener" class="attachment-link">
+          <i class="pi pi-paperclip"></i> View attachment
+        </a>
+      }
+    </div>
+
+    <!-- Conversation thread -->
+    <div class="section-card">
+      <h3 class="section-title">
+        <i class="pi pi-comments"></i> Conversation
+        <span class="thread-count">({{ complaint()!.comments.length }})</span>
+      </h3>
+
+      @if (complaint()!.comments.length === 0) {
+        <div class="empty-inline">
+          <i class="pi pi-comment empty-icon"></i>
+          <p class="empty-text">No messages yet.</p>
+          <p class="empty-hint">
+            {{ isHandler() ? 'Respond to the tenant to get started.' : 'Add a message to share more details.' }}
+          </p>
+        </div>
+      } @else {
+        <div class="thread">
+          @for (comment of complaint()!.comments; track comment.id) {
+            <div class="thread-item">
+              <div class="avatar" [attr.data-role]="comment.authorRole">
+                {{ authorInitial(comment.authorName) }}
+              </div>
+              <div class="thread-body">
+                <div class="thread-meta">
+                  <span class="thread-author">{{ comment.authorName || 'User' }}</span>
+                  <p-tag [value]="comment.authorRole || 'User'" [severity]="roleSeverity(comment.authorRole)" [rounded]="true" />
+                  <span class="thread-time">{{ formatDateTime(comment.createdAt) }}</span>
+                </div>
+                <p class="thread-message">{{ comment.message }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      @if (canComment()) {
+        <div class="composer">
+          <textarea
+            pTextarea
+            [(ngModel)]="newComment"
+            rows="3"
+            maxlength="2000"
+            placeholder="Write a message…"
+            [disabled]="postingComment()"
+            class="w-full"
+          ></textarea>
+          @if (commentError()) {
+            <p-message severity="error" [text]="commentError()!" styleClass="w-full" />
+          }
+          <div class="composer-actions">
+            <p-button
+              label="Post Message"
+              icon="pi pi-send"
+              size="small"
+              [loading]="postingComment()"
+              [disabled]="!newComment.trim() || postingComment()"
+              (onClick)="postComment()"
+            />
+          </div>
+        </div>
+      } @else {
+        <p-message
+          severity="secondary"
+          [text]="'This complaint is ' + statusLabel(complaint()!.statusId) + '. The conversation is closed.'"
+          styleClass="w-full closed-note"
+        />
+      }
+    </div>
+  }
+</div>
+
+<!-- Status-change dialog -->
+<p-dialog
+  [header]="pending()?.title || 'Update Complaint'"
+  [visible]="pending() !== null"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="!updatingStatus()"
+  styleClass="status-dialog"
+  (onHide)="closeStatusDialog()"
+>
+  <div class="dialog-body">
+    <div class="form-field">
+      <label class="field-label" for="statusNote">{{ pending()?.noteLabel }}</label>
+      <textarea
+        pTextarea
+        id="statusNote"
+        [(ngModel)]="statusNote"
+        rows="3"
+        maxlength="500"
+        [placeholder]="pending()?.notePlaceholder || ''"
+        [disabled]="updatingStatus()"
+        class="w-full"
+      ></textarea>
+      <span class="field-hint">This note is added to the conversation.</span>
+    </div>
+    @if (statusError()) {
+      <p-message severity="error" [text]="statusError()!" styleClass="w-full" />
+    }
+  </div>
+
+  <ng-template #footer>
+    <p-button label="Cancel" severity="secondary" [text]="true" size="small" [disabled]="updatingStatus()" (onClick)="closeStatusDialog()" />
+    <p-button [label]="pending()?.confirmLabel || 'Confirm'" icon="pi pi-check" size="small" [loading]="updatingStatus()" (onClick)="confirmStatusChange()" />
+  </ng-template>
+</p-dialog>

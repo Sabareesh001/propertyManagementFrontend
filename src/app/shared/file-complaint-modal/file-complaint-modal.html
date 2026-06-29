@@ -1,0 +1,169 @@
+<p-dialog
+  header="File a Complaint"
+  [visible]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="!submitting()"
+  styleClass="file-complaint-dialog"
+  (onHide)="close()"
+>
+  <div class="form-grid">
+    @if (!hidePicker()) {
+      <div class="form-field">
+        <label class="field-label" for="complaintLease">Property / Lease</label>
+        @if (loadingLeases()) {
+          <div class="inline-loading">
+            <p-progressspinner strokeWidth="4" [style]="{ width: '1.5rem', height: '1.5rem' }" />
+            <span>Loading your leases…</span>
+          </div>
+        } @else if (leaseOptions().length === 0) {
+          <p-message
+            severity="info"
+            text="You have no active leases to file a complaint against. Complaints can only be raised on a property you are currently renting."
+            styleClass="w-full"
+          />
+        } @else {
+          <p-select
+            inputId="complaintLease"
+            [(ngModel)]="leaseId"
+            [options]="leaseOptions()"
+            optionLabel="label"
+            optionValue="id"
+            placeholder="Select the property this is about"
+            appendTo="body"
+            [disabled]="submitting()"
+            styleClass="w-full"
+          />
+        }
+      </div>
+    }
+
+    <div class="form-row">
+      <div class="form-field">
+        <label class="field-label" for="complaintCategory">Category</label>
+        <p-select
+          inputId="complaintCategory"
+          [(ngModel)]="categoryId"
+          [options]="categories"
+          optionLabel="name"
+          optionValue="id"
+          placeholder="Select a category"
+          appendTo="body"
+          [disabled]="submitting()"
+          styleClass="w-full"
+        >
+          <ng-template #item let-cat>
+            <span class="type-option"><i [class]="cat.icon"></i> {{ cat.name }}</span>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <div class="form-field">
+        <label class="field-label" for="complaintPriority">Priority</label>
+        <p-select
+          inputId="complaintPriority"
+          [(ngModel)]="priorityId"
+          [options]="priorities"
+          optionLabel="name"
+          optionValue="id"
+          placeholder="Select priority"
+          appendTo="body"
+          [disabled]="submitting()"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label class="field-label" for="complaintSubject">Subject</label>
+      <input
+        pInputText
+        id="complaintSubject"
+        [(ngModel)]="subject"
+        maxlength="150"
+        placeholder="e.g. Kitchen tap has been leaking for a week"
+        [disabled]="submitting()"
+        class="w-full"
+      />
+      <span class="field-hint">{{ subject.length }}/150 — minimum 5 characters</span>
+    </div>
+
+    <div class="form-field">
+      <label class="field-label" for="complaintDescription">Description</label>
+      <textarea
+        pTextarea
+        id="complaintDescription"
+        [(ngModel)]="description"
+        rows="4"
+        maxlength="2000"
+        placeholder="Describe the issue, when it started, and any details that help resolve it."
+        [disabled]="submitting()"
+        class="w-full"
+      ></textarea>
+      <span class="field-hint">{{ description.length }}/2000 — minimum 10 characters</span>
+    </div>
+
+    <div class="form-field">
+      <label class="field-label">Attachment (optional)</label>
+      @if (attachmentUrl()) {
+        <div class="doc-chip">
+          <i class="pi pi-paperclip"></i>
+          <a [href]="attachmentUrl()!" target="_blank" rel="noopener" class="doc-link">View attached file</a>
+          <p-button
+            icon="pi pi-times"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            size="small"
+            [disabled]="submitting()"
+            (onClick)="clearAttachment()"
+          />
+        </div>
+      } @else {
+        <label class="upload-btn" [class.disabled]="uploading() || submitting()">
+          @if (uploading()) {
+            <i class="pi pi-spin pi-spinner"></i> Uploading…
+          } @else {
+            <i class="pi pi-upload"></i> Upload photo or PDF
+          }
+          <input
+            type="file"
+            accept="application/pdf,image/*"
+            (change)="onFileSelected($event)"
+            [disabled]="uploading() || submitting()"
+            hidden
+          />
+        </label>
+        <span class="field-hint">PDF or image, up to 10 MB.</span>
+      }
+      @if (fileError()) {
+        <span class="field-error">{{ fileError() }}</span>
+      }
+    </div>
+
+    @if (errorMessage()) {
+      <p-message severity="error" [text]="errorMessage()!" styleClass="w-full" />
+    }
+  </div>
+
+  <ng-template #footer>
+    <p-button
+      label="Cancel"
+      severity="secondary"
+      [text]="true"
+      size="small"
+      [disabled]="submitting()"
+      (onClick)="close()"
+    />
+    <p-button
+      label="Submit Complaint"
+      icon="pi pi-send"
+      size="small"
+      [loading]="submitting()"
+      [disabled]="!canSubmit"
+      (onClick)="submit()"
+    />
+  </ng-template>
+</p-dialog>

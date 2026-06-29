@@ -18,6 +18,8 @@ import { adminGuard } from './core/guards/admin.guard';
 import { nonAdminGuard } from './core/guards/non-admin.guard';
 import { VerificationsComponent } from './admin/verifications/verifications';
 import { FinanceComponent } from './admin/finance/finance';
+import { ComplaintsListComponent } from './complaints/complaints-list/complaints-list';
+import { ComplaintDetailComponent } from './complaints/complaint-detail/complaint-detail';
 
 export const routes: Routes = [
   { path: 'auth/register', component: RegisterComponent },
@@ -31,6 +33,19 @@ export const routes: Routes = [
       { path: 'leases', component: LeasesComponent, canActivate: [authGuard, nonAdminGuard] },
       { path: 'leases/:id', component: LeaseDetailComponent, canActivate: [authGuard, nonAdminGuard] },
       { path: 'property/:id', component: PropertyDetailComponent },
+      {
+        path: 'complaints',
+        component: ComplaintsListComponent,
+        data: { scope: 'mine' },
+        canActivate: [authGuard, nonAdminGuard],
+      },
+      { path: 'complaints/:id', component: ComplaintDetailComponent, canActivate: [authGuard] },
+      {
+        path: 'owner/complaints',
+        component: ComplaintsListComponent,
+        data: { scope: 'received' },
+        canActivate: [authGuard, ownerGuard],
+      },
       {
         path: 'owner/dashboard',
         component: OwnerDashboardComponent,
@@ -68,6 +83,12 @@ export const routes: Routes = [
         canActivate: [authGuard, adminGuard],
       },
       { path: 'admin/finance', redirectTo: 'admin/finance/revenue', pathMatch: 'full' },
+      {
+        path: 'admin/complaints',
+        component: ComplaintsListComponent,
+        data: { scope: 'all' },
+        canActivate: [authGuard, adminGuard],
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },

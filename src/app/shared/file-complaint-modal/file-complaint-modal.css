@@ -1,0 +1,112 @@
+:host ::ng-deep .file-complaint-dialog {
+  width: 34rem;
+  max-width: calc(100vw - 2rem);
+}
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding-top: 0.25rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+.field-hint {
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+}
+
+.field-error {
+  font-size: 0.75rem;
+  color: var(--p-red-500);
+}
+
+.type-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.inline-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+  padding: 0.25rem 0;
+}
+
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  align-self: flex-start;
+  padding: 0.55rem 0.9rem;
+  border: 1px dashed var(--p-content-border-color);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--p-text-color);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.upload-btn:hover {
+  border-color: var(--p-primary-color);
+  background: var(--p-content-hover-background);
+}
+
+.upload-btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.doc-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 0.5rem;
+  background: var(--p-content-background);
+  align-self: flex-start;
+  max-width: 100%;
+}
+
+.doc-link {
+  color: var(--p-primary-color);
+  text-decoration: none;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.doc-link:hover {
+  text-decoration: underline;
+}
+
+.w-full,
+:host ::ng-deep .w-full {
+  width: 100%;
+}
+
+@media (max-width: 480px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
