@@ -13,6 +13,7 @@ import { MessageService } from 'primeng/api';
 import { PropertyService, PropertyDetail } from '../core/services/property.service';
 import { PropertyImage } from '../shared/property-card/property-card';
 import { RentRequestModalComponent } from '../shared/rent-request-modal/rent-request-modal';
+import { ScheduleVisitModalComponent } from '../shared/schedule-visit-modal/schedule-visit-modal';
 import { UserResponse } from '../core/services/auth.service';
 import { selectCurrentUser, selectIsLoggedIn } from '../store/auth/auth.selectors';
 
@@ -29,6 +30,7 @@ import { selectCurrentUser, selectIsLoggedIn } from '../store/auth/auth.selector
     SkeletonModule,
     ToastModule,
     RentRequestModalComponent,
+    ScheduleVisitModalComponent,
   ],
   providers: [MessageService],
   templateUrl: './property-detail.html',
@@ -51,6 +53,7 @@ export class PropertyDetailComponent implements OnInit, OnChanges {
   loading = signal(true);
   deedUrl = signal<string | null>(null);
   rentModalVisible = signal(false);
+  scheduleVisitModalVisible = signal(false);
 
   currentUser = toSignal(this.store.select(selectCurrentUser));
 
@@ -204,6 +207,41 @@ export class PropertyDetailComponent implements OnInit, OnChanges {
       severity: 'success',
       summary: 'Proposal Submitted',
       detail: 'Your rental proposal has been sent to the owner.',
+      life: 5000,
+    });
+  }
+
+  openScheduleVisitModal(): void {
+    let isLoggedIn = false;
+    const userRef: { value: UserResponse | null } = { value: null };
+    this.store.select(selectIsLoggedIn).subscribe(v => isLoggedIn = v).unsubscribe();
+    this.store.select(selectCurrentUser).subscribe(v => userRef.value = v).unsubscribe();
+    const user = userRef.value;
+
+    if (!isLoggedIn) {
+      this.router.navigate(['/auth/login']);
+      return;
+    }
+    
+    // Check if the current user is not the owner
+    if (user && user.id === this.property()?.ownerId) {
+       this.messageService.add({
+         severity: 'info',
+         summary: 'Action not allowed',
+         detail: 'You cannot schedule a visit for your own property.',
+         life: 5000,
+       });
+       return;
+    }
+    
+    this.scheduleVisitModalVisible.set(true);
+  }
+
+  onVisitScheduled(): void {
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Visit Scheduled',
+      detail: 'Your site visit request has been sent to the owner.',
       life: 5000,
     });
   }

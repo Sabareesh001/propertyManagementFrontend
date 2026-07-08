@@ -21,14 +21,27 @@ import { VerifyUserModalComponent } from '../shared/verify-user-modal/verify-use
 import { NotificationService, NotificationDto } from '../core/services/notification.service';
 import { selectIsOwner, selectIsAdmin, selectIsLoggedIn } from '../store/auth/auth.selectors';
 
-const TAB_ROUTES = ['/dashboard', '/owner/dashboard', '/my-requests', '/owner/properties', '/owner/received-requests', '/leases', '/complaints', '/owner/complaints'];
+const TAB_ROUTES = [
+  '/dashboard', 
+  '/owner/dashboard', 
+  '/my-requests', 
+  '/site-visits',
+  '/owner/properties', 
+  '/owner/received-requests', 
+  '/owner/site-visits',
+  '/leases', 
+  '/complaints', 
+  '/owner/complaints'
+];
 
 const ALL_DRAWER_ITEMS = [
   { label: 'Dashboard', icon: 'pi pi-home', route: '/dashboard', ownerOnly: false, loggedInOnly: false, adminOnly: false, hideForAdmin: true },
   { label: 'Overview', icon: 'pi pi-chart-line', route: '/owner/dashboard', ownerOnly: true, loggedInOnly: false, adminOnly: false, hideForAdmin: false },
   { label: 'My Requests', icon: 'pi pi-file-edit', route: '/my-requests', ownerOnly: false, loggedInOnly: true, adminOnly: false, hideForAdmin: true },
+  { label: 'Site Visits', icon: 'pi pi-map', route: '/site-visits', ownerOnly: false, loggedInOnly: true, adminOnly: false, hideForAdmin: true },
   { label: 'My Properties', icon: 'pi pi-building', route: '/owner/properties', ownerOnly: true, loggedInOnly: false, adminOnly: false, hideForAdmin: false },
   { label: 'Received Requests', icon: 'pi pi-inbox', route: '/owner/received-requests', ownerOnly: true, loggedInOnly: false, adminOnly: false, hideForAdmin: false },
+  { label: 'Site Visit Requests', icon: 'pi pi-map-marker', route: '/owner/site-visits', ownerOnly: true, loggedInOnly: false, adminOnly: false, hideForAdmin: false },
   { label: 'Leases', icon: 'pi pi-file-check', route: '/leases', ownerOnly: false, loggedInOnly: true, adminOnly: false, hideForAdmin: true },
   { label: 'My Complaints', icon: 'pi pi-flag', route: '/complaints', ownerOnly: false, loggedInOnly: true, adminOnly: false, hideForAdmin: true },
   { label: 'Property Complaints', icon: 'pi pi-flag-fill', route: '/owner/complaints', ownerOnly: true, loggedInOnly: false, adminOnly: false, hideForAdmin: false },

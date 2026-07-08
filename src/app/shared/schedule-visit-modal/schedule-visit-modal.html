@@ -1,0 +1,82 @@
+<p-dialog
+  header="Schedule a Site Visit"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '90vw', maxWidth: '400px' }"
+  [draggable]="false"
+  [resizable]="false"
+  [focusOnShow]="false"
+>
+  @if (property) {
+    <div class="schedule-form">
+      <p class="schedule-info">
+        Schedule a visit for <strong>{{ property.title }}</strong>.
+      </p>
+      
+      <div class="preferences-box">
+        <h4>Owner's Preferences:</h4>
+        <p>Days: {{ property.visitPreferences === 'Specific' ? property.specificVisitDays : property.visitPreferences || 'Any' }}</p>
+        <p>Hours: {{ property.visitStartTime ? format12Hr(property.visitStartTime) : 'Any time' }} - {{ property.visitEndTime ? format12Hr(property.visitEndTime) : 'Any time' }}</p>
+      </div>
+
+      <div class="field mt-3">
+        <label for="visitDate" class="font-bold block mb-2" style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Select Date <span style="color: red;">*</span></label>
+        
+        <p-datepicker 
+          inputId="visitDate" 
+          [(ngModel)]="visitDate" 
+          [showTime]="false" 
+          [minDate]="minDate" 
+          [disabledDays]="disabledDays"
+          [readonlyInput]="true"
+          dateFormat="dd/mm/yy"
+          appendTo="body" 
+          styleClass="w-full"
+          [style]="{ width: '100%' }"
+          placeholder="Pick a date">
+        </p-datepicker>
+      </div>
+
+      <div class="field mt-3">
+        <label for="visitTime" class="font-bold block mb-2" style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Select Time <span style="color: red;">*</span></label>
+        
+        <p-datepicker 
+          inputId="visitTime"
+          [(ngModel)]="visitTime" 
+          [timeOnly]="true" 
+          hourFormat="12" 
+          [readonlyInput]="true"
+          appendTo="body" 
+          styleClass="w-full"
+          [style]="{ width: '100%' }"
+          placeholder="Pick a time">
+        </p-datepicker>
+        
+        @if (minTime && maxTime) {
+          <small class="text-gray-500 block mt-1">Allowed: {{ format12Hr(minTime) }} to {{ format12Hr(maxTime) }}</small>
+        }
+      </div>
+
+      @if (error()) {
+        <small class="p-error block mt-2" style="color: red; display: block; margin-top: 0.5rem;">{{ error() }}</small>
+      }
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button 
+      label="Cancel" 
+      severity="secondary" 
+      [text]="true" 
+      (onClick)="close()" 
+      [disabled]="submitting()"
+    />
+    <p-button 
+      label="Schedule" 
+      (onClick)="submit()" 
+      [loading]="submitting()"
+      [disabled]="!visitDate || !visitTime"
+    />
+  </ng-template>
+</p-dialog>

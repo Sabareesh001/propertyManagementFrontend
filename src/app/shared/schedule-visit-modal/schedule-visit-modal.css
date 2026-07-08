@@ -1,0 +1,26 @@
+.schedule-form {
+  padding-top: 1rem;
+}
+.preferences-box {
+  background: rgba(128, 128, 128, 0.1);
+  padding: 1rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+  border: 1px solid rgba(128, 128, 128, 0.2);
+}
+.preferences-box h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #000;
+}
+.preferences-box p {
+  margin: 0 0 0.2rem 0;
+  font-size: 0.9rem;
+  color: #000;
+}
+
+:host-context(.dark-mode) .preferences-box h4,
+:host-context(.dark-mode) .preferences-box p {
+  color: #fff;
+}

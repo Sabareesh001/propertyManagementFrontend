@@ -28,17 +28,19 @@
           }
           @if (isLoggedIn()) {
             <p-tab value="2"><i class="pi pi-file-edit"></i> My Requests</p-tab>
+            <p-tab value="3"><i class="pi pi-map"></i> Site Visits</p-tab>
           }
           @if (isOwner()) {
-            <p-tab value="3"><i class="pi pi-building"></i> My Properties</p-tab>
-            <p-tab value="4"><i class="pi pi-inbox"></i> Received Requests</p-tab>
+            <p-tab value="4"><i class="pi pi-building"></i> My Properties</p-tab>
+            <p-tab value="5"><i class="pi pi-inbox"></i> Received Requests</p-tab>
+            <p-tab value="6"><i class="pi pi-map-marker"></i> Site Visit Requests</p-tab>
           }
           @if (isLoggedIn()) {
-            <p-tab value="5"><i class="pi pi-file-check"></i> Leases</p-tab>
-            <p-tab value="6"><i class="pi pi-flag"></i> My Complaints</p-tab>
+            <p-tab value="7"><i class="pi pi-file-check"></i> Leases</p-tab>
+            <p-tab value="8"><i class="pi pi-flag"></i> My Complaints</p-tab>
           }
           @if (isOwner()) {
-            <p-tab value="7"><i class="pi pi-flag-fill"></i> Property Complaints</p-tab>
+            <p-tab value="9"><i class="pi pi-flag-fill"></i> Property Complaints</p-tab>
           }
         </p-tablist>
       </p-tabs>

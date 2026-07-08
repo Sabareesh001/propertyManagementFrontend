@@ -20,6 +20,8 @@ import { VerificationsComponent } from './admin/verifications/verifications';
 import { FinanceComponent } from './admin/finance/finance';
 import { ComplaintsListComponent } from './complaints/complaints-list/complaints-list';
 import { ComplaintDetailComponent } from './complaints/complaint-detail/complaint-detail';
+import { TenantSiteVisitsComponent } from './tenant/site-visits/tenant-site-visits';
+import { OwnerSiteVisitsComponent } from './owner/site-visits/owner-site-visits';
 
 export const routes: Routes = [
   { path: 'auth/register', component: RegisterComponent },
@@ -59,6 +61,16 @@ export const routes: Routes = [
       {
         path: 'owner/received-requests',
         component: ReceivedRequestsComponent,
+        canActivate: [authGuard, ownerGuard],
+      },
+      {
+        path: 'site-visits',
+        component: TenantSiteVisitsComponent,
+        canActivate: [authGuard, nonAdminGuard],
+      },
+      {
+        path: 'owner/site-visits',
+        component: OwnerSiteVisitsComponent,
         canActivate: [authGuard, ownerGuard],
       },
       {

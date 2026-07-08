@@ -24,6 +24,10 @@ export interface PropertyDetail extends Property {
   remarks: string | null;
   verifiedBy: string | null;
   documents?: PropertyDocument[];
+  visitPreferences?: string | null;
+  specificVisitDays?: string | null;
+  visitStartTime?: string | null;
+  visitEndTime?: string | null;
 }
 
 /** A single image in a create/update payload. Omit/null `id` to add a new image. */
@@ -45,6 +49,17 @@ export interface PropertyPayload {
   securityDeposit: number;
   thumbnailImgUrl: string | null;
   propertyImages: PropertyImagePayload[];
+  visitPreferences?: string | null;
+  specificVisitDays?: string | null;
+  visitStartTime?: string | null;
+  visitEndTime?: string | null;
+}
+
+export interface UpdatePropertyVisitPreferencesPayload {
+  visitPreferences?: string | null;
+  specificVisitDays?: string | null;
+  visitStartTime?: string | null;
+  visitEndTime?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -75,6 +90,11 @@ export class PropertyService {
   /** PUT /api/property/{id} — update a property (owner only). */
   update(id: number, payload: PropertyPayload): Observable<PropertyDetail> {
     return this.http.put<PropertyDetail>(`${this.baseUrl}/${id}`, payload, WITH_CREDENTIALS);
+  }
+
+  /** PATCH /api/property/{id}/visit-preferences — update property availability (owner only). */
+  updateVisitPreferences(id: number, payload: UpdatePropertyVisitPreferencesPayload): Observable<PropertyDetail> {
+    return this.http.patch<PropertyDetail>(`${this.baseUrl}/${id}/visit-preferences`, payload, WITH_CREDENTIALS);
   }
 
   /** DELETE /api/property/{id} — remove a property (owner only). */
