@@ -43,6 +43,10 @@ export class SiteVisitService {
     return this.http.put<SiteVisitResponseDto>(`${this.baseUrl}/${visitId}/status`, dto, WITH_CREDENTIALS);
   }
 
+  cancelVisit(visitId: string, remarks: string): Observable<SiteVisitResponseDto> {
+    return this.http.put<SiteVisitResponseDto>(`${this.baseUrl}/${visitId}/cancel`, { remarks }, WITH_CREDENTIALS);
+  }
+
   getMyRequests(): Observable<SiteVisitResponseDto[]> {
     return this.http.get<SiteVisitResponseDto[]>(`${this.baseUrl}/my-requests`, WITH_CREDENTIALS);
   }

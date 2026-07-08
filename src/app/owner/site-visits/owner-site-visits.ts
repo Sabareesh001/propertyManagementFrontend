@@ -55,7 +55,7 @@ import { PropertyService } from '../../core/services/property.service';
                 </div>
               </td>
               <td>{{ visit.tenant?.firstName }} {{ visit.tenant?.lastName }} <br> <small>{{ visit.tenant?.email }}</small></td>
-              <td>{{ visit.visitDate | date:'medium' }}</td>
+              <td>{{ visit.visitDate | date:'MMM d, y, h:mm a' }}</td>
               <td>
                 <p-tag [value]="visit.statusName" [severity]="getSeverity(visit.statusId)"></p-tag>
               </td>
