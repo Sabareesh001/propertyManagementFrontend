@@ -45,22 +45,60 @@
     }
 
     <div class="topbar-profile">
-      <p-button
-        [icon]="themeService.isDark() ? 'pi pi-sun' : 'pi pi-moon'"
-        severity="secondary"
-        [text]="true"
-        size="large"
-        [rounded]="true"
-        (onClick)="themeService.toggle()"
-        [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
-      />
-      <p-splitbutton
-        label="Profile"
-        icon="pi pi-user"
-        [model]="profileMenuItems"
-        severity="secondary"
-        size="large"
-      />
+      @if (isLoggedIn()) {
+        <p-overlaybadge
+          class="notification-bell"
+          [value]="notificationService.unreadCount() || undefined"
+          severity="danger"
+          badgeSize="small"
+        >
+          <p-button
+            icon="pi pi-bell"
+            severity="secondary"
+            [text]="true"
+            size="large"
+            [rounded]="true"
+            (onClick)="notificationsPopover.toggle($event)"
+            aria-label="Notifications"
+          />
+        </p-overlaybadge>
+        <p-popover #notificationsPopover styleClass="notification-panel">
+          <div class="notification-list">
+            @for (n of notificationService.notifications(); track n.id) {
+              <button
+                type="button"
+                class="notification-item"
+                [class.unread]="!n.isRead"
+                (click)="selectNotification(n, notificationsPopover)"
+              >
+                <strong class="notification-title">{{ n.title }}</strong>
+                <p class="notification-message">{{ n.message }}</p>
+                <small class="notification-time">{{ n.createdAt | date:'short' }}</small>
+              </button>
+            } @empty {
+              <p class="notification-empty">No notifications yet.</p>
+            }
+          </div>
+        </p-popover>
+      }
+      <div class="profile-actions">
+        <p-button
+          [icon]="themeService.isDark() ? 'pi pi-sun' : 'pi pi-moon'"
+          severity="secondary"
+          [text]="true"
+          size="large"
+          [rounded]="true"
+          (onClick)="themeService.toggle()"
+          [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+        />
+        <p-splitbutton
+          label="Profile"
+          icon="pi pi-user"
+          [model]="profileMenuItems"
+          severity="secondary"
+          size="large"
+        />
+      </div>
     </div>
   </header>
 

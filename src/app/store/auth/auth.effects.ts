@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { catchError, map, of, switchMap, tap } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { AuthActions } from './auth.actions';
 
 @Injectable()
@@ -10,6 +11,7 @@ export class AuthEffects {
   private actions$ = inject(Actions);
   private auth = inject(AuthService);
   private router = inject(Router);
+  private notifications = inject(NotificationService);
 
   login$ = createEffect(() =>
     this.actions$.pipe(
@@ -33,6 +35,20 @@ export class AuthEffects {
           localStorage.setItem('auth_user', JSON.stringify(user));
           const isAdmin = user.roles?.some((r) => r.id === 3);
           this.router.navigate([isAdmin ? '/admin/verifications/property' : '/dashboard']);
+          this.notifications.connect();
+          this.notifications.loadMyNotifications();
+        }),
+      ),
+    { dispatch: false },
+  );
+
+  restoreSession$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(AuthActions.restoreSession),
+        tap(() => {
+          this.notifications.connect();
+          this.notifications.loadMyNotifications();
         }),
       ),
     { dispatch: false },
@@ -45,6 +61,7 @@ export class AuthEffects {
         tap(() => {
           localStorage.removeItem('auth_user');
           document.cookie = 'jwt_token=; Max-Age=0; path=/';
+          this.notifications.disconnect();
           this.router.navigate(['/auth/login']);
         }),
       ),

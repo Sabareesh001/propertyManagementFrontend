@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -8,6 +9,8 @@ import { Button } from 'primeng/button';
 import { Drawer } from 'primeng/drawer';
 import { PanelMenu } from 'primeng/panelmenu';
 import { Message } from 'primeng/message';
+import { Popover } from 'primeng/popover';
+import { OverlayBadge } from 'primeng/overlaybadge';
 import { MenuItem } from 'primeng/api';
 import { Store } from '@ngrx/store';
 import { AuthActions } from '../store/auth/auth.actions';
@@ -15,6 +18,7 @@ import { ThemeService } from '../core/services/theme.service';
 import { StripeService } from '../core/services/stripe.service';
 import { UserVerificationService, VerificationStatus } from '../core/services/user-verification.service';
 import { VerifyUserModalComponent } from '../shared/verify-user-modal/verify-user-modal';
+import { NotificationService, NotificationDto } from '../core/services/notification.service';
 import { selectIsOwner, selectIsAdmin, selectIsLoggedIn } from '../store/auth/auth.selectors';
 
 const TAB_ROUTES = ['/dashboard', '/owner/dashboard', '/my-requests', '/owner/properties', '/owner/received-requests', '/leases', '/complaints', '/owner/complaints'];
@@ -40,7 +44,7 @@ const ALL_DRAWER_ITEMS = [
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, Tabs, TabList, Tab, SplitButton, Button, Drawer, PanelMenu, Message, VerifyUserModalComponent],
+  imports: [RouterOutlet, Tabs, TabList, Tab, SplitButton, Button, Drawer, PanelMenu, Message, Popover, OverlayBadge, DatePipe, VerifyUserModalComponent],
   templateUrl: './layout.html',
   styleUrl: './layout.css',
 })
@@ -50,6 +54,7 @@ export class LayoutComponent {
   private stripeService = inject(StripeService);
   private userVerificationService = inject(UserVerificationService);
   themeService = inject(ThemeService);
+  notificationService = inject(NotificationService);
 
   drawerVisible = false;
   activeTab = '0';
@@ -249,5 +254,12 @@ export class LayoutComponent {
 
   logout() {
     this.store.dispatch(AuthActions.logout());
+  }
+
+  selectNotification(n: NotificationDto, popover: Popover): void {
+    if (!n.isRead) this.notificationService.markAsRead(n.id);
+    const route = this.notificationService.routeForNotification(n);
+    if (route) this.router.navigate([route]);
+    popover.hide();
   }
 }

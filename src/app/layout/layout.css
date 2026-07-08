@@ -83,7 +83,84 @@
   grid-column: 3;
   display: flex;
   align-items: center;
+  gap: 0.25rem;
   justify-self: end;
+}
+
+.profile-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* ── Notification bell ── */
+.notification-bell ::ng-deep .p-overlaybadge {
+  display: inline-flex;
+}
+
+.notification-panel {
+  max-width: min(24rem, 90vw);
+  padding: 0;
+}
+
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 24rem;
+  overflow-y: auto;
+  width: 22rem;
+  max-width: 100%;
+}
+
+.notification-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-bottom: 1px solid var(--p-content-border-color);
+  background: transparent;
+  color: var(--p-text-color);
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-item:hover {
+  background: var(--p-content-hover-background);
+}
+
+.notification-item.unread {
+  background: var(--p-highlight-background);
+}
+
+.notification-title {
+  font-size: 0.875rem;
+  overflow-wrap: break-word;
+}
+
+.notification-message {
+  font-size: 0.8125rem;
+  color: var(--p-text-muted-color);
+  overflow-wrap: break-word;
+  margin: 0;
+}
+
+.notification-time {
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+}
+
+.notification-empty {
+  padding: 1.5rem 1rem;
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+  text-align: center;
 }
 
 /* ── Stripe onboarding reminder ── */
@@ -319,7 +396,7 @@
     display: none;
   }
 
-  .topbar-profile {
+  .profile-actions {
     display: none;
   }
 
