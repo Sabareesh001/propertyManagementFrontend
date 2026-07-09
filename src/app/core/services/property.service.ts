@@ -1,8 +1,32 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Property } from '../../shared/property-card/property-card';
 import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
+
+export interface PropertyImage {
+  id: string;
+  imageUrl: string;
+  description: string | null;
+  displayOrder: number;
+}
+
+export interface Property {
+  id: number;
+  ownerId: string;
+  title: string;
+  description: string | null;
+  addressLine: string;
+  cityId: number | null;
+  monthlyRent: number;
+  upfrontPayment: number;
+  securityDeposit: number;
+  thumbnailImgUrl: string | null;
+  verificationStatusId: number | null;
+  availabilityStatusId: number | null;
+  createdAt: string | null;
+  propertyImages: PropertyImage[];
+  remarks?: string | null;
+}
 
 /** A property-level document (deed, etc.) — see DocumentResponseDto. */
 export interface PropertyDocument {

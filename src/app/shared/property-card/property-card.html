@@ -23,6 +23,18 @@
       </div>
     </div>
 
+    <!-- compare checkbox (top-right next to avail) -->
+    @if (showCompare) {
+      <div class="compare-checkbox-container" (click)="$event.stopPropagation()">
+        <p-checkbox 
+          [binary]="true"
+          [ngModel]="compareService.isSelected(property.id)"
+          (ngModelChange)="compareService.toggleSelection($any(property))"
+          label="Compare"
+        />
+      </div>
+    }
+
     <!-- availability dot label (top-left) -->
     <div class="avail-pill">
       <span class="avail-dot"></span>

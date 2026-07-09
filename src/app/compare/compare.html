@@ -1,0 +1,118 @@
+<div class="compare-page">
+  <div class="compare-header">
+    <p-button 
+      icon="pi pi-arrow-left" 
+      label="Back" 
+      severity="secondary" 
+      [text]="true" 
+      (onClick)="goBack()" 
+    />
+    <h2 class="page-title">Property Comparison</h2>
+    <div class="spacer"></div>
+  </div>
+
+  @if (properties.length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-clone empty-icon"></i>
+      <p>No properties selected for comparison.</p>
+      <p-button label="Browse Properties" (onClick)="goBack()" />
+    </div>
+  } @else {
+    <div class="compare-table-container">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th class="feature-col">Feature</th>
+            @for (prop of properties; track prop.id) {
+              <th>
+                <div class="col-header">
+                  <div class="col-actions">
+                    <p-button 
+                      icon="pi pi-times" 
+                      severity="danger" 
+                      [text]="true" 
+                      [rounded]="true" 
+                      pTooltip="Remove from comparison" 
+                      (onClick)="removeProperty(prop.id)" 
+                    />
+                  </div>
+                  @if (getThumbnail(prop)) {
+                    <img [src]="getThumbnail(prop)" class="prop-thumb" alt="Thumbnail" />
+                  } @else {
+                    <div class="prop-thumb placeholder">
+                      <i class="pi pi-building"></i>
+                    </div>
+                  }
+                  <h3 class="prop-title" (click)="goToProperty(prop.id)">{{ prop.title }}</h3>
+                  <p class="prop-address"><i class="pi pi-map-marker"></i> {{ prop.addressLine }}</p>
+                </div>
+              </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="feature-name">Monthly Rent</td>
+            @for (prop of properties; track prop.id) {
+              <td class="highlight-val">{{ formatCurrency(prop.monthlyRent) }}</td>
+            }
+          </tr>
+          <tr>
+            <td class="feature-name">Upfront Payment</td>
+            @for (prop of properties; track prop.id) {
+              <td>{{ formatCurrency(prop.upfrontPayment) }}</td>
+            }
+          </tr>
+          <tr>
+            <td class="feature-name">Security Deposit</td>
+            @for (prop of properties; track prop.id) {
+              <td>{{ formatCurrency(prop.securityDeposit) }}</td>
+            }
+          </tr>
+          <tr>
+            <td class="feature-name">Visit Preferences</td>
+            @for (prop of properties; track prop.id) {
+              <td>
+                <span class="badge">{{ prop.visitPreferences === 'Specific' ? 'Specific Days' : prop.visitPreferences }}</span>
+              </td>
+            }
+          </tr>
+          <tr>
+            <td class="feature-name">Specific Days</td>
+            @for (prop of properties; track prop.id) {
+              <td>
+                {{ prop.visitPreferences === 'Specific' && prop.specificVisitDays ? prop.specificVisitDays.replace(',', ', ') : 'Any' }}
+              </td>
+            }
+          </tr>
+          <tr>
+            <td class="feature-name">Visit Timings</td>
+            @for (prop of properties; track prop.id) {
+              <td>
+                @if (prop.visitStartTime && prop.visitEndTime) {
+                  {{ prop.visitStartTime.substring(0,5) }} - {{ prop.visitEndTime.substring(0,5) }}
+                } @else {
+                  Flexible
+                }
+              </td>
+            }
+          </tr>
+          <tr>
+            <td class="feature-name">Description</td>
+            @for (prop of properties; track prop.id) {
+              <td class="desc-cell">{{ prop.description || 'No description provided.' }}</td>
+            }
+          </tr>
+          <tr>
+            <td class="feature-name">Actions</td>
+            @for (prop of properties; track prop.id) {
+              <td class="action-cell">
+                <p-button label="View Details" [outlined]="true" (onClick)="goToProperty(prop.id)" />
+              </td>
+            }
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

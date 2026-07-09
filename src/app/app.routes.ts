@@ -22,6 +22,7 @@ import { ComplaintsListComponent } from './complaints/complaints-list/complaints
 import { ComplaintDetailComponent } from './complaints/complaint-detail/complaint-detail';
 import { TenantSiteVisitsComponent } from './tenant/site-visits/tenant-site-visits';
 import { OwnerSiteVisitsComponent } from './owner/site-visits/owner-site-visits';
+import { ComparePropertiesComponent } from './compare/compare';
 
 export const routes: Routes = [
   { path: 'auth/register', component: RegisterComponent },
@@ -66,6 +67,11 @@ export const routes: Routes = [
       {
         path: 'site-visits',
         component: TenantSiteVisitsComponent,
+        canActivate: [authGuard, nonAdminGuard],
+      },
+      {
+        path: 'compare',
+        component: ComparePropertiesComponent,
         canActivate: [authGuard, nonAdminGuard],
       },
       {

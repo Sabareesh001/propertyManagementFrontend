@@ -14,6 +14,7 @@ import { authReducer } from './store/auth/auth.reducer';
 import { AuthEffects } from './store/auth/auth.effects';
 import { AuthActions } from './store/auth/auth.actions';
 import { UserResponse } from './core/services/auth.service';
+import { MessageService } from 'primeng/api';
 
 function restoreAuthSession() {
   const store = inject(Store);
@@ -45,5 +46,6 @@ export const appConfig: ApplicationConfig = {
     provideEffects(AuthEffects),
     provideStoreDevtools({ maxAge: 25, logOnly: !isDevMode() }),
     provideAppInitializer(restoreAuthSession),
+    MessageService
   ]
 };

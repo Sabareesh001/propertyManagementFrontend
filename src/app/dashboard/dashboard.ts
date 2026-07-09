@@ -8,6 +8,8 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ButtonModule } from 'primeng/button';
 import { PropertyCardComponent } from '../shared/property-card/property-card';
 import { PropertyService, PropertyDetail } from '../core/services/property.service';
+import { CompareService } from '../core/services/compare.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
@@ -27,6 +29,8 @@ import { PropertyService, PropertyDetail } from '../core/services/property.servi
 })
 export class DashboardComponent implements OnInit {
   private propertyService = inject(PropertyService);
+  public compareService = inject(CompareService);
+  private router = inject(Router);
 
   searchQuery = signal('');
   allProperties = signal<PropertyDetail[]>([]);
@@ -61,5 +65,9 @@ export class DashboardComponent implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  goToCompare(): void {
+    this.router.navigate(['/compare']);
   }
 }

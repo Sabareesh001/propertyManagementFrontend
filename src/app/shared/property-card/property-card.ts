@@ -3,43 +3,26 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
-
-export interface PropertyImage {
-  id: string;
-  imageUrl: string;
-  description: string | null;
-  displayOrder: number;
-}
-
-export interface Property {
-  id: number;
-  ownerId: string;
-  title: string;
-  description: string | null;
-  addressLine: string;
-  cityId: number | null;
-  monthlyRent: number;
-  upfrontPayment: number;
-  securityDeposit: number;
-  thumbnailImgUrl: string | null;
-  verificationStatusId: number | null;
-  availabilityStatusId: number | null;
-  createdAt: string | null;
-  propertyImages: PropertyImage[];
-  remarks?: string | null;
-}
+import { CheckboxModule } from 'primeng/checkbox';
+import { FormsModule } from '@angular/forms';
+import { CompareService } from '../../core/services/compare.service';
+import { Property } from '../../core/services/property.service';
 
 @Component({
   selector: 'app-property-card',
   standalone: true,
-  imports: [CommonModule, ButtonModule, TooltipModule],
+  imports: [CommonModule, ButtonModule, TooltipModule, CheckboxModule, FormsModule],
   templateUrl: './property-card.html',
   styleUrl: './property-card.css',
 })
 export class PropertyCardComponent {
   private router = inject(Router);
+  public compareService = inject(CompareService);
 
   @Input({ required: true }) property!: Property;
+
+  /** Show the Compare checkbox */
+  @Input() showCompare = false;
 
   /** Show the "Listed on" date in the stats row */
   @Input() showListedOn = false;

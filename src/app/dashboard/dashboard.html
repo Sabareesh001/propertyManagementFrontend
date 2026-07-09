@@ -37,10 +37,36 @@
   } @else {
     <div class="property-grid">
       @for (property of filteredProperties(); track property.id) {
-        <app-property-card [property]="property" />
+        <app-property-card [property]="property" [showCompare]="true" />
       }
     </div>
   }
 </div>
+
+@if (compareService.selectionCount() > 0) {
+  <div class="compare-floating-bar">
+    <div class="compare-info">
+      <i class="pi pi-clone"></i>
+      <span>
+        <strong>{{ compareService.selectionCount() }}</strong> property{{ compareService.selectionCount() > 1 ? 'ies' : '' }} selected for comparison
+      </span>
+    </div>
+    <div class="compare-actions">
+      <p-button 
+        label="Clear" 
+        severity="secondary" 
+        [text]="true" 
+        (onClick)="compareService.clearSelection()" 
+      />
+      <p-button 
+        label="Compare Now" 
+        icon="pi pi-arrow-right" 
+        iconPos="right" 
+        [disabled]="!compareService.canCompare()" 
+        (onClick)="goToCompare()" 
+      />
+    </div>
+  </div>
+}
 
 <p-scrolltop size="large" [threshold]="400" />
