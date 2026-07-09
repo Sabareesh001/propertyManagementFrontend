@@ -201,6 +201,16 @@ export class PropertyFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.form.valueChanges.subscribe(() => this.clearBackendErrors());
+    
+    this.form.get('visitPreferences')?.valueChanges.subscribe(val => {
+      const specificDaysControl = this.form.get('specificVisitDays');
+      if (val === 'Specific') {
+        specificDaysControl?.setValidators(Validators.required);
+      } else {
+        specificDaysControl?.clearValidators();
+      }
+      specificDaysControl?.updateValueAndValidity();
+    });
 
     const idParam = this.route.snapshot.paramMap.get('id');
     if (!idParam) return;

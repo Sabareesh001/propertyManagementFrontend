@@ -229,7 +229,14 @@
                   defaultLabel="Select Days"
                   styleClass="w-full"
                   display="chip"
+                  [filter]="false"
+                  [showToggleAll]="false"
+                  [class.ng-invalid]="fieldError('specificVisitDays')"
+                  [class.ng-dirty]="fieldError('specificVisitDays')"
                 />
+                @if (fieldError('specificVisitDays') && form.get('specificVisitDays')?.hasError('required')) {
+                  <small class="field-error">Please select at least one day.</small>
+                }
               </div>
             }
           </div>
