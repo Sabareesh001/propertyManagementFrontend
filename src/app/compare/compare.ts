@@ -22,6 +22,31 @@ export class ComparePropertiesComponent {
     return this.compareService.selectedProperties();
   }
 
+  get analytics() {
+    const props = this.properties;
+    if (props.length < 2) return null;
+
+    let bestRent = props[0];
+    let bestInitialCost = props[0];
+
+    for (const p of props) {
+      if (p.monthlyRent < bestRent.monthlyRent) {
+        bestRent = p;
+      }
+      
+      const currentInitial = p.upfrontPayment + p.securityDeposit;
+      const bestInitial = bestInitialCost.upfrontPayment + bestInitialCost.securityDeposit;
+      if (currentInitial < bestInitial) {
+        bestInitialCost = p;
+      }
+    }
+
+    return {
+      bestRent,
+      bestInitialCost
+    };
+  }
+
   goBack() {
     this.location.back();
   }
@@ -38,6 +63,17 @@ export class ComparePropertiesComponent {
     if (property.thumbnailImgUrl) return property.thumbnailImgUrl;
     if (property.propertyImages?.length) return property.propertyImages[0].imageUrl;
     return '';
+  }
+
+  getSpecificDays(prop: any): string {
+    if (prop.visitPreferences === 'Weekends') {
+      return 'Saturday, Sunday';
+    } else if (prop.visitPreferences === 'Weekdays') {
+      return 'Monday - Friday';
+    } else if (prop.visitPreferences === 'Specific' && prop.specificVisitDays) {
+      return prop.specificVisitDays.replace(/,/g, ', ');
+    }
+    return 'All Days';
   }
 
   removeProperty(id: number) {

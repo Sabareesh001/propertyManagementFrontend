@@ -81,7 +81,7 @@
             <td class="feature-name">Specific Days</td>
             @for (prop of properties; track prop.id) {
               <td>
-                {{ prop.visitPreferences === 'Specific' && prop.specificVisitDays ? prop.specificVisitDays.replace(',', ', ') : 'Any' }}
+                {{ getSpecificDays(prop) }}
               </td>
             }
           </tr>
@@ -114,5 +114,40 @@
         </tbody>
       </table>
     </div>
+
+    @if (analytics) {
+      <div class="analytics-section mt-5">
+        <h3 class="analytics-title">Smart Suggestions</h3>
+        <div class="analytics-cards">
+          
+          <div class="analytics-card">
+            <div class="analytics-icon budget-icon">
+              <i class="pi pi-wallet"></i>
+            </div>
+            <div class="analytics-info">
+              <h4>Most Budget Friendly</h4>
+              <p>
+                <strong>{{ analytics.bestRent.title }}</strong> offers the lowest monthly rent at 
+                <span class="highlight-val">{{ formatCurrency(analytics.bestRent.monthlyRent) }}</span>.
+              </p>
+            </div>
+          </div>
+
+          <div class="analytics-card">
+            <div class="analytics-icon initial-icon">
+              <i class="pi pi-money-bill"></i>
+            </div>
+            <div class="analytics-info">
+              <h4>Lowest Initial Cost</h4>
+              <p>
+                <strong>{{ analytics.bestInitialCost.title }}</strong> requires the least upfront cash 
+                (<span class="highlight-val">{{ formatCurrency(analytics.bestInitialCost.upfrontPayment + analytics.bestInitialCost.securityDeposit) }}</span> total deposit & upfront).
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    }
   }
 </div>
