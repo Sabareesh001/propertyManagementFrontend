@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
+import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, PagedResult } from '../models/paged-result.model';
 
 export type VerificationStatus = 'Unverified' | 'Pending' | 'Verified' | 'Rejected';
 
@@ -58,9 +59,15 @@ export class UserVerificationService {
     return this.http.post<{ url: string }>(`${this.baseUrl}/upload-document`, form, WITH_CREDENTIALS);
   }
 
-  /** GET /api/userverification/pending — all pending verification requests (admin). */
-  getPending(): Observable<UserVerificationResponse[]> {
-    return this.http.get<UserVerificationResponse[]>(`${this.baseUrl}/pending`, WITH_CREDENTIALS);
+  /** GET /api/userverification/pending — all pending verification requests (admin), paginated. */
+  getPending(
+    pageNumber = DEFAULT_PAGE_NUMBER,
+    pageSize = DEFAULT_PAGE_SIZE,
+  ): Observable<PagedResult<UserVerificationResponse>> {
+    return this.http.get<PagedResult<UserVerificationResponse>>(`${this.baseUrl}/pending`, {
+      ...WITH_CREDENTIALS,
+      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+    });
   }
 
   /** POST /api/userverification/{id}/verify — approve a request (admin). */

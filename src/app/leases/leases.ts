@@ -88,9 +88,9 @@ export class LeasesComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.error.set(false);
-    this.leaseService.getMyLeases().subscribe({
-      next: (data) => {
-        this.leases.set(data);
+    this.leaseService.getMyLeases(1, 100).subscribe({
+      next: (res) => {
+        this.leases.set(res.items);
         this.loading.set(false);
       },
       error: () => {

@@ -409,9 +409,10 @@ export class UserVerificationsComponent implements OnInit {
     this.loading.set(true);
     this.error.set(false);
     this.verificationService
-      .getPending()
+      .getPending(1, 100)
       .pipe(
-        switchMap((pending) => {
+        switchMap((res) => {
+          const pending = res.items;
           if (!pending.length) return of([] as PendingRow[]);
           return forkJoin(
             pending.map((req) =>

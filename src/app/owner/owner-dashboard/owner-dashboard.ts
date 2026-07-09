@@ -131,12 +131,23 @@ export class OwnerDashboardComponent implements OnInit {
 
     forkJoin({
       properties: this.propertyService
-        .getMyProperties()
-        .pipe(catchError(() => of([] as PropertyDetail[]))),
-      leases: this.leaseService.getMyLeases().pipe(catchError(() => of([] as LeaseResponse[]))),
+        .getMyProperties(1, 100)
+        .pipe(
+          map((res) => res.items),
+          catchError(() => of([] as PropertyDetail[])),
+        ),
+      leases: this.leaseService
+        .getMyLeases(1, 100)
+        .pipe(
+          map((res) => res.items),
+          catchError(() => of([] as LeaseResponse[])),
+        ),
       proposals: this.proposalService
-        .getReceivedRequests()
-        .pipe(catchError(() => of([] as LeaseProposalResponse[]))),
+        .getReceivedRequests(1, 100)
+        .pipe(
+          map((res) => res.items),
+          catchError(() => of([] as LeaseProposalResponse[])),
+        ),
       stripe: this.stripeService.getStatus().pipe(catchError(() => of(null))),
     })
       .pipe(
@@ -155,12 +166,22 @@ export class OwnerDashboardComponent implements OnInit {
           return forkJoin({
             charges: forkJoin(
               financeLeases.map((l) =>
-                this.chargeService.getCharges(l.id).pipe(catchError(() => of([] as ChargeResponse[]))),
+                this.chargeService
+                  .getCharges(l.id, 1, 100)
+                  .pipe(
+                    map((res) => res.items),
+                    catchError(() => of([] as ChargeResponse[])),
+                  ),
               ),
             ),
             payments: forkJoin(
               financeLeases.map((l) =>
-                this.chargeService.getPayments(l.id).pipe(catchError(() => of([] as PaymentResponse[]))),
+                this.chargeService
+                  .getPayments(l.id, 1, 100)
+                  .pipe(
+                    map((res) => res.items),
+                    catchError(() => of([] as PaymentResponse[])),
+                  ),
               ),
             ),
           }).pipe(map((fin) => ({ ...base, financeLeases, ...fin })));

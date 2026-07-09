@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -197,8 +198,9 @@ export class RevenueComponent implements OnInit {
     this.loading.set(true);
     this.error.set(false);
     forkJoin({
-      payments: this.finance.getPayments(),
-      charges: this.finance.getCharges(),
+      // Aggregates are computed client-side over the loaded set, so pull a large page (backend caps at 100).
+      payments: this.finance.getPayments(null, null, 1, 100).pipe(map((res) => res.items)),
+      charges: this.finance.getCharges(null, null, 1, 100).pipe(map((res) => res.items)),
     }).subscribe({
       next: ({ payments, charges }) => {
         this.payments.set(payments ?? []);

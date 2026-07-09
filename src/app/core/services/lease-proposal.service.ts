@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
+import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, PagedResult } from '../models/paged-result.model';
 
 export interface CreateLeaseProposalPayload {
   propertyId: number;
@@ -51,12 +52,24 @@ export class LeaseProposalService {
     return this.http.post<LeaseProposalResponse>(`${this.baseUrl}/${id}/submit`, {}, WITH_CREDENTIALS);
   }
 
-  getMyRequests(): Observable<LeaseProposalResponse[]> {
-    return this.http.get<LeaseProposalResponse[]>(`${this.baseUrl}/my-requests`, WITH_CREDENTIALS);
+  getMyRequests(
+    pageNumber = DEFAULT_PAGE_NUMBER,
+    pageSize = DEFAULT_PAGE_SIZE,
+  ): Observable<PagedResult<LeaseProposalResponse>> {
+    return this.http.get<PagedResult<LeaseProposalResponse>>(`${this.baseUrl}/my-requests`, {
+      ...WITH_CREDENTIALS,
+      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+    });
   }
 
-  getReceivedRequests(): Observable<LeaseProposalResponse[]> {
-    return this.http.get<LeaseProposalResponse[]>(`${this.baseUrl}/received-requests`, WITH_CREDENTIALS);
+  getReceivedRequests(
+    pageNumber = DEFAULT_PAGE_NUMBER,
+    pageSize = DEFAULT_PAGE_SIZE,
+  ): Observable<PagedResult<LeaseProposalResponse>> {
+    return this.http.get<PagedResult<LeaseProposalResponse>>(`${this.baseUrl}/received-requests`, {
+      ...WITH_CREDENTIALS,
+      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+    });
   }
 
   accept(id: string): Observable<LeaseProposalResponse> {

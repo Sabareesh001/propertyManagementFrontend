@@ -1,7 +1,8 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import * as signalR from '@microsoft/signalr';
 import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
+import { PagedResult } from '../models/paged-result.model';
 
 /** Mirrors the backend NotificationType enum. */
 export enum NotificationType {
@@ -42,11 +43,15 @@ export class NotificationService {
   readonly notifications = signal<NotificationDto[]>([]);
   readonly unreadCount = signal(0);
 
+  /** Backfills the bell dropdown on load/reconnect — paginated on the backend, fetched as one larger page since there's no visible pager in the dropdown. */
   loadMyNotifications(): void {
-    this.http.get<NotificationDto[]>(this.baseUrl, WITH_CREDENTIALS).subscribe((list) => {
-      this.notifications.set(list);
-      this.unreadCount.set(list.filter((n) => !n.isRead).length);
-    });
+    const params = new HttpParams().set('pageNumber', 1).set('pageSize', 50);
+    this.http
+      .get<PagedResult<NotificationDto>>(this.baseUrl, { ...WITH_CREDENTIALS, params })
+      .subscribe((res) => {
+        this.notifications.set(res.items);
+        this.unreadCount.set(res.items.filter((n) => !n.isRead).length);
+      });
   }
 
   markAsRead(id: string): void {

@@ -409,9 +409,10 @@ export class PropertyVerificationsComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.error.set(false);
-    this.propertyService.getPendingVerification().subscribe({
-      next: (data) => {
-        this.requests.set(data);
+    // Table already paginates client-side over the loaded set, so pull a large page (backend caps at 100).
+    this.propertyService.getPendingVerification(1, 100).subscribe({
+      next: (res) => {
+        this.requests.set(res.items);
         this.loading.set(false);
       },
       error: () => {

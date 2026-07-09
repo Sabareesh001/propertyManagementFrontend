@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
+import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, PagedResult } from '../models/paged-result.model';
 
 /** A document attached to a lease at creation — see DocumentResponseDto. */
 export interface LeaseDocumentPayload {
@@ -53,9 +54,15 @@ export class LeaseService {
     return this.http.post<LeaseResponse>(this.baseUrl, payload, WITH_CREDENTIALS);
   }
 
-  /** GET /api/lease/my-leases — leases where the user is owner or tenant. */
-  getMyLeases(): Observable<LeaseResponse[]> {
-    return this.http.get<LeaseResponse[]>(`${this.baseUrl}/my-leases`, WITH_CREDENTIALS);
+  /** GET /api/lease/my-leases — leases where the user is owner or tenant, paginated. */
+  getMyLeases(
+    pageNumber = DEFAULT_PAGE_NUMBER,
+    pageSize = DEFAULT_PAGE_SIZE,
+  ): Observable<PagedResult<LeaseResponse>> {
+    return this.http.get<PagedResult<LeaseResponse>>(`${this.baseUrl}/my-leases`, {
+      ...WITH_CREDENTIALS,
+      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+    });
   }
 
   /** GET /api/lease/{id} — a single lease. */
@@ -92,14 +99,26 @@ export class LeaseService {
     );
   }
 
-  /** GET /api/lease/pending-templates — Admin only: leases in Submitted (2) awaiting template review. */
-  getPendingTemplates(): Observable<LeaseResponse[]> {
-    return this.http.get<LeaseResponse[]>(`${this.baseUrl}/pending-templates`, WITH_CREDENTIALS);
+  /** GET /api/lease/pending-templates — Admin only: leases in Submitted (2) awaiting template review, paginated. */
+  getPendingTemplates(
+    pageNumber = DEFAULT_PAGE_NUMBER,
+    pageSize = DEFAULT_PAGE_SIZE,
+  ): Observable<PagedResult<LeaseResponse>> {
+    return this.http.get<PagedResult<LeaseResponse>>(`${this.baseUrl}/pending-templates`, {
+      ...WITH_CREDENTIALS,
+      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+    });
   }
 
-  /** GET /api/lease/pending-signed — Admin only: leases in TenantSigned (4) awaiting signed-agreement review. */
-  getPendingSigned(): Observable<LeaseResponse[]> {
-    return this.http.get<LeaseResponse[]>(`${this.baseUrl}/pending-signed`, WITH_CREDENTIALS);
+  /** GET /api/lease/pending-signed — Admin only: leases in TenantSigned (4) awaiting signed-agreement review, paginated. */
+  getPendingSigned(
+    pageNumber = DEFAULT_PAGE_NUMBER,
+    pageSize = DEFAULT_PAGE_SIZE,
+  ): Observable<PagedResult<LeaseResponse>> {
+    return this.http.get<PagedResult<LeaseResponse>>(`${this.baseUrl}/pending-signed`, {
+      ...WITH_CREDENTIALS,
+      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+    });
   }
 
   /** PUT /api/lease/{id}/verify-template?approve=true|false — Admin: Submitted → PendingSignature / Rejected. */

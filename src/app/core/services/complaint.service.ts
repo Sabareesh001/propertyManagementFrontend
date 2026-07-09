@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
+import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, PagedResult } from '../models/paged-result.model';
 
 /** One message in a complaint's conversation thread. Matches the backend ComplaintCommentDto. */
 export interface ComplaintComment {
@@ -114,19 +115,37 @@ export class ComplaintService {
     return this.http.post<ComplaintResponse>(this.baseUrl, payload, WITH_CREDENTIALS);
   }
 
-  /** GET /api/complaint/my — complaints I filed. */
-  getMyComplaints(): Observable<ComplaintResponse[]> {
-    return this.http.get<ComplaintResponse[]>(`${this.baseUrl}/my`, WITH_CREDENTIALS);
+  /** GET /api/complaint/my — complaints I filed, paginated. */
+  getMyComplaints(
+    pageNumber = DEFAULT_PAGE_NUMBER,
+    pageSize = DEFAULT_PAGE_SIZE,
+  ): Observable<PagedResult<ComplaintResponse>> {
+    return this.http.get<PagedResult<ComplaintResponse>>(`${this.baseUrl}/my`, {
+      ...WITH_CREDENTIALS,
+      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+    });
   }
 
-  /** GET /api/complaint/received — complaints filed against my properties (owner). */
-  getReceivedComplaints(): Observable<ComplaintResponse[]> {
-    return this.http.get<ComplaintResponse[]>(`${this.baseUrl}/received`, WITH_CREDENTIALS);
+  /** GET /api/complaint/received — complaints filed against my properties (owner), paginated. */
+  getReceivedComplaints(
+    pageNumber = DEFAULT_PAGE_NUMBER,
+    pageSize = DEFAULT_PAGE_SIZE,
+  ): Observable<PagedResult<ComplaintResponse>> {
+    return this.http.get<PagedResult<ComplaintResponse>>(`${this.baseUrl}/received`, {
+      ...WITH_CREDENTIALS,
+      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+    });
   }
 
-  /** GET /api/complaint — every complaint in the system (admin). */
-  getAllComplaints(): Observable<ComplaintResponse[]> {
-    return this.http.get<ComplaintResponse[]>(this.baseUrl, WITH_CREDENTIALS);
+  /** GET /api/complaint — every complaint in the system (admin), paginated. */
+  getAllComplaints(
+    pageNumber = DEFAULT_PAGE_NUMBER,
+    pageSize = DEFAULT_PAGE_SIZE,
+  ): Observable<PagedResult<ComplaintResponse>> {
+    return this.http.get<PagedResult<ComplaintResponse>>(this.baseUrl, {
+      ...WITH_CREDENTIALS,
+      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+    });
   }
 
   /** GET /api/complaint/{id} — a single complaint with its full comment thread. */

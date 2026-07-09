@@ -220,8 +220,8 @@ export class PropertyFormComponent implements OnInit {
 
           // Load existing documents (deeds)
           this.propertyService.getDocuments(id).subscribe({
-            next: (docs) => {
-              this.existingDeeds.set(docs.filter(d => d.documentTypeId === 2));
+            next: (res) => {
+              this.existingDeeds.set(res.items.filter(d => d.documentTypeId === 2));
               this.loading.set(false);
             },
             error: () => this.loading.set(false),

@@ -383,9 +383,9 @@ export class SignedLeaseVerificationsComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.error.set(false);
-    this.leaseService.getPendingSigned().subscribe({
-      next: (data) => {
-        this.requests.set(data);
+    this.leaseService.getPendingSigned(1, 100).subscribe({
+      next: (res) => {
+        this.requests.set(res.items);
         this.loading.set(false);
       },
       error: () => {

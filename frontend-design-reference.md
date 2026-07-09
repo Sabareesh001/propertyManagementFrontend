@@ -17,12 +17,16 @@
 7. [Charges & Payments](#7-charges--payments)
 8. [Bank Accounts](#8-bank-accounts)
 9. [Stripe Connect](#9-stripe-connect)
-10. [Complete Endpoint Reference](#10-complete-endpoint-reference)
-11. [All DTOs & Schemas](#11-all-dtos--schemas)
-12. [Validation Rules Cheat Sheet](#12-validation-rules-cheat-sheet)
-13. [Status Enums & Lookup Values](#13-status-enums--lookup-values)
-14. [Error Response Format](#14-error-response-format)
-15. [Page-by-Page Design Guide](#15-page-by-page-design-guide)
+10. [Complaints](#10-complaints)
+11. [Admin Finance Dashboard](#11-admin-finance-dashboard)
+12. [Notifications](#12-notifications)
+13. [Pagination](#13-pagination)
+14. [Complete Endpoint Reference](#14-complete-endpoint-reference)
+15. [All DTOs & Schemas](#15-all-dtos--schemas)
+16. [Validation Rules Cheat Sheet](#16-validation-rules-cheat-sheet)
+17. [Status Enums & Lookup Values](#17-status-enums--lookup-values)
+18. [Error Response Format](#18-error-response-format)
+19. [Page-by-Page Design Guide](#19-page-by-page-design-guide)
 
 ---
 
@@ -66,7 +70,7 @@ Auth: None
   "roleId": 1
 }
 ```
-**Response 201:** `UserResponseDto` (see §11)
+**Response 201:** `UserResponseDto` (see §15)
 
 **Validation:**
 - `email`: required, valid email format, no whitespace
@@ -94,6 +98,51 @@ Auth: None
 
 > The JWT is also returned in the `Authorization: Bearer <token>` header pattern for non-cookie clients.
 
+**Email verification gate:** Login fails with **403** if the account's email is not yet verified:
+```json
+{
+  "status": 403,
+  "detail": "Email address has not been verified.",
+  "errorCode": "EMAIL_NOT_VERIFIED"
+}
+```
+> **UI guidance:** On login, check `error.errorCode === "EMAIL_NOT_VERIFIED"` and show a "Resend verification email" link that calls `POST /api/user/resend-verification`.
+
+---
+
+### Verify Email
+```
+GET /api/user/verify-email/{hash}
+Auth: None
+```
+`hash` is the token from the verification link emailed at registration (`{FrontendUrl}/auth/verify-email/{hash}`).
+
+**Response 200:**
+```json
+{ "message": "Email verified successfully.", "emailVerified": true }
+```
+
+**Errors:**
+- 404: hash is unknown/invalid
+- 400: hash has expired (links expire 24h after registration)
+
+---
+
+### Resend Verification Email
+```
+POST /api/user/resend-verification
+Auth: None
+```
+**Request body:**
+```json
+{ "email": "user@example.com" }
+```
+
+**Response 200:** Always returns a generic success message regardless of whether the email exists or is already verified (avoids leaking registered emails):
+```json
+{ "message": "If an account with that email exists and is not yet verified, a new verification link has been sent." }
+```
+
 ---
 
 ### Become Owner (upgrade role)
@@ -109,10 +158,10 @@ No request body. Adds `Owner` role to the current user, re-issues JWT cookie.
 
 ### Get All Users
 ```
-GET /api/user
+GET /api/user?pageNumber=&pageSize=
 Auth: Required
 ```
-**Response 200:** `UserResponseDto[]`
+Paginated (see §13). **Response 200:** `PagedResultDto<UserResponseDto>`
 
 ---
 
@@ -218,10 +267,10 @@ Possible values: `"Unverified"`, `"Pending"`, `"Verified"`, `"Rejected"`
 
 ### Get Pending Verifications (Admin only)
 ```
-GET /api/userverification/pending
+GET /api/userverification/pending?pageNumber=&pageSize=
 Auth: Admin
 ```
-**Response 200:** `UserVerificationResponseDto[]`
+Paginated (see §13). **Response 200:** `PagedResultDto<UserVerificationResponseDto>`
 
 ---
 
@@ -340,10 +389,10 @@ Auth: Owner
 
 ### Get All Properties (public)
 ```
-GET /api/property
+GET /api/property?pageNumber=&pageSize=
 Auth: None
 ```
-**Response 200:** `PropertyResponseDto[]`
+Paginated (see §13), newest first. **Response 200:** `PagedResultDto<PropertyResponseDto>`
 
 ---
 
@@ -360,10 +409,10 @@ Auth: None
 
 ### Get My Properties
 ```
-GET /api/property/my
+GET /api/property/my?pageNumber=&pageSize=
 Auth: Owner
 ```
-**Response 200:** `PropertyResponseDto[]`
+Paginated (see §13), newest first. **Response 200:** `PagedResultDto<PropertyResponseDto>`
 
 ---
 
@@ -410,10 +459,10 @@ No request body. Moves the property from Draft (or Rejected) → Submitted.
 
 ### Get Properties Pending Verification (Admin only)
 ```
-GET /api/property/pending-verification
+GET /api/property/pending-verification?pageNumber=&pageSize=
 Auth: Admin
 ```
-**Response 200:** `PropertyResponseDto[]`
+Paginated (see §13), oldest first (FIFO queue). **Response 200:** `PagedResultDto<PropertyResponseDto>`
 
 ---
 
@@ -513,10 +562,10 @@ Auth: Owner (must be property owner)
 
 ### Get Property Documents
 ```
-GET /api/property/{id}/documents
+GET /api/property/{id}/documents?pageNumber=&pageSize=
 Auth: Required
 ```
-**Response 200:** `DocumentResponseDto[]`
+Paginated (see §13). **Response 200:** `PagedResultDto<DocumentResponseDto>`
 
 ---
 
@@ -645,21 +694,21 @@ Can cancel if status is Draft or Submitted.
 
 ### Get My Requests (Tenant view)
 ```
-GET /api/leaseproposal/my-requests
+GET /api/leaseproposal/my-requests?pageNumber=&pageSize=
 Auth: Tenant
 ```
-**Response 200:** `LeaseProposalResponseDto[]`
+Paginated (see §13). **Response 200:** `PagedResultDto<LeaseProposalResponseDto>`
 
 ---
 
 ### Get Received Requests (Owner view)
 ```
-GET /api/leaseproposal/received-requests
+GET /api/leaseproposal/received-requests?pageNumber=&pageSize=
 Auth: Owner
 ```
-Returns proposals for all the owner's properties, with tenant details embedded.
+Returns proposals for all the owner's properties, with tenant details embedded. Paginated (see §13).
 
-**Response 200:** `LeaseProposalResponseDto[]` (each has `tenant` field with `TenantDetailsDto`)
+**Response 200:** `PagedResultDto<LeaseProposalResponseDto>` (each item has `tenant` field with `TenantDetailsDto`)
 
 ---
 
@@ -762,12 +811,12 @@ No request body. Moves Draft → Submitted (requires `agreementDocumentUrl` to b
 
 ### Get Pending Templates (Admin)
 ```
-GET /api/lease/pending-templates
+GET /api/lease/pending-templates?pageNumber=&pageSize=
 Auth: Admin
 ```
-Returns all leases in **Submitted (2)** status whose templates are awaiting verification. Use this to populate the admin verification queue instead of polling `GET /api/lease/my-leases` and filtering client-side.
+Returns all leases in **Submitted (2)** status whose templates are awaiting verification, oldest first. Use this to populate the admin verification queue instead of polling `GET /api/lease/my-leases` and filtering client-side. Paginated (see §13).
 
-**Response 200:** `LeaseResponseDto[]`
+**Response 200:** `PagedResultDto<LeaseResponseDto>`
 
 ---
 
@@ -804,12 +853,12 @@ Moves PendingSignature → TenantSigned.
 
 ### Get Pending Signed Leases (Admin)
 ```
-GET /api/lease/pending-signed
+GET /api/lease/pending-signed?pageNumber=&pageSize=
 Auth: Admin
 ```
-Returns all leases in **TenantSigned (4)** status whose signed agreements are awaiting verification. Use this to populate the admin signed-lease verification queue instead of polling `GET /api/lease/my-leases` and filtering client-side. Mirror of `GET /api/lease/pending-templates` for the signing stage.
+Returns all leases in **TenantSigned (4)** status whose signed agreements are awaiting verification, oldest first. Use this to populate the admin signed-lease verification queue instead of polling `GET /api/lease/my-leases` and filtering client-side. Mirror of `GET /api/lease/pending-templates` for the signing stage. Paginated (see §13).
 
-**Response 200:** `LeaseResponseDto[]`
+**Response 200:** `PagedResultDto<LeaseResponseDto>`
 
 ---
 
@@ -836,21 +885,21 @@ Auth: Required (Owner/Tenant of lease, or Admin)
 
 ### Get My Leases
 ```
-GET /api/lease/my-leases
+GET /api/lease/my-leases?pageNumber=&pageSize=
 Auth: Required
 ```
-Returns leases where the user is the owner or tenant (based on role).
+Returns leases where the user is the owner or tenant (based on role). Paginated (see §13).
 
-**Response 200:** `LeaseResponseDto[]`
+**Response 200:** `PagedResultDto<LeaseResponseDto>`
 
 ---
 
 ### Get Lease Documents
 ```
-GET /api/lease/{id}/documents
+GET /api/lease/{id}/documents?pageNumber=&pageSize=
 Auth: Required (Owner/Tenant of lease, or Admin)
 ```
-**Response 200:** `DocumentResponseDto[]`
+Paginated (see §13). **Response 200:** `PagedResultDto<DocumentResponseDto>`
 
 ---
 
@@ -951,10 +1000,10 @@ Auth: Owner (must own the property of that lease)
 
 ### Get All Charges for Lease
 ```
-GET /api/lease/{leaseId}/charges
+GET /api/lease/{leaseId}/charges?pageNumber=&pageSize=
 Auth: Required (Owner or Tenant of that lease)
 ```
-**Response 200:** `ChargeResponseDto[]`
+Paginated (see §13), newest first. **Response 200:** `PagedResultDto<ChargeResponseDto>`
 
 Each charge includes `amountPaid` and `balanceDue` computed fields.
 
@@ -1003,10 +1052,10 @@ A single payment can cover multiple charges (partial or full amounts).
 
 ### Get All Payments for Lease
 ```
-GET /api/lease/{leaseId}/payments
+GET /api/lease/{leaseId}/payments?pageNumber=&pageSize=
 Auth: Required (Owner or Tenant of that lease)
 ```
-**Response 200:** `PaymentResponseDto[]`
+Paginated (see §13), newest first. **Response 200:** `PagedResultDto<PaymentResponseDto>`
 
 ---
 
@@ -1041,10 +1090,10 @@ Auth: Required
 
 ### Get My Bank Accounts
 ```
-GET /api/bankaccount
+GET /api/bankaccount?pageNumber=&pageSize=
 Auth: Required
 ```
-**Response 200:** `BankAccountResponseDto[]`
+Paginated (see §13), newest first. **Response 200:** `PagedResultDto<BankAccountResponseDto>`
 
 ---
 
@@ -1182,63 +1231,362 @@ Handles:
 
 ---
 
-## 10. Complete Endpoint Reference
+## 10. Complaints
+
+A tenant raises a complaint against one of their **Active** leases. The owner of the property (or an admin) triages it through a status state machine, and any participant can add comments to a shared thread.
+
+### State Machine
+
+```
+Open (1)
+  │
+  ├─[owner/admin]──▶ InProgress (2)
+  │                       │
+  ├─[owner/admin]──▶ Resolved (3) ◀──[owner/admin]──┘
+  │                       │
+  │        ┌──[tenant-creator]──▶ Closed (4)  [terminal]
+  │        └──[any participant]──▶ InProgress (2)  [reopen]
+  │
+  └─[tenant-creator or admin]──▶ Cancelled (5)  [terminal]
+```
+`Closed` and `Cancelled` are terminal — no further transitions allowed once reached.
+
+### Categories (ComplaintTypeId)
+| ID | Name             |
+|----|------------------|
+| 1  | Maintenance      |
+| 2  | Plumbing         |
+| 3  | Electrical       |
+| 4  | Appliance        |
+| 5  | Noise/Neighbours |
+| 6  | Security/Safety  |
+| 7  | Billing/Payment  |
+| 8  | Other            |
+
+### Priorities (PriorityId)
+| ID | Name   |
+|----|--------|
+| 1  | Low    |
+| 2  | Medium |
+| 3  | High   |
+| 4  | Urgent |
+
+### Statuses (StatusId)
+| ID | Name       |
+|----|------------|
+| 1  | Open       |
+| 2  | InProgress |
+| 3  | Resolved   |
+| 4  | Closed     |
+| 5  | Cancelled  |
+
+---
+
+### Create Complaint (Tenant)
+```
+POST /api/complaint
+Auth: Tenant (must be the tenant of the lease)
+```
+**Request body:**
+```json
+{
+  "leaseId": "uuid-of-active-lease",
+  "categoryId": 2,
+  "priorityId": 3,
+  "subject": "Kitchen sink leaking",
+  "description": "Water pooling under the sink since yesterday evening.",
+  "attachmentUrl": "https://cdn.example.com/leak-photo.jpg"
+}
+```
+**Validation:**
+- `leaseId`: required, must reference an **Active** lease the tenant belongs to
+- `categoryId`: 1–8
+- `priorityId`: 1–4
+- `subject`: 5–150 chars
+- `description`: 10–2000 chars
+- `attachmentUrl`: optional
+
+**Response 201:** `ComplaintResponseDto` (with empty `comments`)
+
+---
+
+### Get My Complaints (Tenant view)
+```
+GET /api/complaint/my?pageNumber=&pageSize=
+Auth: Required
+```
+Complaints created by the current user, newest first. Each item has an empty `comments` list (use Get Complaint by ID for the full thread). Paginated (see §13).
+
+**Response 200:** `PagedResultDto<ComplaintResponseDto>`
+
+---
+
+### Get Received Complaints (Owner view)
+```
+GET /api/complaint/received?pageNumber=&pageSize=
+Auth: Owner
+```
+Complaints raised on any of the owner's properties, newest first. Paginated (see §13).
+
+**Response 200:** `PagedResultDto<ComplaintResponseDto>`
+
+---
+
+### Get All Complaints (Admin only)
+```
+GET /api/complaint?pageNumber=&pageSize=
+Auth: Admin
+```
+All complaints in the system, newest first. Paginated (see §13).
+
+**Response 200:** `PagedResultDto<ComplaintResponseDto>`
+
+---
+
+### Get Complaint by ID
+```
+GET /api/complaint/{id}
+Auth: Required (tenant who created it, owner of the property, or Admin)
+```
+Returns the full comment thread (not paginated — thread length is naturally bounded).
+
+**Response 200:** `ComplaintResponseDto` (with populated `comments[]`)
+
+---
+
+### Update Complaint Status
+```
+PUT /api/complaint/{id}/status
+Auth: Required (permission depends on the transition — see state machine above)
+```
+**Request body:**
+```json
+{
+  "statusId": 2,
+  "note": "Plumber scheduled for tomorrow morning."
+}
+```
+`note` is optional — if provided, it's appended to the thread as a comment from the acting user.
+
+**Response 200:** `ComplaintResponseDto` (with refreshed `comments[]`)
+
+**Errors:**
+- 403: caller doesn't have permission for this specific transition (e.g. a tenant trying to mark Resolved)
+- 400: the transition isn't valid from the complaint's current status (e.g. Closed → anything)
+
+---
+
+### Add Comment
+```
+POST /api/complaint/{id}/comments
+Auth: Required (tenant who created it, owner of the property, or Admin)
+```
+**Request body:**
+```json
+{ "message": "Confirmed — plumber will arrive between 10am and 12pm." }
+```
+`message`: 1–2000 chars.
+
+Blocked with **400** if the complaint is `Closed` or `Cancelled`.
+
+**Response 201:** `ComplaintCommentDto`
+
+---
+
+### Upload Complaint Attachment
+```
+POST /api/complaint/upload-document
+Auth: Required
+Content-Type: multipart/form-data
+```
+Uploads a PDF or image (max 10 MB) and returns a permanent URL to use as `attachmentUrl` on create.
+
+**Form field:** `file` — PDF, JPEG, PNG, GIF, or WebP.
+
+**Response 200:**
+```json
+{ "url": "http://localhost:5000/uploads/complaintdocs/<uuid>.pdf" }
+```
+
+**Errors:**
+- 400: No file provided / unsupported type / exceeds 10 MB
+
+---
+
+## 11. Admin Finance Dashboard
+
+Admin-only, platform-wide finance views that aggregate data across every lease — not scoped to a single owner or tenant.
+
+### Get All Payments (Admin only)
+```
+GET /api/admin/payments?from=&to=&pageNumber=&pageSize=
+Auth: Admin
+```
+Every payment across all leases, newest first, enriched with lease/property/owner/tenant context. `from`/`to` (`DateTime`) optionally filter on `createdAt`. Paginated (see §13).
+
+**Response 200:** `PagedResultDto<AdminPaymentDto>`
+
+---
+
+### Get All Charges (Admin only)
+```
+GET /api/admin/charges?from=&to=&pageNumber=&pageSize=
+Auth: Admin
+```
+Every charge across all leases, newest first, enriched with lease/property/owner/tenant context. `from`/`to` optionally filter on `createdAt`. Paginated (see §13).
+
+**Response 200:** `PagedResultDto<AdminChargeDto>`
+
+---
+
+### Get Finance Summary (Admin only)
+```
+GET /api/admin/finance-summary?from=&to=
+Auth: Admin
+```
+Server-side aggregated figures across **all** payments matching the optional `from`/`to` filter — **not paginated** (it's a single object, not a list).
+
+**Response 200:** `AdminFinanceSummaryDto`
+
+---
+
+## 12. Notifications
+
+Real-time notifications pushed over SignalR and also readable via REST for the notification inbox/bell icon.
+
+### Get My Notifications
+```
+GET /api/notification?pageNumber=&pageSize=
+Auth: Required
+```
+Notifications addressed to the current user, newest first. Paginated (see §13).
+
+**Response 200:** `PagedResultDto<NotificationResponseDto>`
+
+---
+
+### Mark Notification as Read
+```
+PUT /api/notification/{id}/read
+Auth: Required (must be the recipient)
+```
+No request body.
+
+**Response 204:** No content
+
+---
+
+### Real-Time Push (SignalR)
+```
+Hub: /hubs/notifications
+Auth: JWT via Authorization header, jwt_token cookie, or ?access_token= query param (SignalR can't set custom headers on the WebSocket handshake)
+Event: "ReceiveNotification" → NotificationResponseDto
+```
+On connect, the server joins the socket to a personal group keyed by the user's ID, so a `NotifyAsync` call (triggered by proposal/lease/complaint events elsewhere in the API) pushes to every open tab/device for that user. Reconnects and multiple tabs are handled automatically — no extra client-side group management needed.
+
+**Typical flow:**
+1. Frontend connects to `/hubs/notifications` right after login using the JWT.
+2. Subscribe to `"ReceiveNotification"` — append incoming DTOs to the notification bell dropdown / toast list.
+3. `GET /api/notification` on page load to backfill history (e.g. before the socket connected).
+4. `PUT /api/notification/{id}/read` when the user opens/dismisses a notification.
+
+---
+
+## 13. Pagination
+
+Every "list" endpoint in this API (any endpoint that previously returned a bare array) now returns a **paginated envelope** instead of a raw array, and accepts standard query-string pagination parameters. This is a single, DRY mechanism applied consistently across the whole API — if you've implemented it for one paginated endpoint, every other one works identically.
+
+### Request query parameters
+| Param        | Type | Default | Constraints                          |
+|--------------|------|---------|---------------------------------------|
+| `pageNumber` | int  | `1`     | Must be ≥ 1                           |
+| `pageSize`   | int  | `20`    | Must be between `1` and `100`         |
+
+Both are optional — omit them to get page 1 with 20 items. Values outside the constraints return **400** with a standard validation error body (see §18).
+
+### Response envelope — `PagedResultDto<T>`
+```typescript
+{
+  items: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;   // total items matching the query, across all pages
+  totalPages: number;   // ceil(totalCount / pageSize)
+}
+```
+> **UI guidance:** Read the list from `.items`, not the response root. Use `totalCount`/`totalPages` to render a pager or "Showing X–Y of Z" label; don't infer total count from `items.length` (that's just the current page's size).
+
+### Which endpoints are paginated
+All of the following accept `?pageNumber=&pageSize=` and return `PagedResultDto<T>` — every one is cross-referenced above in its own section:
+
+`GET /api/user`, `GET /api/userverification/pending`, `GET /api/property`, `GET /api/property/my`, `GET /api/property/pending-verification`, `GET /api/property/{id}/documents`, `GET /api/leaseproposal/my-requests`, `GET /api/leaseproposal/received-requests`, `GET /api/lease/pending-templates`, `GET /api/lease/pending-signed`, `GET /api/lease/my-leases`, `GET /api/lease/{id}/documents`, `GET /api/lease/{leaseId}/charges`, `GET /api/lease/{leaseId}/payments`, `GET /api/bankaccount`, `GET /api/complaint/my`, `GET /api/complaint/received`, `GET /api/complaint`, `GET /api/admin/payments`, `GET /api/admin/charges`, `GET /api/notification`.
+
+**Not paginated** (single objects, or naturally bounded thread endpoints): `GET /api/property/{id}`, `GET /api/lease/{id}`, `GET /api/complaint/{id}` (full comment thread), `GET /api/admin/finance-summary` (aggregate).
+
+---
+
+## 14. Complete Endpoint Reference
+
+`📄` marks paginated GET endpoints — see §13 for the shared `?pageNumber=&pageSize=` / `PagedResultDto<T>` contract.
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | POST | `/api/user/register` | None | Register new user |
 | POST | `/api/user/login` | None | Login, set JWT cookie |
-| GET | `/api/user` | Required | Get all users |
+| GET | `/api/user/verify-email/{hash}` | None | Confirm email address |
+| POST | `/api/user/resend-verification` | None | Resend verification email |
+| GET 📄 | `/api/user` | Required | Get all users |
 | GET | `/api/user/{id}` | None | Get user by ID |
 | PUT | `/api/user/{id}` | None | Update user |
 | DELETE | `/api/user/{id}` | None | Delete user |
 | POST | `/api/user/become-owner` | Required | Add Owner role |
 | POST | `/api/userverification/submit` | Required | Submit KYC documents |
 | GET | `/api/userverification/status` | Required | Get my verification status |
-| GET | `/api/userverification/pending` | Admin | List pending verifications |
+| GET 📄 | `/api/userverification/pending` | Admin | List pending verifications |
 | POST | `/api/userverification/{id}/verify` | Admin | Approve verification |
 | POST | `/api/userverification/{id}/reject` | Admin | Reject verification |
+| POST | `/api/userverification/upload-document` | Required | Upload verification PDF (multipart) |
 | POST | `/api/property` | Owner | Create property |
-| GET | `/api/property` | None | Get all properties |
+| GET 📄 | `/api/property` | None | Get all properties |
 | GET | `/api/property/{id}` | None | Get property by ID (int) |
-| GET | `/api/property/my` | Owner | Get my properties |
+| GET 📄 | `/api/property/my` | Owner | Get my properties |
 | PUT | `/api/property/{id}` | Owner | Update property |
 | DELETE | `/api/property/{id}` | Owner | Delete property |
 | PUT | `/api/property/{id}/submit` | Owner | Submit property for verification |
-| GET | `/api/property/pending-verification` | Admin | List properties pending verification |
+| GET 📄 | `/api/property/pending-verification` | Admin | List properties pending verification |
 | PUT | `/api/property/{id}/verify?approve=` | Admin | Approve/reject property |
 | POST | `/api/property/upload-image` | Owner | Upload property image(s) (multipart) |
 | POST | `/api/property/upload-document` | Owner | Upload property PDF (multipart) |
 | POST | `/api/property/{id}/documents` | Owner | Add document to property |
-| GET | `/api/property/{id}/documents` | Required | Get property documents |
+| GET 📄 | `/api/property/{id}/documents` | Required | Get property documents |
 | DELETE | `/api/property/{id}/documents/{documentId}` | Owner | Remove property document |
-| POST | `/api/userverification/upload-document` | Required | Upload verification PDF (multipart) |
 | POST | `/api/leaseproposal` | Required | Create lease proposal |
 | POST | `/api/leaseproposal/{id}/submit` | Required | Submit draft proposal |
 | PUT | `/api/leaseproposal/{id}` | Required | Update draft proposal |
 | PUT | `/api/leaseproposal/{id}/accept` | Owner | Accept proposal |
 | PUT | `/api/leaseproposal/{id}/reject` | Owner | Reject proposal |
 | PUT | `/api/leaseproposal/{id}/cancel` | Tenant | Cancel proposal |
-| GET | `/api/leaseproposal/my-requests` | Tenant | My outgoing proposals |
-| GET | `/api/leaseproposal/received-requests` | Owner | Incoming proposals |
+| GET 📄 | `/api/leaseproposal/my-requests` | Tenant | My outgoing proposals |
+| GET 📄 | `/api/leaseproposal/received-requests` | Owner | Incoming proposals |
 | POST | `/api/lease` | Owner | Create lease contract |
 | PUT | `/api/lease/{id}` | Owner | Update draft lease |
 | PUT | `/api/lease/{id}/submit` | Owner | Submit lease for review |
-| GET | `/api/lease/pending-templates` | Admin | List templates pending verification |
+| GET 📄 | `/api/lease/pending-templates` | Admin | List templates pending verification |
 | PUT | `/api/lease/{id}/verify-template?approve=` | Admin | Approve/reject template |
 | PUT | `/api/lease/{id}/sign` | Tenant | Sign the lease |
-| GET | `/api/lease/pending-signed` | Admin | List signed leases pending verification |
+| GET 📄 | `/api/lease/pending-signed` | Admin | List signed leases pending verification |
 | PUT | `/api/lease/{id}/verify-signed?approve=` | Admin | Activate/reject signed lease |
 | GET | `/api/lease/{id}` | Required | Get lease by ID (GUID) |
-| GET | `/api/lease/my-leases` | Required | Get my leases |
-| GET | `/api/lease/{id}/documents` | Required | Get lease documents |
+| GET 📄 | `/api/lease/my-leases` | Required | Get my leases |
+| GET 📄 | `/api/lease/{id}/documents` | Required | Get lease documents |
+| POST | `/api/lease/{id}/documents` | Tenant | Upload tenant lease document |
 | POST | `/api/lease/{leaseId}/charges` | Owner | Apply charge to lease |
-| GET | `/api/lease/{leaseId}/charges` | Required | Get all charges |
+| GET 📄 | `/api/lease/{leaseId}/charges` | Required | Get all charges |
 | GET | `/api/lease/{leaseId}/charges/{chargeId}` | Required | Get single charge |
 | POST | `/api/lease/{leaseId}/payments` | Tenant | Record payment |
-| GET | `/api/lease/{leaseId}/payments` | Required | Get all payments |
+| GET 📄 | `/api/lease/{leaseId}/payments` | Required | Get all payments |
 | POST | `/api/bankaccount` | Required | Create bank account |
-| GET | `/api/bankaccount` | Required | Get my bank accounts |
+| GET 📄 | `/api/bankaccount` | Required | Get my bank accounts |
 | GET | `/api/bankaccount/{id}` | Required | Get account by ID (GUID) |
 | PUT | `/api/bankaccount/{id}` | Required | Update bank account |
 | DELETE | `/api/bankaccount/{id}` | Required | Delete bank account |
@@ -1246,10 +1594,23 @@ Handles:
 | GET | `/api/stripe/connect/status` | Owner | Get Stripe account status |
 | POST | `/api/stripe/lease/{leaseId}/payments/intent` | Tenant | Create Stripe PaymentIntent |
 | POST | `/api/stripe/webhook` | None | Stripe webhook handler |
+| POST | `/api/complaint` | Tenant | Create complaint |
+| GET 📄 | `/api/complaint/my` | Required | My created complaints |
+| GET 📄 | `/api/complaint/received` | Owner | Complaints on my properties |
+| GET 📄 | `/api/complaint` | Admin | All complaints |
+| GET | `/api/complaint/{id}` | Required | Get complaint with full thread |
+| PUT | `/api/complaint/{id}/status` | Required | Transition complaint status |
+| POST | `/api/complaint/{id}/comments` | Required | Add comment to thread |
+| POST | `/api/complaint/upload-document` | Required | Upload complaint attachment (multipart) |
+| GET 📄 | `/api/admin/payments` | Admin | Platform-wide payments |
+| GET 📄 | `/api/admin/charges` | Admin | Platform-wide charges |
+| GET | `/api/admin/finance-summary` | Admin | Aggregated finance figures |
+| GET 📄 | `/api/notification` | Required | My notifications |
+| PUT | `/api/notification/{id}/read` | Required | Mark notification as read |
 
 ---
 
-## 11. All DTOs & Schemas
+## 15. All DTOs & Schemas
 
 ### UserResponseDto
 ```typescript
@@ -1266,6 +1627,7 @@ Handles:
   roles: RoleResponseDto[];            // all roles
   verificationStatusId: number | null; // 1=Unverified, 2=Pending, 3=Verified, 4=Rejected
   activeStatusId: number | null;       // 1=Active, 2=Inactive, 3=Suspended
+  emailVerified: boolean;              // must be true to log in (see §2)
 }
 ```
 
@@ -1494,9 +1856,120 @@ All fields optional — only non-null fields are applied. Proposal must be Draft
 }
 ```
 
+### PagedResultDto\<T\>
+The generic envelope wrapping every paginated list response (see §13).
+```typescript
+{
+  items: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+```
+
+### ComplaintResponseDto
+```typescript
+{
+  id: string;                  // UUID
+  leaseId: string | null;      // UUID
+  propertyId: number | null;
+  propertyTitle: string | null;
+  tenantId: string | null;     // UUID
+  tenantName: string | null;
+  ownerId: string | null;      // UUID
+  categoryId: number | null;   // 1–8, see §10
+  categoryName: string | null;
+  priorityId: number | null;   // 1–4, see §10
+  priorityName: string | null;
+  statusId: number | null;     // 1–5, see §10
+  statusName: string | null;
+  subject: string | null;
+  description: string | null;
+  attachmentUrl: string | null;
+  createdBy: string | null;    // UUID
+  resolvedAt: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  commentCount: number;
+  comments: ComplaintCommentDto[];  // empty on list endpoints; populated on Get by ID
+}
+```
+
+### ComplaintCommentDto
+```typescript
+{
+  id: string;             // UUID
+  complaintId: string;    // UUID
+  authorId: string;       // UUID
+  authorName: string | null;
+  authorRole: string | null;  // "Admin" | "Owner" | "Tenant"
+  message: string | null;
+  createdAt: string | null;
+}
+```
+
+### AdminPaymentDto
+Extends `PaymentResponseDto` (see above) with platform-wide context:
+```typescript
+{
+  // ...all PaymentResponseDto fields, plus:
+  platformFee: number | null;   // Stripe fee; null for manual payments
+  leaseId: string;              // UUID
+  propertyId: number | null;
+  ownerId: string | null;       // UUID
+  ownerName: string | null;
+  tenantId: string | null;      // UUID
+  tenantEmail: string | null;
+}
+```
+
+### AdminChargeDto
+Extends `ChargeResponseDto` (see above) with platform-wide context:
+```typescript
+{
+  // ...all ChargeResponseDto fields, plus:
+  leaseId: string;              // UUID
+  propertyId: number | null;
+  propertyTitle: string | null;
+  ownerId: string | null;       // UUID
+  ownerName: string | null;
+  tenantId: string | null;      // UUID
+  tenantName: string | null;
+  tenantEmail: string | null;
+}
+```
+
+### AdminFinanceSummaryDto
+```typescript
+{
+  companyRevenue: number;   // sum of platform fees on Completed payments
+  grossVolume: number;      // sum of amounts on Completed payments
+  pendingAmount: number;    // sum of amounts on Pending payments
+  paymentCount: number;
+  completedCount: number;
+  failedCount: number;
+  refundedCount: number;
+}
+```
+
+### NotificationResponseDto
+```typescript
+{
+  id: string;                  // UUID
+  typeId: number;               // see NotificationType (server-internal event catalog)
+  title: string;
+  message: string;
+  relatedEntityType: string | null;
+  relatedEntityId: string | null;  // UUID
+  isRead: boolean;
+  createdAt: string | null;
+}
+```
+
 ---
 
-## 12. Validation Rules Cheat Sheet
+## 16. Validation Rules Cheat Sheet
 
 | Field | Rules |
 |-------|-------|
@@ -1529,10 +2002,19 @@ All fields optional — only non-null fields are applied. Proposal must be Draft
 | Property Document URL | Required, valid absolute URL |
 | Upload Document | PDF only, max 10 MB, `multipart/form-data` field name `file` |
 | Upload Image(s) | JPEG/PNG/GIF/WebP only, max 5 MB per file, `multipart/form-data` field name `files` (repeatable) |
+| Page Number | ≥ 1 (default 1) — see §13 |
+| Page Size | 1–100 (default 20) — see §13 |
+| Complaint Subject | 5–150 chars |
+| Complaint Description | 10–2000 chars |
+| Complaint Category ID | 1–8 |
+| Complaint Priority ID | 1–4 |
+| Complaint Status ID (transition) | 1–5; must be a valid transition from current status (see §10) |
+| Comment Message | 1–2000 chars |
+| Resend Verification Email | Required, valid email format |
 
 ---
 
-## 13. Status Enums & Lookup Values
+## 17. Status Enums & Lookup Values
 
 ### User Verification Status
 | ID | Name       |
@@ -1629,9 +2111,38 @@ All fields optional — only non-null fields are applied. Proposal must be Draft
 | 2  | Owner  |
 | 3  | Admin  |
 
+### Complaint Category
+| ID | Name             |
+|----|------------------|
+| 1  | Maintenance      |
+| 2  | Plumbing         |
+| 3  | Electrical       |
+| 4  | Appliance        |
+| 5  | Noise/Neighbours |
+| 6  | Security/Safety  |
+| 7  | Billing/Payment  |
+| 8  | Other            |
+
+### Complaint Priority
+| ID | Name   |
+|----|--------|
+| 1  | Low    |
+| 2  | Medium |
+| 3  | High   |
+| 4  | Urgent |
+
+### Complaint Status
+| ID | Name       |
+|----|------------|
+| 1  | Open       |
+| 2  | InProgress |
+| 3  | Resolved   |
+| 4  | Closed     |
+| 5  | Cancelled  |
+
 ---
 
-## 14. Error Response Format
+## 18. Error Response Format
 
 The `GlobalExceptionHandler` maps exceptions to HTTP status codes consistently:
 
@@ -1640,8 +2151,11 @@ The `GlobalExceptionHandler` maps exceptions to HTTP status codes consistently:
 | `InvalidOperationException` | 400         | Business rule violations            |
 | `KeyNotFoundException`      | 404         | Entity not found                    |
 | `UnauthorizedAccessException`| 403        | Forbidden (wrong role/ownership)    |
+| `EmailNotVerifiedException` | 403         | Login blocked, unverified email — subclass of `UnauthorizedAccessException`, checked first (see §2) |
 | `StripeException` (invalid) | 400         | Invalid Stripe request              |
 | `StripeException` (other)   | 502         | Stripe downstream error             |
+
+**Machine-readable error codes:** Some 4xx responses include an `errorCode` extension on the standard ProblemDetails body so the frontend can branch without string-matching `detail`. Currently only `EMAIL_NOT_VERIFIED` (see §2) uses this — check `error.errorCode` before falling back to `error.detail` for display.
 
 **Validation errors (400):**
 Returned before the controller executes via `ValidationFilter`. Format:
@@ -1666,7 +2180,7 @@ Returned before the controller executes via `ValidationFilter`. Format:
 
 ---
 
-## 15. Page-by-Page Design Guide
+## 19. Page-by-Page Design Guide
 
 This section maps pages a frontend app would need to the API calls that power them.
 
@@ -1846,6 +2360,43 @@ This section maps pages a frontend app would need to the API calls that power th
 - View both agreement and signed agreement URLs
 - `PUT /api/lease/{id}/verify-signed?approve=true/false`
 
+#### All Complaints (Admin)
+- `GET /api/complaint` — every complaint in the system, paginated
+- Filter/sort client-side by status, category, priority
+- Click through to complaint detail (same view as owner/tenant, with full comment thread)
+
+#### Finance Dashboard (Admin)
+- `GET /api/admin/finance-summary?from=&to=` — headline stat tiles (company revenue, gross volume, pending amount, payment counts)
+- `GET /api/admin/payments?from=&to=` (paginated) — full payment ledger table with lease/property/owner/tenant columns
+- `GET /api/admin/charges?from=&to=` (paginated) — full charge ledger table
+- Date range picker drives `from`/`to` on all three calls
+
+---
+
+### Complaints Pages (Tenant/Owner)
+
+#### My Complaints (Tenant)
+- `GET /api/complaint/my` (paginated)
+- "Raise Complaint" CTA → `POST /api/complaint` against an Active lease
+- Status badge: Open | InProgress | Resolved | Closed | Cancelled
+
+#### Received Complaints (Owner)
+- `GET /api/complaint/received` (paginated)
+- Actions per status (see §10 state machine): "Start Work" (→ InProgress), "Mark Resolved", "Cancel" — via `PUT /api/complaint/{id}/status`
+
+#### Complaint Detail (shared by tenant/owner/admin)
+- `GET /api/complaint/{id}` — full thread
+- `POST /api/complaint/{id}/comments` — reply box, disabled if status is Closed/Cancelled
+- Attachment upload via `POST /api/complaint/upload-document` before create
+
+---
+
+### Notifications
+
+- Connect to SignalR hub `/hubs/notifications` on login (see §12); render toasts/badge count from `"ReceiveNotification"` pushes in real time
+- `GET /api/notification` (paginated) to backfill the notification bell dropdown on page load
+- `PUT /api/notification/{id}/read` when a notification is opened/dismissed
+
 ---
 
 ### Shared Components Needed
@@ -1860,6 +2411,9 @@ This section maps pages a frontend app would need to the API calls that power th
 | Tenant Info Card | `TenantDetailsDto` | In proposal received view |
 | Verification Status Banner | `verificationStatusId` on user | Prompt if Unverified |
 | Stripe.js Integration | `clientSecret` from intent API | For online payments |
+| Pagination Control | `pageNumber`/`totalPages` from any `PagedResultDto<T>` | Reusable across every list page (see §13) |
+| Complaint Comment Thread | `ComplaintResponseDto.comments[]` | Author name + role badge per comment |
+| Notification Bell | `NotificationResponseDto` via REST + SignalR | Unread count from `isRead === false` |
 
 ---
 
@@ -1876,7 +2430,11 @@ This section maps pages a frontend app would need to the API calls that power th
 9. **Property must be Verified** (`verificationStatusId === 3`) and Available (`availabilityStatusId === 1`) for proposals to make sense
 10. **At least one document** required when submitting for user verification
 11. **Cannot submit property for verification** unless at least one non-deleted document with `documentTypeId === 2` (Property Deed) is attached — gate the "Submit" button on `GET /api/property/{id}/documents` containing a deed
+12. **Cannot log in** unless `emailVerified === true` — surface the `EMAIL_NOT_VERIFIED` errorCode with a resend link (see §2)
+13. **Cannot raise a complaint** unless the referenced lease is Active
+14. **Cannot comment on or transition** a Closed or Cancelled complaint
+15. **All list views must read `.items`** from the `PagedResultDto<T>` envelope and drive pagers off `totalCount`/`totalPages`, not `items.length` (see §13)
 
 ---
 
-*Last updated: 2026-07-04*
+*Last updated: 2026-07-09*

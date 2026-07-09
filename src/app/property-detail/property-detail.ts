@@ -157,8 +157,8 @@ export class PropertyDetailComponent implements OnInit, OnChanges {
         this.loading.set(false);
         if (this.showDeedButton) {
           this.propertyService.getDocuments(id as number).subscribe({
-            next: (docs) => {
-              const deed = docs.find((d) => d.documentTypeId === 2 && d.documentUrl);
+            next: (res) => {
+              const deed = res.items.find((d) => d.documentTypeId === 2 && d.documentUrl);
               this.deedUrl.set(deed?.documentUrl ?? null);
             },
           });

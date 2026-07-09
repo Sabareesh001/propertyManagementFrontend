@@ -2,7 +2,7 @@ import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { TableModule } from 'primeng/table';
@@ -132,8 +132,12 @@ export class LeaseDetailComponent implements OnInit {
     this.error.set(false);
     forkJoin({
       lease: this.leaseService.getById(this.leaseId),
-      charges: this.chargeService.getCharges(this.leaseId).pipe(catchError(() => of([] as ChargeResponse[]))),
-      payments: this.chargeService.getPayments(this.leaseId).pipe(catchError(() => of([] as PaymentResponse[]))),
+      charges: this.chargeService
+        .getCharges(this.leaseId)
+        .pipe(map((res) => res.items), catchError(() => of([] as ChargeResponse[]))),
+      payments: this.chargeService
+        .getPayments(this.leaseId)
+        .pipe(map((res) => res.items), catchError(() => of([] as PaymentResponse[]))),
     }).subscribe({
       next: ({ lease, charges, payments }) => {
         this.lease.set(lease);
@@ -164,8 +168,12 @@ export class LeaseDetailComponent implements OnInit {
 
   private refreshChargesAndPayments(): void {
     forkJoin({
-      charges: this.chargeService.getCharges(this.leaseId).pipe(catchError(() => of(this.charges()))),
-      payments: this.chargeService.getPayments(this.leaseId).pipe(catchError(() => of(this.payments()))),
+      charges: this.chargeService
+        .getCharges(this.leaseId)
+        .pipe(map((res) => res.items), catchError(() => of(this.charges()))),
+      payments: this.chargeService
+        .getPayments(this.leaseId)
+        .pipe(map((res) => res.items), catchError(() => of(this.payments()))),
     }).subscribe(({ charges, payments }) => {
       this.charges.set(this.sortCharges(charges));
       this.payments.set(this.sortPayments(payments));

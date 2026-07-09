@@ -78,9 +78,10 @@ export class MyPropertiesComponent implements OnInit {
   loadProperties(): void {
     this.loading.set(true);
     this.error.set(false);
-    this.propertyService.getMyProperties().subscribe({
-      next: (properties) => {
-        this.properties.set(properties);
+    // Owner's own properties — pageSize 100 keeps the whole list in view without a visible pager.
+    this.propertyService.getMyProperties(1, 100).subscribe({
+      next: (res) => {
+        this.properties.set(res.items);
         this.loading.set(false);
       },
       error: () => {

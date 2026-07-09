@@ -13,6 +13,7 @@ import {
   complaintCategoryName,
 } from '../../core/services/complaint.service';
 import { FileComplaintModalComponent } from '../../shared/file-complaint-modal/file-complaint-modal';
+import { PaginationControlsComponent, PageEvent } from '../../shared/pagination-controls/pagination-controls';
 
 type ComplaintScope = 'mine' | 'received' | 'all';
 
@@ -28,6 +29,7 @@ type ComplaintScope = 'mine' | 'received' | 'all';
     ProgressSpinnerModule,
     MenuModule,
     FileComplaintModalComponent,
+    PaginationControlsComponent,
   ],
   providers: [MessageService],
   templateUrl: './complaints-list.html',
@@ -45,6 +47,9 @@ export class ComplaintsListComponent implements OnInit {
   error = signal(false);
   selectedStatus = signal<number | null>(null);
   fileModalVisible = signal(false);
+  pageNumber = signal(1);
+  pageSize = signal(20);
+  totalRecords = signal(0);
 
   categoryName = complaintCategoryName;
 
@@ -117,14 +122,15 @@ export class ComplaintsListComponent implements OnInit {
     this.error.set(false);
     const source$ =
       this.scope === 'received'
-        ? this.complaintService.getReceivedComplaints()
+        ? this.complaintService.getReceivedComplaints(this.pageNumber(), this.pageSize())
         : this.scope === 'all'
-          ? this.complaintService.getAllComplaints()
-          : this.complaintService.getMyComplaints();
+          ? this.complaintService.getAllComplaints(this.pageNumber(), this.pageSize())
+          : this.complaintService.getMyComplaints(this.pageNumber(), this.pageSize());
 
     source$.subscribe({
-      next: (data) => {
-        this.complaints.set(this.sort(data));
+      next: (res) => {
+        this.complaints.set(this.sort(res.items));
+        this.totalRecords.set(res.totalCount);
         this.loading.set(false);
       },
       error: () => {
@@ -132,6 +138,12 @@ export class ComplaintsListComponent implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  onPageChange(event: PageEvent): void {
+    this.pageNumber.set(event.pageNumber);
+    this.pageSize.set(event.pageSize);
+    this.load();
   }
 
   private sort(list: ComplaintResponse[]): ComplaintResponse[] {
@@ -144,6 +156,7 @@ export class ComplaintsListComponent implements OnInit {
 
   onCreated(complaint: ComplaintResponse): void {
     this.complaints.update((list) => this.sort([complaint, ...list]));
+    this.totalRecords.update((c) => c + 1);
     this.messageService.add({
       severity: 'success',
       summary: 'Complaint Filed',
