@@ -5,10 +5,12 @@ import { AuthState, initialAuthState } from './auth.state';
 export const authReducer = createReducer(
   initialAuthState,
 
-  on(AuthActions.login, (state): AuthState => ({
+  on(AuthActions.login, (state, { credentials }): AuthState => ({
     ...state,
     loading: true,
     error: null,
+    emailNotVerified: false,
+    pendingEmail: credentials.email,
   })),
 
   on(AuthActions.loginSuccess, (state, { user }): AuthState => ({
@@ -16,12 +18,14 @@ export const authReducer = createReducer(
     user,
     loading: false,
     error: null,
+    emailNotVerified: false,
   })),
 
-  on(AuthActions.loginFailure, (state, { error }): AuthState => ({
+  on(AuthActions.loginFailure, (state, { error, emailNotVerified }): AuthState => ({
     ...state,
     loading: false,
     error,
+    emailNotVerified: !!emailNotVerified,
   })),
 
   on(AuthActions.logout, (): AuthState => initialAuthState),

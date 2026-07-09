@@ -1,0 +1,23 @@
+<div class="verify-container">
+  <div class="verify-content">
+    @switch (state) {
+      @case ('loading') {
+        <p-progress-spinner styleClass="verify-spinner" strokeWidth="4" />
+        <h1 class="title">Verifying your email…</h1>
+        <p class="message">Hang tight while we confirm your email address.</p>
+      }
+      @case ('success') {
+        <i class="pi pi-check-circle status-icon status-icon-success"></i>
+        <h1 class="title">Email verified</h1>
+        <p class="message">{{ message }}</p>
+        <p-button label="Go to Login" icon="pi pi-sign-in" routerLink="/auth/login" />
+      }
+      @case ('error') {
+        <i class="pi pi-times-circle status-icon status-icon-error"></i>
+        <h1 class="title">Verification failed</h1>
+        <p class="message">{{ message }}</p>
+        <p-button label="Back to Login" icon="pi pi-arrow-left" [outlined]="true" routerLink="/auth/login" />
+      }
+    }
+  </div>
+</div>

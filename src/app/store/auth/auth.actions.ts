@@ -6,7 +6,7 @@ export const AuthActions = createActionGroup({
   events: {
     'Login': props<{ credentials: LoginRequest }>(),
     'Login Success': props<{ user: UserResponse }>(),
-    'Login Failure': props<{ error: string }>(),
+    'Login Failure': props<{ error: string; emailNotVerified?: boolean }>(),
     'Logout': emptyProps(),
     'Restore Session': props<{ user: UserResponse }>(),
   },

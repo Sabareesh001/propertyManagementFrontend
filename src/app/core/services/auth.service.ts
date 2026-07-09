@@ -31,11 +31,17 @@ export interface UserResponse {
   roles: RoleResponseDto[];
   verificationStatusId: number | null;
   activeStatusId: number | null;
+  emailVerified: boolean;
 }
 
 export interface LoginRequest {
   email: string;
   password: string;
+}
+
+export interface VerifyEmailResponse {
+  message: string;
+  emailVerified: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -60,5 +66,15 @@ export class AuthService {
   /** POST /api/user/become-owner — adds the Owner role to the current user. */
   becomeOwner(): Observable<UserResponse> {
     return this.http.post<UserResponse>(`${this.baseUrl}/become-owner`, {}, WITH_CREDENTIALS);
+  }
+
+  /** GET /api/user/verify-email/{hash} — confirms the email address tied to the verification hash. */
+  verifyEmail(hash: string): Observable<VerifyEmailResponse> {
+    return this.http.get<VerifyEmailResponse>(`${this.baseUrl}/verify-email/${hash}`);
+  }
+
+  /** POST /api/user/resend-verification — issues a new verification hash and re-sends the email. */
+  resendVerificationEmail(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/resend-verification`, { email });
   }
 }

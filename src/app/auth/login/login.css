@@ -213,6 +213,13 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Resend verification */
+.resend-verification {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 /* Register link */
 .register-link {
   text-align: center;
