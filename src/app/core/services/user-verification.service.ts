@@ -5,12 +5,7 @@ import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
 
 export type VerificationStatus = 'Unverified' | 'Pending' | 'Verified' | 'Rejected';
 
-export const VERIFICATION_DOCUMENT_TYPES = [
-  { id: 1, name: 'Pan Card', icon: 'pi pi-id-card' },
-  { id: 2, name: 'Property Deed', icon: 'pi pi-file' },
-  { id: 3, name: 'Salary Slip', icon: 'pi pi-wallet' },
-  { id: 4, name: 'Lease Agreement', icon: 'pi pi-file-check' },
-] as const;
+export const VERIFICATION_DOCUMENT_TYPES = [{ id: 1, name: 'Pan Card', icon: 'pi pi-id-card' }] as const;
 
 export function verificationDocumentTypeName(id: number): string {
   return VERIFICATION_DOCUMENT_TYPES.find((t) => t.id === id)?.name ?? `Document #${id}`;
