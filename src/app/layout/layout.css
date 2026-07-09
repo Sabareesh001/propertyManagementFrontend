@@ -47,7 +47,9 @@
 .topbar-tabs {
   grid-column: 2;
   display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 0.5rem;
 }
 
 .topbar ::ng-deep .p-tabs {
@@ -77,6 +79,18 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0 1.25rem;
+}
+
+/* ── Owner tools split button ── */
+::ng-deep .owner-tools-menu .nav-item-active .p-menuitem-content {
+  background: var(--p-primary-color);
+  border-radius: 0.375rem;
+}
+
+::ng-deep .owner-tools-menu .nav-item-active .p-menuitem-link,
+::ng-deep .owner-tools-menu .nav-item-active .p-menuitem-icon,
+::ng-deep .owner-tools-menu .nav-item-active .p-menuitem-text {
+  color: var(--p-primary-contrast-color);
 }
 
 .topbar-profile {
