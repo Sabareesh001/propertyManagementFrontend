@@ -57,6 +57,25 @@
         <p-message severity="error" [text]="err" styleClass="w-full" />
       }
 
+      @if (emailNotVerified$ | async) {
+        <div class="resend-verification">
+          @if (resendMessage) {
+            <p-message severity="success" [text]="resendMessage" styleClass="w-full" />
+          } @else if (resendError) {
+            <p-message severity="error" [text]="resendError" styleClass="w-full" />
+          } @else if (pendingEmail$ | async; as pendingEmail) {
+            <p-button
+              label="Resend verification email"
+              icon="pi pi-envelope"
+              [text]="true"
+              size="small"
+              [loading]="resendLoading"
+              (onClick)="resendVerification(pendingEmail)"
+            />
+          }
+        </div>
+      }
+
       <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="form-body">
         <div class="field">
           <label class="field-label" for="email">Email Address</label>

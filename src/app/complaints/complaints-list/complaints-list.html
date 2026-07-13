@@ -9,7 +9,7 @@
     <div class="header-title">
       <h2 class="page-title">{{ pageTitle }}</h2>
       @if (!loading() && !error() && complaints().length > 0) {
-        <span class="header-sub">{{ openCount() }} open · {{ complaints().length }} total</span>
+        <span class="header-sub">{{ openCount() }} open on this page · {{ totalRecords() }} total</span>
       }
     </div>
     <div class="header-actions">
@@ -122,5 +122,11 @@
         </div>
       }
     </div>
+    <app-pagination-controls
+      [totalRecords]="totalRecords()"
+      [pageNumber]="pageNumber()"
+      [pageSize]="pageSize()"
+      (pageChange)="onPageChange($event)"
+    />
   }
 </div>

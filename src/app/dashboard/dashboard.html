@@ -40,6 +40,12 @@
         <app-property-card [property]="property" [showCompare]="true" />
       }
     </div>
+    <app-pagination-controls
+      [totalRecords]="totalRecords()"
+      [pageNumber]="pageNumber()"
+      [pageSize]="pageSize()"
+      (pageChange)="onPageChange($event)"
+    />
   }
 </div>
 

@@ -139,9 +139,10 @@ export class ChargesComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.error.set(false);
-    this.finance.getCharges().subscribe({
-      next: (data) => {
-        this.charges.set(data ?? []);
+    // Filters/export operate client-side over the loaded set, so pull a large page (backend caps at 100).
+    this.finance.getCharges(null, null, 1, 100).subscribe({
+      next: (res) => {
+        this.charges.set(res.items ?? []);
         this.loading.set(false);
       },
       error: () => {

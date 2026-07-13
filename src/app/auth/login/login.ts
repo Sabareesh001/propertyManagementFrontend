@@ -8,7 +8,14 @@ import { Button } from 'primeng/button';
 import { Message } from 'primeng/message';
 import { Store } from '@ngrx/store';
 import { AuthActions } from '../../store/auth/auth.actions';
-import { selectAuthLoading, selectAuthError } from '../../store/auth/auth.selectors';
+import {
+  selectAuthLoading,
+  selectAuthError,
+  selectEmailNotVerified,
+  selectPendingEmail,
+} from '../../store/auth/auth.selectors';
+import { AuthService } from '../../core/services/auth.service';
+import { extractApiError } from '../../core/api.config';
 
 @Component({
   selector: 'app-login',
@@ -29,9 +36,16 @@ import { selectAuthLoading, selectAuthError } from '../../store/auth/auth.select
 export class LoginComponent {
   private fb = inject(FormBuilder);
   private store = inject(Store);
+  private authService = inject(AuthService);
 
   loading$ = this.store.select(selectAuthLoading);
   errorMessage$ = this.store.select(selectAuthError);
+  emailNotVerified$ = this.store.select(selectEmailNotVerified);
+  pendingEmail$ = this.store.select(selectPendingEmail);
+
+  resendLoading = false;
+  resendMessage = '';
+  resendError = '';
 
   form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -52,11 +66,33 @@ export class LoginComponent {
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
 
+    this.resendMessage = '';
+    this.resendError = '';
+
     this.store.dispatch(AuthActions.login({
       credentials: {
         email: this.f.email.value!,
         password: this.f.password.value!,
       },
     }));
+  }
+
+  resendVerification(email: string | null) {
+    if (!email || this.resendLoading) return;
+
+    this.resendLoading = true;
+    this.resendMessage = '';
+    this.resendError = '';
+
+    this.authService.resendVerificationEmail(email).subscribe({
+      next: () => {
+        this.resendLoading = false;
+        this.resendMessage = 'Verification email sent. Please check your inbox.';
+      },
+      error: (err) => {
+        this.resendLoading = false;
+        this.resendError = extractApiError(err, 'Could not resend the verification email. Please try again.');
+      },
+    });
   }
 }

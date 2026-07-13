@@ -11,50 +11,15 @@
 >
   <p class="dialog-intro">
     <i class="pi pi-shield"></i>
-    Submit at least one identity document (PDF, max 10 MB). An admin will review your
-    request before you can list properties or submit lease proposals.
+    Submit your PAN card (PDF, max 10 MB). An admin will review your request before you
+    can list properties or submit lease proposals.
   </p>
 
   <div class="document-rows">
     @for (row of rows(); track $index) {
       <div class="document-row">
-        <div class="document-row-header">
-          <span class="document-row-title">Document {{ $index + 1 }}</span>
-          @if (rows().length > 1) {
-            <p-button
-              icon="pi pi-trash"
-              severity="danger"
-              [text]="true"
-              [rounded]="true"
-              size="small"
-              [disabled]="submitting()"
-              (onClick)="removeRow($index)"
-            />
-          }
-        </div>
-
         <div class="form-field">
-          <label class="field-label" [for]="'docType' + $index">Document Type</label>
-          <p-select
-            [inputId]="'docType' + $index"
-            [ngModel]="row.documentTypeId"
-            (ngModelChange)="updateRow($index, { documentTypeId: $event })"
-            [options]="documentTypes"
-            optionLabel="name"
-            optionValue="id"
-            placeholder="Select a document type"
-            appendTo="body"
-            [disabled]="submitting()"
-            styleClass="w-full"
-          >
-            <ng-template #item let-type>
-              <span class="type-option"><i [class]="type.icon"></i> {{ type.name }}</span>
-            </ng-template>
-          </p-select>
-        </div>
-
-        <div class="form-field">
-          <label class="field-label" [for]="'docNumber' + $index">Document Number</label>
+          <label class="field-label" [for]="'docNumber' + $index">PAN Number</label>
           <input
             pInputText
             [id]="'docNumber' + $index"
@@ -102,15 +67,6 @@
       </div>
     }
   </div>
-
-  <p-button
-    label="Add Another Document"
-    icon="pi pi-plus"
-    [text]="true"
-    size="small"
-    [disabled]="submitting()"
-    (onClick)="addRow()"
-  />
 
   @if (errorMessage()) {
     <p-message severity="error" [text]="errorMessage()!" styleClass="w-full submit-error" />

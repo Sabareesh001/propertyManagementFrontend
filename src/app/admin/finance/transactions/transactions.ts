@@ -148,9 +148,10 @@ export class TransactionsComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.error.set(false);
-    this.finance.getPayments().subscribe({
-      next: (data) => {
-        this.payments.set(data ?? []);
+    // Filters/export operate client-side over the loaded set, so pull a large page (backend caps at 100).
+    this.finance.getPayments(null, null, 1, 100).subscribe({
+      next: (res) => {
+        this.payments.set(res.items ?? []);
         this.loading.set(false);
       },
       error: () => {

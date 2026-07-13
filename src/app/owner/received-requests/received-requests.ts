@@ -79,9 +79,9 @@ export class ReceivedRequestsComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.error.set(false);
-    this.leaseProposalService.getReceivedRequests().subscribe({
-      next: (data) => {
-        this.proposals.set(data);
+    this.leaseProposalService.getReceivedRequests(1, 100).subscribe({
+      next: (res) => {
+        this.proposals.set(res.items);
         this.loading.set(false);
       },
       error: () => {

@@ -1,19 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
 import { ChargeAllocationResponse } from './charge.service';
+import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, PagedResult } from '../models/paged-result.model';
 
-/**
- * Platform-wide finance data for the Admin dashboard.
- *
- * NOTE: The endpoints below (`/api/admin/payments`, `/api/admin/charges`,
- * `/api/admin/revenue/summary`) do NOT exist in the backend yet — every payment
- * and charge endpoint in the current API is lease-scoped and restricted to the
- * owner/tenant of that lease. See `frontend-design-reference.md` §7. These admin
- * endpoints must be added by the backend; the exact contract expected by this
- * service is written up in the "backend prompt" handed off with this feature.
- */
+/** Platform-wide finance data for the Admin dashboard — see §11 of frontend-design-reference.md. */
 
 /** A single payment enriched with the lease / property / owner / tenant context an admin needs. */
 export interface AdminPayment {
@@ -65,12 +57,14 @@ export interface AdminCharge {
   tenantEmail: string | null;
 }
 
-/** Optional server-computed aggregate. The Revenue view falls back to client-side maths if absent. */
-export interface AdminRevenueSummary {
+/** Matches the backend AdminFinanceSummaryDto (GET /api/admin/finance-summary). */
+export interface AdminFinanceSummary {
+  /** Sum of platform fees on Completed payments. */
   companyRevenue: number;
+  /** Sum of amounts on Completed payments. */
   grossVolume: number;
-  totalCollected: number;
-  totalOutstanding: number;
+  /** Sum of amounts on Pending payments. */
+  pendingAmount: number;
   paymentCount: number;
   completedCount: number;
   failedCount: number;
@@ -90,18 +84,46 @@ export class AdminFinanceService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${API_BASE_URL}/api/admin`;
 
-  /** GET /api/admin/payments — every payment across the platform (Admin only). */
-  getPayments(): Observable<AdminPayment[]> {
-    return this.http.get<AdminPayment[]>(`${this.baseUrl}/payments`, WITH_CREDENTIALS);
+  /** GET /api/admin/payments?from=&to= — every payment across the platform (Admin only), paginated. */
+  getPayments(
+    from?: string | null,
+    to?: string | null,
+    pageNumber = DEFAULT_PAGE_NUMBER,
+    pageSize = DEFAULT_PAGE_SIZE,
+  ): Observable<PagedResult<AdminPayment>> {
+    let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
+    return this.http.get<PagedResult<AdminPayment>>(`${this.baseUrl}/payments`, {
+      ...WITH_CREDENTIALS,
+      params,
+    });
   }
 
-  /** GET /api/admin/charges — every charge across the platform (Admin only). */
-  getCharges(): Observable<AdminCharge[]> {
-    return this.http.get<AdminCharge[]>(`${this.baseUrl}/charges`, WITH_CREDENTIALS);
+  /** GET /api/admin/charges?from=&to= — every charge across the platform (Admin only), paginated. */
+  getCharges(
+    from?: string | null,
+    to?: string | null,
+    pageNumber = DEFAULT_PAGE_NUMBER,
+    pageSize = DEFAULT_PAGE_SIZE,
+  ): Observable<PagedResult<AdminCharge>> {
+    let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
+    return this.http.get<PagedResult<AdminCharge>>(`${this.baseUrl}/charges`, {
+      ...WITH_CREDENTIALS,
+      params,
+    });
   }
 
-  /** GET /api/admin/revenue/summary — optional server-side KPI aggregate (Admin only). */
-  getRevenueSummary(): Observable<AdminRevenueSummary> {
-    return this.http.get<AdminRevenueSummary>(`${this.baseUrl}/revenue/summary`, WITH_CREDENTIALS);
+  /** GET /api/admin/finance-summary?from=&to= — server-side aggregated KPIs (Admin only), not paginated. */
+  getFinanceSummary(from?: string | null, to?: string | null): Observable<AdminFinanceSummary> {
+    let params = new HttpParams();
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
+    return this.http.get<AdminFinanceSummary>(`${this.baseUrl}/finance-summary`, {
+      ...WITH_CREDENTIALS,
+      params,
+    });
   }
 }

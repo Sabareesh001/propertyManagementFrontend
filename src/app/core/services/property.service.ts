@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
+import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, PagedResult } from '../models/paged-result.model';
 
 export interface PropertyImage {
   id: string;
@@ -91,9 +92,14 @@ export class PropertyService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${API_BASE_URL}/api/property`;
 
-  /** GET /api/property — all properties (public). */
-  getAll(): Observable<PropertyDetail[]> {
-    return this.http.get<PropertyDetail[]>(this.baseUrl);
+  /** GET /api/property — all properties (public), paginated. */
+  getAll(
+    pageNumber = DEFAULT_PAGE_NUMBER,
+    pageSize = DEFAULT_PAGE_SIZE,
+  ): Observable<PagedResult<PropertyDetail>> {
+    return this.http.get<PagedResult<PropertyDetail>>(this.baseUrl, {
+      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+    });
   }
 
   /** GET /api/property/{id} — single property (public). */
@@ -101,9 +107,15 @@ export class PropertyService {
     return this.http.get<PropertyDetail>(`${this.baseUrl}/${id}`,WITH_CREDENTIALS);
   }
 
-  /** GET /api/property/my — the authenticated owner's properties. */
-  getMyProperties(): Observable<PropertyDetail[]> {
-    return this.http.get<PropertyDetail[]>(`${this.baseUrl}/my`, WITH_CREDENTIALS);
+  /** GET /api/property/my — the authenticated owner's properties, paginated. */
+  getMyProperties(
+    pageNumber = DEFAULT_PAGE_NUMBER,
+    pageSize = DEFAULT_PAGE_SIZE,
+  ): Observable<PagedResult<PropertyDetail>> {
+    return this.http.get<PagedResult<PropertyDetail>>(`${this.baseUrl}/my`, {
+      ...WITH_CREDENTIALS,
+      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+    });
   }
 
   /** POST /api/property — create a property (Owner, Verified). */
@@ -148,9 +160,16 @@ export class PropertyService {
     return this.http.post<{ url: string }>(`${this.baseUrl}/upload-document`, form, WITH_CREDENTIALS);
   }
 
-  /** GET /api/property/{id}/documents — get all documents for a property. */
-  getDocuments(id: number): Observable<PropertyDocument[]> {
-    return this.http.get<PropertyDocument[]>(`${this.baseUrl}/${id}/documents`, WITH_CREDENTIALS);
+  /** GET /api/property/{id}/documents — get all documents for a property, paginated. */
+  getDocuments(
+    id: number,
+    pageNumber = DEFAULT_PAGE_NUMBER,
+    pageSize = 100,
+  ): Observable<PagedResult<PropertyDocument>> {
+    return this.http.get<PagedResult<PropertyDocument>>(`${this.baseUrl}/${id}/documents`, {
+      ...WITH_CREDENTIALS,
+      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+    });
   }
 
   /** POST /api/property/{id}/documents — attach a document to a property. */
@@ -163,9 +182,15 @@ export class PropertyService {
     return this.http.delete<void>(`${this.baseUrl}/${propertyId}/documents/${documentId}`, WITH_CREDENTIALS);
   }
 
-  /** GET /api/property/pending-verification — Admin only. */
-  getPendingVerification(): Observable<PropertyDetail[]> {
-    return this.http.get<PropertyDetail[]>(`${this.baseUrl}/pending-verification`, WITH_CREDENTIALS);
+  /** GET /api/property/pending-verification — Admin only, paginated. */
+  getPendingVerification(
+    pageNumber = DEFAULT_PAGE_NUMBER,
+    pageSize = DEFAULT_PAGE_SIZE,
+  ): Observable<PagedResult<PropertyDetail>> {
+    return this.http.get<PagedResult<PropertyDetail>>(`${this.baseUrl}/pending-verification`, {
+      ...WITH_CREDENTIALS,
+      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+    });
   }
 
   /** PUT /api/property/{id}/verify?approve=true|false — Admin only. */

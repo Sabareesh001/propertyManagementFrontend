@@ -32,6 +32,13 @@ const TAB_ROUTES = [
   '/leases', 
   '/complaints', 
   '/owner/complaints'
+const TAB_ROUTES = ['/dashboard', '/my-requests', '/leases', '/complaints'];
+
+const OWNER_MENU_ITEMS = [
+  { label: 'Overview', icon: 'pi pi-chart-line', route: '/owner/dashboard' },
+  { label: 'My Properties', icon: 'pi pi-building', route: '/owner/properties' },
+  { label: 'Received Requests', icon: 'pi pi-inbox', route: '/owner/received-requests' },
+  { label: 'Property Complaints', icon: 'pi pi-flag-fill', route: '/owner/complaints' },
 ];
 
 const ALL_DRAWER_ITEMS = [
@@ -116,6 +123,16 @@ export class LayoutComponent {
         (!item.hideForAdmin || !this.isAdmin()),
     ),
   );
+
+  ownerMenuItems = computed<MenuItem[]>(() => {
+    const url = this.currentUrl();
+    return OWNER_MENU_ITEMS.map((item) => ({
+      label: item.label,
+      icon: item.icon,
+      styleClass: url.startsWith(item.route) ? 'nav-item-active' : '',
+      command: () => this.navigateDrawerItem(item.route),
+    }));
+  });
 
   showAdminSidebar = computed(() => this.isAdmin() && this.currentUrl().startsWith('/admin'));
 

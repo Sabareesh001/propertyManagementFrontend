@@ -1,16 +1,12 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
+import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, PagedResult } from '../models/paged-result.model';
 
 export type VerificationStatus = 'Unverified' | 'Pending' | 'Verified' | 'Rejected';
 
-export const VERIFICATION_DOCUMENT_TYPES = [
-  { id: 1, name: 'Pan Card', icon: 'pi pi-id-card' },
-  { id: 2, name: 'Property Deed', icon: 'pi pi-file' },
-  { id: 3, name: 'Salary Slip', icon: 'pi pi-wallet' },
-  { id: 4, name: 'Lease Agreement', icon: 'pi pi-file-check' },
-] as const;
+export const VERIFICATION_DOCUMENT_TYPES = [{ id: 1, name: 'Pan Card', icon: 'pi pi-id-card' }] as const;
 
 export function verificationDocumentTypeName(id: number): string {
   return VERIFICATION_DOCUMENT_TYPES.find((t) => t.id === id)?.name ?? `Document #${id}`;
@@ -63,9 +59,15 @@ export class UserVerificationService {
     return this.http.post<{ url: string }>(`${this.baseUrl}/upload-document`, form, WITH_CREDENTIALS);
   }
 
-  /** GET /api/userverification/pending — all pending verification requests (admin). */
-  getPending(): Observable<UserVerificationResponse[]> {
-    return this.http.get<UserVerificationResponse[]>(`${this.baseUrl}/pending`, WITH_CREDENTIALS);
+  /** GET /api/userverification/pending — all pending verification requests (admin), paginated. */
+  getPending(
+    pageNumber = DEFAULT_PAGE_NUMBER,
+    pageSize = DEFAULT_PAGE_SIZE,
+  ): Observable<PagedResult<UserVerificationResponse>> {
+    return this.http.get<PagedResult<UserVerificationResponse>>(`${this.baseUrl}/pending`, {
+      ...WITH_CREDENTIALS,
+      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+    });
   }
 
   /** POST /api/userverification/{id}/verify — approve a request (admin). */

@@ -100,10 +100,10 @@ export class FileComplaintModalComponent implements OnChanges {
 
   private loadLeases(): void {
     this.loadingLeases.set(true);
-    this.leaseService.getMyLeases().subscribe({
-      next: (leases) => {
+    this.leaseService.getMyLeases(1, 100).subscribe({
+      next: (res) => {
         const myId = this.currentUser()?.id;
-        const options = leases
+        const options = res.items
           .filter((l) => l.tenantId === myId && l.statusId === 5) // Active leases where I'm the tenant
           .map((l) => ({ id: l.id, label: this.leaseLabel(l) }));
         this.leaseOptions.set(options);

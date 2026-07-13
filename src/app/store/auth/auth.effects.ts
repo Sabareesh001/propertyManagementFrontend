@@ -19,9 +19,13 @@ export class AuthEffects {
       switchMap(({ credentials }) =>
         this.auth.login(credentials).pipe(
           map((user) => AuthActions.loginSuccess({ user })),
-          catchError((err) =>
-            of(AuthActions.loginFailure({ error: err?.error?.message ?? 'Invalid email or password.' }))
-          ),
+          catchError((err) => {
+            const emailNotVerified = err?.error?.errorCode === 'EMAIL_NOT_VERIFIED';
+            return of(AuthActions.loginFailure({
+              error: err?.error?.message ?? 'Invalid email or password.',
+              emailNotVerified,
+            }));
+          }),
         ),
       ),
     ),

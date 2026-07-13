@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { RegisterComponent } from './auth/register/register';
 import { LoginComponent } from './auth/login/login';
+import { VerifyEmailComponent } from './auth/verify-email/verify-email';
 import { NotFoundComponent } from './not-found/not-found';
 import { LayoutComponent } from './layout/layout';
 import { DashboardComponent } from './dashboard/dashboard';
@@ -27,6 +28,7 @@ import { ComparePropertiesComponent } from './compare/compare';
 export const routes: Routes = [
   { path: 'auth/register', component: RegisterComponent },
   { path: 'auth/login', component: LoginComponent },
+  { path: 'auth/verify-email/:hash', component: VerifyEmailComponent },
   {
     path: '',
     component: LayoutComponent,

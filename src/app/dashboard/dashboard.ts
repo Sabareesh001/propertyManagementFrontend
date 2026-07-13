@@ -10,6 +10,7 @@ import { PropertyCardComponent } from '../shared/property-card/property-card';
 import { PropertyService, PropertyDetail } from '../core/services/property.service';
 import { CompareService } from '../core/services/compare.service';
 import { Router } from '@angular/router';
+import { PaginationControlsComponent, PageEvent } from '../shared/pagination-controls/pagination-controls';
 
 @Component({
   selector: 'app-dashboard',
@@ -23,6 +24,7 @@ import { Router } from '@angular/router';
     ScrollTop,
     ProgressSpinnerModule,
     ButtonModule,
+    PaginationControlsComponent,
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
@@ -36,6 +38,9 @@ export class DashboardComponent implements OnInit {
   allProperties = signal<PropertyDetail[]>([]);
   loading = signal(true);
   error = signal(false);
+  pageNumber = signal(1);
+  pageSize = signal(20);
+  totalRecords = signal(0);
 
   filteredProperties = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
@@ -55,9 +60,10 @@ export class DashboardComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.error.set(false);
-    this.propertyService.getAll().subscribe({
-      next: (properties) => {
-        this.allProperties.set(properties);
+    this.propertyService.getAll(this.pageNumber(), this.pageSize()).subscribe({
+      next: (res) => {
+        this.allProperties.set(res.items);
+        this.totalRecords.set(res.totalCount);
         this.loading.set(false);
       },
       error: () => {
@@ -69,5 +75,10 @@ export class DashboardComponent implements OnInit {
 
   goToCompare(): void {
     this.router.navigate(['/compare']);
+  }
+  onPageChange(event: PageEvent): void {
+    this.pageNumber.set(event.pageNumber);
+    this.pageSize.set(event.pageSize);
+    this.load();
   }
 }

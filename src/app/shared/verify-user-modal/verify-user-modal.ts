@@ -3,21 +3,20 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
-import { SelectModule } from 'primeng/select';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { forkJoin, switchMap } from 'rxjs';
 import {
   UserVerificationService,
   UserVerificationResponse,
-  VERIFICATION_DOCUMENT_TYPES,
 } from '../../core/services/user-verification.service';
 import { extractApiError } from '../../core/api.config';
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
+const PAN_CARD_DOCUMENT_TYPE_ID = 1;
 
 interface DocumentRow {
-  documentTypeId: number | null;
+  documentTypeId: number;
   documentNumber: string;
   file: File | null;
   error: string | null;
@@ -26,15 +25,7 @@ interface DocumentRow {
 @Component({
   selector: 'app-verify-user-modal',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    DialogModule,
-    ButtonModule,
-    SelectModule,
-    InputTextModule,
-    MessageModule,
-  ],
+  imports: [CommonModule, FormsModule, DialogModule, ButtonModule, InputTextModule, MessageModule],
   templateUrl: './verify-user-modal.html',
   styleUrl: './verify-user-modal.css',
 })
@@ -45,7 +36,6 @@ export class VerifyUserModalComponent implements OnChanges {
 
   private verificationService = inject(UserVerificationService);
 
-  documentTypes = [...VERIFICATION_DOCUMENT_TYPES];
   rows = signal<DocumentRow[]>([this.emptyRow()]);
   submitting = signal(false);
   errorMessage = signal<string | null>(null);
@@ -59,15 +49,7 @@ export class VerifyUserModalComponent implements OnChanges {
   }
 
   private emptyRow(): DocumentRow {
-    return { documentTypeId: null, documentNumber: '', file: null, error: null };
-  }
-
-  addRow(): void {
-    this.rows.update((rows) => [...rows, this.emptyRow()]);
-  }
-
-  removeRow(index: number): void {
-    this.rows.update((rows) => rows.filter((_, i) => i !== index));
+    return { documentTypeId: PAN_CARD_DOCUMENT_TYPE_ID, documentNumber: '', file: null, error: null };
   }
 
   updateRow(index: number, patch: Partial<DocumentRow>): void {
@@ -112,9 +94,7 @@ export class VerifyUserModalComponent implements OnChanges {
     this.rows.update((rows) =>
       rows.map((row) => {
         let error: string | null = null;
-        if (row.documentTypeId === null) {
-          error = 'Select a document type.';
-        } else if (!/^[a-zA-Z0-9\-]{4,50}$/.test(row.documentNumber.trim())) {
+        if (!/^[a-zA-Z0-9\-]{4,50}$/.test(row.documentNumber.trim())) {
           error = 'Document number must be 4–50 characters: letters, digits, and hyphens only.';
         } else if (!row.file) {
           error = 'Attach the document as a PDF.';

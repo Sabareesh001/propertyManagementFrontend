@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
+import { DEFAULT_PAGE_NUMBER, PagedResult } from '../models/paged-result.model';
 
 /** Matches the backend ChargeResponseDto. */
 export interface ChargeResponse {
@@ -100,9 +101,16 @@ export class ChargeService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${API_BASE_URL}/api/lease`;
 
-  /** GET /api/lease/{leaseId}/charges — all charges on a lease. */
-  getCharges(leaseId: string): Observable<ChargeResponse[]> {
-    return this.http.get<ChargeResponse[]>(`${this.baseUrl}/${leaseId}/charges`, WITH_CREDENTIALS);
+  /** GET /api/lease/{leaseId}/charges — all charges on a lease, paginated (pageSize 100 by default since this is a single-lease list). */
+  getCharges(
+    leaseId: string,
+    pageNumber = DEFAULT_PAGE_NUMBER,
+    pageSize = 100,
+  ): Observable<PagedResult<ChargeResponse>> {
+    return this.http.get<PagedResult<ChargeResponse>>(`${this.baseUrl}/${leaseId}/charges`, {
+      ...WITH_CREDENTIALS,
+      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+    });
   }
 
   /** GET /api/lease/{leaseId}/charges/{chargeId} — a single charge. */
@@ -122,12 +130,16 @@ export class ChargeService {
     );
   }
 
-  /** GET /api/lease/{leaseId}/payments — payment history for a lease. */
-  getPayments(leaseId: string): Observable<PaymentResponse[]> {
-    return this.http.get<PaymentResponse[]>(
-      `${this.baseUrl}/${leaseId}/payments`,
-      WITH_CREDENTIALS,
-    );
+  /** GET /api/lease/{leaseId}/payments — payment history for a lease, paginated (pageSize 100 by default since this is a single-lease list). */
+  getPayments(
+    leaseId: string,
+    pageNumber = DEFAULT_PAGE_NUMBER,
+    pageSize = 100,
+  ): Observable<PagedResult<PaymentResponse>> {
+    return this.http.get<PagedResult<PaymentResponse>>(`${this.baseUrl}/${leaseId}/payments`, {
+      ...WITH_CREDENTIALS,
+      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+    });
   }
 
   /** POST /api/stripe/lease/{leaseId}/payments/intent — tenant starts a Stripe payment for charges. */

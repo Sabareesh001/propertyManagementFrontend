@@ -387,9 +387,9 @@ export class LeaseVerificationsComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.error.set(false);
-    this.leaseService.getPendingTemplates().subscribe({
-      next: (data) => {
-        this.requests.set(data);
+    this.leaseService.getPendingTemplates(1, 100).subscribe({
+      next: (res) => {
+        this.requests.set(res.items);
         this.loading.set(false);
       },
       error: () => {
