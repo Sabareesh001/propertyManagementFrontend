@@ -1,0 +1,104 @@
+<div class="request-container">
+  @if (loading()) {
+    <div class="empty-state">
+      <p-progressspinner strokeWidth="4" [style]="{ width: '3rem', height: '3rem' }" />
+      <p class="empty-text">Loading lease details…</p>
+    </div>
+  } @else if (error() || !lease()) {
+    <div class="empty-state">
+      <i class="pi pi-exclamation-triangle empty-icon"></i>
+      <p class="empty-text">Couldn't load this lease. It may not exist, or you may not have access.</p>
+      <p-button label="Back to Leases" icon="pi pi-arrow-left" size="small" severity="secondary" [outlined]="true" routerLink="/leases" />
+    </div>
+  } @else if (success()) {
+    <div class="success-panel">
+      <i class="pi pi-check-circle success-icon"></i>
+      <h3 class="success-title">Request Submitted</h3>
+      <p class="success-body">
+        Your cancellation request for <strong>Property #{{ lease()!.propertyId }}</strong> has been sent to the owner for review.
+      </p>
+      <p-button label="View My Cancellations" icon="pi pi-list" (onClick)="goToMyCancellations()" />
+    </div>
+  } @else {
+    <div class="page-header">
+      <p-button
+        icon="pi pi-arrow-left"
+        severity="secondary"
+        [text]="true"
+        size="small"
+        [routerLink]="['/leases', leaseId]"
+      />
+      <h2 class="page-title">Request Cancellation</h2>
+    </div>
+
+    <div class="lease-summary">
+      <span class="summary-label">Property #{{ lease()!.propertyId }}</span>
+      <span class="summary-sub">Lease active — cancelling ends this tenancy early, subject to owner review.</span>
+    </div>
+
+    <div class="form-card">
+      <div class="field">
+        <label class="field-label">Reason <span class="required">(10–2000 characters)</span></label>
+        <textarea
+          pTextarea
+          [(ngModel)]="reason"
+          rows="5"
+          placeholder="Explain why you'd like to cancel this lease..."
+          style="width: 100%; resize: vertical;"
+        ></textarea>
+        <small class="field-hint">{{ reason.trim().length }} / 2000</small>
+      </div>
+
+      <div class="field-group">
+        <div class="field">
+          <label class="field-label">Requested Effective Date</label>
+          <p-datepicker
+            [(ngModel)]="requestedEffectiveDate"
+            (ngModelChange)="onEffectiveDateChange()"
+            [minDate]="today"
+            dateFormat="dd M yy"
+            placeholder="Select date"
+            [fluid]="true"
+            [showIcon]="true"
+            appendTo="body"
+          />
+        </div>
+        <div class="field">
+          <label class="field-label">Requested Move-Out Date <span class="optional">(optional)</span></label>
+          <p-datepicker
+            [(ngModel)]="requestedMoveOutDate"
+            [minDate]="requestedEffectiveDate ?? today"
+            dateFormat="dd M yy"
+            placeholder="Select date"
+            [fluid]="true"
+            [showIcon]="true"
+            [disabled]="!requestedEffectiveDate"
+            appendTo="body"
+          />
+        </div>
+      </div>
+
+      @if (errorMessage()) {
+        <p-message severity="error" [text]="errorMessage()!" styleClass="w-full" />
+      }
+
+      <div class="form-actions">
+        <p-button
+          label="Cancel"
+          severity="secondary"
+          [text]="true"
+          [routerLink]="['/leases', leaseId]"
+          [disabled]="submitting()"
+        />
+        <p-button
+          label="Submit Request"
+          icon="pi pi-send"
+          iconPos="right"
+          (onClick)="submit()"
+          [loading]="submitting()"
+          [disabled]="!canSubmit"
+        />
+      </div>
+    </div>
+  }
+</div>

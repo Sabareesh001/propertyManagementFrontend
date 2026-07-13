@@ -15,6 +15,16 @@ export enum NotificationType {
   LeaseSignedSubmitted = 7,
   LeaseSignedApproved = 8,
   LeaseSignedRejected = 9,
+  CancellationRequestSubmitted = 10,
+  CancellationRequestAccepted = 11,
+  CancellationRequestRejected = 12,
+  LeaseCancellationSubmittedForApproval = 13,
+  LeaseCancellationTemplateApproved = 14,
+  LeaseCancellationTemplateRejected = 15,
+  LeaseCancellationSignedSubmitted = 16,
+  LeaseCancellationFinalized = 17,
+  LeaseCancellationRejected = 18,
+  LeaseExpired = 19,
 }
 
 /** Matches the backend NotificationDto. */
@@ -32,6 +42,7 @@ export interface NotificationDto {
 /** Route prefix to deep-link into when a notification is clicked. Only entity types with a matching detail route are listed. */
 const ROUTE_BY_ENTITY_TYPE: Record<string, string> = {
   Lease: '/leases',
+  LeaseCancellation: '/cancellations',
 };
 
 @Injectable({ providedIn: 'root' })

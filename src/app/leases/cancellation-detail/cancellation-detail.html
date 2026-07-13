@@ -1,0 +1,198 @@
+<div class="cancellation-container">
+  @if (loading()) {
+    <div class="empty-state">
+      <p-progressspinner strokeWidth="4" [style]="{ width: '3rem', height: '3rem' }" />
+      <p class="empty-text">Loading cancellation details…</p>
+    </div>
+  } @else if (error() || !lease()) {
+    <div class="empty-state">
+      <i class="pi pi-exclamation-triangle empty-icon"></i>
+      <p class="empty-text">Couldn't load this cancellation. It may not exist, or you may not have access.</p>
+      <p-button label="Back to Leases" icon="pi pi-arrow-left" size="small" severity="secondary" [outlined]="true" routerLink="/leases" />
+    </div>
+  } @else {
+    <div class="page-header">
+      <p-button
+        icon="pi pi-arrow-left"
+        severity="secondary"
+        [text]="true"
+        size="small"
+        [routerLink]="['/leases', leaseId]"
+      />
+      <h2 class="page-title">
+        {{ mode() === 'create' ? 'Cancel Lease' : 'Lease Cancellation' }}
+        · Property #{{ lease()!.propertyId }}
+      </h2>
+      @if (cancellation()) {
+        <p-tag [value]="statusLabel(cancellation()!.statusId)" [severity]="statusSeverity(cancellation()!.statusId)" />
+      }
+    </div>
+
+    <div class="form-card">
+      <div class="field">
+        <label class="field-label">Reason <span class="required">(10–2000 characters)</span></label>
+        @if (canEdit() || mode() === 'create') {
+          <textarea
+            pTextarea
+            [(ngModel)]="reason"
+            rows="4"
+            placeholder="Explain why this lease is being cancelled..."
+            style="width: 100%; resize: vertical;"
+          ></textarea>
+        } @else {
+          <p class="readonly-value">{{ reason || '—' }}</p>
+        }
+      </div>
+
+      <div class="field-group">
+        <div class="field">
+          <label class="field-label">Effective Date</label>
+          @if (canEdit() || mode() === 'create') {
+            <p-datepicker
+              [(ngModel)]="effectiveDate"
+              (ngModelChange)="onEffectiveDateChange()"
+              [minDate]="today"
+              dateFormat="dd M yy"
+              placeholder="Select date"
+              [fluid]="true"
+              [showIcon]="true"
+              appendTo="body"
+            />
+          } @else {
+            <p class="readonly-value">{{ formatDate(cancellation()?.effectiveDate ?? null) }}</p>
+          }
+        </div>
+        <div class="field">
+          <label class="field-label">Move-Out Date <span class="optional">(optional)</span></label>
+          @if (canEdit() || mode() === 'create') {
+            <p-datepicker
+              [(ngModel)]="moveOutDate"
+              [minDate]="effectiveDate ?? today"
+              dateFormat="dd M yy"
+              placeholder="Select date"
+              [fluid]="true"
+              [showIcon]="true"
+              [disabled]="!effectiveDate"
+              appendTo="body"
+            />
+          } @else {
+            <p class="readonly-value">{{ formatDate(cancellation()?.moveOutDate ?? null) }}</p>
+          }
+        </div>
+      </div>
+
+      @if (isOwner()) {
+        <div class="field-group">
+          <div class="field">
+            <label class="field-label">Security Deposit Refund <span class="optional">(optional)</span></label>
+            @if (canEdit() || mode() === 'create') {
+              <p-inputnumber
+                [(ngModel)]="securityDepositRefundAmount"
+                mode="currency"
+                currency="INR"
+                locale="en-IN"
+                [min]="0"
+                [fluid]="true"
+              />
+            } @else {
+              <p class="readonly-value">{{ formatCurrency(cancellation()?.securityDepositRefundAmount ?? null) }}</p>
+            }
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Deposit Disposition Notes <span class="optional">(optional)</span></label>
+          @if (canEdit() || mode() === 'create') {
+            <textarea
+              pTextarea
+              [(ngModel)]="depositDispositionNotes"
+              rows="2"
+              placeholder="e.g. Full refund minus one month's cleaning fee"
+              style="width: 100%; resize: vertical;"
+            ></textarea>
+          } @else {
+            <p class="readonly-value">{{ depositDispositionNotes || '—' }}</p>
+          }
+        </div>
+      }
+
+      <p-divider />
+
+      <!-- Agreement document -->
+      <div class="field">
+        <label class="field-label">
+          Cancellation Agreement <span class="optional">(required before submitting)</span>
+        </label>
+        @if (canEdit() || mode() === 'create') {
+          @if (agreementDocumentUrl) {
+            <div class="doc-chip">
+              <i class="pi pi-file-pdf"></i>
+              <a [href]="agreementDocumentUrl" target="_blank" rel="noopener" class="doc-link">View uploaded document</a>
+              <p-button icon="pi pi-times" severity="secondary" [rounded]="true" [text]="true" size="small" (onClick)="clearAgreementDoc()" />
+            </div>
+          } @else {
+            <label class="upload-btn" [class.disabled]="uploading()">
+              <i class="pi" [class.pi-upload]="!uploading()" [class.pi-spin]="uploading()" [class.pi-spinner]="uploading()"></i>
+              <span>{{ uploading() ? 'Uploading…' : 'Upload PDF' }}</span>
+              <input type="file" accept="application/pdf" (change)="onAgreementDocSelected($event)" [disabled]="uploading()" hidden />
+            </label>
+          }
+        } @else if (cancellation()?.agreementDocumentUrl) {
+          <a [href]="cancellation()!.agreementDocumentUrl!" target="_blank" rel="noopener" class="doc-download">
+            <i class="pi pi-file-pdf"></i>
+            <span>View / download agreement</span>
+            <i class="pi pi-external-link"></i>
+          </a>
+        } @else {
+          <span class="doc-missing"><i class="pi pi-file"></i> No agreement document yet</span>
+        }
+      </div>
+
+      <!-- Tenant sign step -->
+      @if (canSign()) {
+        <p-divider />
+        <div class="field">
+          <label class="field-label">Signed Agreement <span class="required">(required)</span></label>
+          @if (signedAgreementDocumentUrl) {
+            <div class="doc-chip">
+              <i class="pi pi-verified"></i>
+              <a [href]="signedAgreementDocumentUrl" target="_blank" rel="noopener" class="doc-link">View uploaded document</a>
+              <p-button icon="pi pi-times" severity="secondary" [rounded]="true" [text]="true" size="small" (onClick)="clearSignedDoc()" />
+            </div>
+          } @else {
+            <label class="upload-btn" [class.disabled]="uploading()">
+              <i class="pi" [class.pi-upload]="!uploading()" [class.pi-spin]="uploading()" [class.pi-spinner]="uploading()"></i>
+              <span>{{ uploading() ? 'Uploading…' : 'Upload signed PDF' }}</span>
+              <input type="file" accept="application/pdf" (change)="onSignedDocSelected($event)" [disabled]="uploading()" hidden />
+            </label>
+          }
+        </div>
+      } @else if (cancellation()?.signedAgreementDocumentUrl) {
+        <div class="field">
+          <label class="field-label">Signed Agreement</label>
+          <a [href]="cancellation()!.signedAgreementDocumentUrl!" target="_blank" rel="noopener" class="doc-download">
+            <i class="pi pi-verified"></i>
+            <span>View signed document</span>
+            <i class="pi pi-external-link"></i>
+          </a>
+        </div>
+      }
+
+      @if (errorMessage()) {
+        <p-message severity="error" [text]="errorMessage()!" styleClass="w-full" />
+      }
+
+      <div class="form-actions">
+        @if (mode() === 'create') {
+          <p-button label="Cancel" severity="secondary" [text]="true" [routerLink]="['/leases', leaseId]" [disabled]="saving()" />
+          <p-button label="Create Cancellation" icon="pi pi-file-edit" iconPos="right" (onClick)="create()" [loading]="saving()" [disabled]="!canSubmitForm || uploading()" />
+        } @else if (canEdit()) {
+          <p-button label="Save Changes" icon="pi pi-save" severity="secondary" [outlined]="true" (onClick)="save()" [loading]="saving()" [disabled]="!canSubmitForm || uploading()" />
+          <p-button label="Submit for Review" icon="pi pi-send" iconPos="right" (onClick)="submit()" [loading]="submitting()" [disabled]="!agreementDocumentUrl" />
+        } @else if (canSign()) {
+          <p-button label="Sign Cancellation Agreement" icon="pi pi-check" iconPos="right" (onClick)="sign()" [loading]="signing()" [disabled]="!signedAgreementDocumentUrl" />
+        }
+      </div>
+    </div>
+  }
+</div>

@@ -6,8 +6,10 @@ import { PropertyVerificationsComponent } from './property-verifications';
 import { UserVerificationsComponent } from './user-verifications';
 import { LeaseVerificationsComponent } from './lease-verifications';
 import { SignedLeaseVerificationsComponent } from './signed-lease-verifications';
+import { CancellationVerificationsComponent } from './cancellation-verifications';
+import { SignedCancellationVerificationsComponent } from './signed-cancellation-verifications';
 
-type Section = 'property' | 'user' | 'lease' | 'signed-lease';
+type Section = 'property' | 'user' | 'lease' | 'signed-lease' | 'cancellation-template' | 'cancellation-signed';
 
 @Component({
   selector: 'app-verifications',
@@ -17,6 +19,8 @@ type Section = 'property' | 'user' | 'lease' | 'signed-lease';
     UserVerificationsComponent,
     LeaseVerificationsComponent,
     SignedLeaseVerificationsComponent,
+    CancellationVerificationsComponent,
+    SignedCancellationVerificationsComponent,
   ],
   templateUrl: './verifications.html',
   styleUrl: './verifications.css',

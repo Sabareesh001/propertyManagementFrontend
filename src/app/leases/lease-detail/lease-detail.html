@@ -50,6 +50,29 @@
         [value]="leaseStatusLabel(lease()!.statusId)"
         [severity]="leaseStatusSeverity(lease()!.statusId)"
       />
+      @if (isActive()) {
+        @if (isTenant()) {
+          <p-button
+            label="Request Cancellation"
+            icon="pi pi-file-excel"
+            severity="danger"
+            size="small"
+            [outlined]="true"
+            [routerLink]="['/cancellations/new']"
+            [queryParams]="{ leaseId: leaseId }"
+          />
+        } @else if (isOwner()) {
+          <p-button
+            label="Cancel Lease"
+            icon="pi pi-file-excel"
+            severity="danger"
+            size="small"
+            [outlined]="true"
+            [routerLink]="['/owner/cancellations/new']"
+            [queryParams]="{ leaseId: leaseId }"
+          />
+        }
+      }
     </div>
 
     <!-- ── Lease summary ──────────────────────────────────────── -->

@@ -13,6 +13,10 @@ import { ReceivedRequestsComponent } from './owner/received-requests/received-re
 import { OwnerDashboardComponent } from './owner/owner-dashboard/owner-dashboard';
 import { LeasesComponent } from './leases/leases';
 import { LeaseDetailComponent } from './leases/lease-detail/lease-detail';
+import { CancellationDetailComponent } from './leases/cancellation-detail/cancellation-detail';
+import { RequestCancellationComponent } from './tenant/request-cancellation/request-cancellation';
+import { MyCancellationsComponent } from './tenant/my-cancellations/my-cancellations';
+import { ReceivedCancellationsComponent } from './owner/received-cancellations/received-cancellations';
 import { authGuard } from './core/guards/auth.guard';
 import { ownerGuard } from './core/guards/owner.guard';
 import { adminGuard } from './core/guards/admin.guard';
@@ -34,6 +38,9 @@ export const routes: Routes = [
       { path: 'my-requests', component: MyRequestsComponent, canActivate: [authGuard, nonAdminGuard,] },
       { path: 'leases', component: LeasesComponent, canActivate: [authGuard, nonAdminGuard] },
       { path: 'leases/:id', component: LeaseDetailComponent, canActivate: [authGuard, nonAdminGuard] },
+      { path: 'cancellations', component: MyCancellationsComponent, canActivate: [authGuard, nonAdminGuard] },
+      { path: 'cancellations/new', component: RequestCancellationComponent, canActivate: [authGuard, nonAdminGuard] },
+      { path: 'cancellations/:id', component: CancellationDetailComponent, canActivate: [authGuard, nonAdminGuard] },
       { path: 'property/:id', component: PropertyDetailComponent },
       {
         path: 'complaints',
@@ -61,6 +68,16 @@ export const routes: Routes = [
       {
         path: 'owner/received-requests',
         component: ReceivedRequestsComponent,
+        canActivate: [authGuard, ownerGuard],
+      },
+      {
+        path: 'owner/cancellations/requests',
+        component: ReceivedCancellationsComponent,
+        canActivate: [authGuard, ownerGuard],
+      },
+      {
+        path: 'owner/cancellations/new',
+        component: CancellationDetailComponent,
         canActivate: [authGuard, ownerGuard],
       },
       {

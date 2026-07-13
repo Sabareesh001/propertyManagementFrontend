@@ -1,0 +1,92 @@
+<p-toast />
+<p-confirmdialog />
+
+<div class="requests-container">
+  <h2 class="page-title">Received Cancellation Requests</h2>
+
+  @if (loading()) {
+    <div class="empty-state">
+      <p-progressspinner strokeWidth="4" [style]="{ width: '3rem', height: '3rem' }" />
+      <p class="empty-text">Loading cancellation requests…</p>
+    </div>
+  } @else if (error()) {
+    <div class="empty-state">
+      <i class="pi pi-exclamation-triangle empty-icon"></i>
+      <p class="empty-text">Couldn't load cancellation requests. Please try again.</p>
+      <p-button label="Retry" icon="pi pi-refresh" size="small" (onClick)="load()" />
+    </div>
+  } @else if (requests().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-inbox empty-icon"></i>
+      <p class="empty-text">No tenants have requested to cancel a lease yet.</p>
+      <p-button label="My Leases" icon="pi pi-file-check" routerLink="/leases" />
+    </div>
+  } @else {
+    <div class="requests-list">
+      @for (request of requests(); track request.id) {
+        <div class="request-card">
+          <div class="request-header">
+            <a [routerLink]="['/leases', request.leaseId]" class="lease-link">
+              <i class="pi pi-file-check"></i>
+              View Lease
+            </a>
+            <p-tag [value]="statusLabel(request.statusId)" [severity]="statusSeverity(request.statusId)" />
+          </div>
+
+          @if (request.reason) {
+            <p class="request-reason">{{ request.reason }}</p>
+          }
+
+          <div class="request-details">
+            <div class="detail-item">
+              <span class="detail-label">Requested Effective Date</span>
+              <span class="detail-value">{{ formatDate(request.requestedEffectiveDate) }}</span>
+            </div>
+            @if (request.requestedMoveOutDate) {
+              <div class="detail-item">
+                <span class="detail-label">Requested Move-Out Date</span>
+                <span class="detail-value">{{ formatDate(request.requestedMoveOutDate) }}</span>
+              </div>
+            }
+            <div class="detail-item">
+              <span class="detail-label">Received On</span>
+              <span class="detail-value">{{ formatDate(request.createdAt) }}</span>
+            </div>
+          </div>
+
+          @if (canReview(request.statusId)) {
+            <div class="request-actions">
+              <p-button
+                label="Reject"
+                icon="pi pi-times"
+                severity="danger"
+                [outlined]="true"
+                size="small"
+                [disabled]="actingId() === request.id"
+                (onClick)="confirmReject(request)"
+              />
+              <p-button
+                label="Accept"
+                icon="pi pi-check"
+                severity="success"
+                size="small"
+                [loading]="actingId() === request.id"
+                (onClick)="confirmAccept(request)"
+              />
+            </div>
+          } @else if (request.statusId === 2 && request.leaseCancellationId) {
+            <div class="request-actions">
+              <p-button
+                label="Continue Cancellation"
+                icon="pi pi-arrow-right"
+                iconPos="right"
+                size="small"
+                [routerLink]="['/cancellations', request.leaseCancellationId]"
+              />
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

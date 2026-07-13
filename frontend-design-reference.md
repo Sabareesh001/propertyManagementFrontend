@@ -14,19 +14,20 @@
 4. [Property Lifecycle](#4-property-lifecycle)
 5. [Lease Proposal Flow](#5-lease-proposal-flow)
 6. [Lease Contract Lifecycle](#6-lease-contract-lifecycle)
-7. [Charges & Payments](#7-charges--payments)
-8. [Bank Accounts](#8-bank-accounts)
-9. [Stripe Connect](#9-stripe-connect)
-10. [Complaints](#10-complaints)
-11. [Admin Finance Dashboard](#11-admin-finance-dashboard)
-12. [Notifications](#12-notifications)
-13. [Pagination](#13-pagination)
-14. [Complete Endpoint Reference](#14-complete-endpoint-reference)
-15. [All DTOs & Schemas](#15-all-dtos--schemas)
-16. [Validation Rules Cheat Sheet](#16-validation-rules-cheat-sheet)
-17. [Status Enums & Lookup Values](#17-status-enums--lookup-values)
-18. [Error Response Format](#18-error-response-format)
-19. [Page-by-Page Design Guide](#19-page-by-page-design-guide)
+7. [Lease Cancellation & Expiration](#7-lease-cancellation--expiration)
+8. [Charges & Payments](#8-charges--payments)
+9. [Bank Accounts](#9-bank-accounts)
+10. [Stripe Connect](#10-stripe-connect)
+11. [Complaints](#11-complaints)
+12. [Admin Finance Dashboard](#12-admin-finance-dashboard)
+13. [Notifications](#13-notifications)
+14. [Pagination](#14-pagination)
+15. [Complete Endpoint Reference](#15-complete-endpoint-reference)
+16. [All DTOs & Schemas](#16-all-dtos--schemas)
+17. [Validation Rules Cheat Sheet](#17-validation-rules-cheat-sheet)
+18. [Status Enums & Lookup Values](#18-status-enums--lookup-values)
+19. [Error Response Format](#19-error-response-format)
+20. [Page-by-Page Design Guide](#20-page-by-page-design-guide)
 
 ---
 
@@ -70,7 +71,7 @@ Auth: None
   "roleId": 1
 }
 ```
-**Response 201:** `UserResponseDto` (see §15)
+**Response 201:** `UserResponseDto` (see §16)
 
 **Validation:**
 - `email`: required, valid email format, no whitespace
@@ -161,7 +162,7 @@ No request body. Adds `Owner` role to the current user, re-issues JWT cookie.
 GET /api/user?pageNumber=&pageSize=
 Auth: Required
 ```
-Paginated (see §13). **Response 200:** `PagedResultDto<UserResponseDto>`
+Paginated (see §14). **Response 200:** `PagedResultDto<UserResponseDto>`
 
 ---
 
@@ -270,7 +271,7 @@ Possible values: `"Unverified"`, `"Pending"`, `"Verified"`, `"Rejected"`
 GET /api/userverification/pending?pageNumber=&pageSize=
 Auth: Admin
 ```
-Paginated (see §13). **Response 200:** `PagedResultDto<UserVerificationResponseDto>`
+Paginated (see §14). **Response 200:** `PagedResultDto<UserVerificationResponseDto>`
 
 ---
 
@@ -392,7 +393,7 @@ Auth: Owner
 GET /api/property?pageNumber=&pageSize=
 Auth: None
 ```
-Paginated (see §13), newest first. **Response 200:** `PagedResultDto<PropertyResponseDto>`
+Paginated (see §14), newest first. **Response 200:** `PagedResultDto<PropertyResponseDto>`
 
 ---
 
@@ -412,7 +413,7 @@ Auth: None
 GET /api/property/my?pageNumber=&pageSize=
 Auth: Owner
 ```
-Paginated (see §13), newest first. **Response 200:** `PagedResultDto<PropertyResponseDto>`
+Paginated (see §14), newest first. **Response 200:** `PagedResultDto<PropertyResponseDto>`
 
 ---
 
@@ -462,7 +463,7 @@ No request body. Moves the property from Draft (or Rejected) → Submitted.
 GET /api/property/pending-verification?pageNumber=&pageSize=
 Auth: Admin
 ```
-Paginated (see §13), oldest first (FIFO queue). **Response 200:** `PagedResultDto<PropertyResponseDto>`
+Paginated (see §14), oldest first (FIFO queue). **Response 200:** `PagedResultDto<PropertyResponseDto>`
 
 ---
 
@@ -565,7 +566,7 @@ Auth: Owner (must be property owner)
 GET /api/property/{id}/documents?pageNumber=&pageSize=
 Auth: Required
 ```
-Paginated (see §13). **Response 200:** `PagedResultDto<DocumentResponseDto>`
+Paginated (see §14). **Response 200:** `PagedResultDto<DocumentResponseDto>`
 
 ---
 
@@ -697,7 +698,7 @@ Can cancel if status is Draft or Submitted.
 GET /api/leaseproposal/my-requests?pageNumber=&pageSize=
 Auth: Tenant
 ```
-Paginated (see §13). **Response 200:** `PagedResultDto<LeaseProposalResponseDto>`
+Paginated (see §14). **Response 200:** `PagedResultDto<LeaseProposalResponseDto>`
 
 ---
 
@@ -706,7 +707,7 @@ Paginated (see §13). **Response 200:** `PagedResultDto<LeaseProposalResponseDto
 GET /api/leaseproposal/received-requests?pageNumber=&pageSize=
 Auth: Owner
 ```
-Returns proposals for all the owner's properties, with tenant details embedded. Paginated (see §13).
+Returns proposals for all the owner's properties, with tenant details embedded. Paginated (see §14).
 
 **Response 200:** `PagedResultDto<LeaseProposalResponseDto>` (each item has `tenant` field with `TenantDetailsDto`)
 
@@ -814,7 +815,7 @@ No request body. Moves Draft → Submitted (requires `agreementDocumentUrl` to b
 GET /api/lease/pending-templates?pageNumber=&pageSize=
 Auth: Admin
 ```
-Returns all leases in **Submitted (2)** status whose templates are awaiting verification, oldest first. Use this to populate the admin verification queue instead of polling `GET /api/lease/my-leases` and filtering client-side. Paginated (see §13).
+Returns all leases in **Submitted (2)** status whose templates are awaiting verification, oldest first. Use this to populate the admin verification queue instead of polling `GET /api/lease/my-leases` and filtering client-side. Paginated (see §14).
 
 **Response 200:** `PagedResultDto<LeaseResponseDto>`
 
@@ -856,7 +857,7 @@ Moves PendingSignature → TenantSigned.
 GET /api/lease/pending-signed?pageNumber=&pageSize=
 Auth: Admin
 ```
-Returns all leases in **TenantSigned (4)** status whose signed agreements are awaiting verification, oldest first. Use this to populate the admin signed-lease verification queue instead of polling `GET /api/lease/my-leases` and filtering client-side. Mirror of `GET /api/lease/pending-templates` for the signing stage. Paginated (see §13).
+Returns all leases in **TenantSigned (4)** status whose signed agreements are awaiting verification, oldest first. Use this to populate the admin signed-lease verification queue instead of polling `GET /api/lease/my-leases` and filtering client-side. Mirror of `GET /api/lease/pending-templates` for the signing stage. Paginated (see §14).
 
 **Response 200:** `PagedResultDto<LeaseResponseDto>`
 
@@ -888,7 +889,7 @@ Auth: Required (Owner/Tenant of lease, or Admin)
 GET /api/lease/my-leases?pageNumber=&pageSize=
 Auth: Required
 ```
-Returns leases where the user is the owner or tenant (based on role). Paginated (see §13).
+Returns leases where the user is the owner or tenant (based on role). Paginated (see §14).
 
 **Response 200:** `PagedResultDto<LeaseResponseDto>`
 
@@ -899,7 +900,7 @@ Returns leases where the user is the owner or tenant (based on role). Paginated 
 GET /api/lease/{id}/documents?pageNumber=&pageSize=
 Auth: Required (Owner/Tenant of lease, or Admin)
 ```
-Paginated (see §13). **Response 200:** `PagedResultDto<DocumentResponseDto>`
+Paginated (see §14). **Response 200:** `PagedResultDto<DocumentResponseDto>`
 
 ---
 
@@ -930,7 +931,272 @@ The lease must **not** be in `Draft (1)` or `Submitted (2)` status; otherwise th
 
 ---
 
-## 7. Charges & Payments
+## 7. Lease Cancellation & Expiration
+
+Ending an **Active** lease early goes through the same document/signature/admin-approval pipeline as creating one (§6), but starts from either side: the tenant can *request* cancellation (owner reviews it), or the owner can *initiate* cancellation directly. Natural end-of-term (expiration) requires no action from anyone — it happens automatically.
+
+### Cancellation Request State Machine (tenant-initiated)
+
+```
+Submitted (1)  ── tenant creates via POST /api/leasecancellation/requests
+  │
+  ├─[owner]──▶ Accepted (2)  → auto-creates a LeaseCancellation in Draft, pre-filled from the request
+  └─[owner]──▶ Rejected (3)
+```
+There is no tenant-facing withdraw endpoint yet; `Withdrawn (4)` exists as a reserved status value only.
+
+### Lease Cancellation State Machine (mirrors §6 exactly)
+
+```
+Draft (1)
+  │
+  ├─[owner edits]──▶ Draft (1)
+  │
+  ▼  PUT /{id}/submit (owner)
+Submitted (2)
+  │
+  ├─[Admin rejects]──▶ Rejected (6)
+  │
+  ▼  PUT /{id}/verify-template?approve=true (Admin)
+PendingSignature (3)
+  │
+  ▼  PUT /{id}/sign (Tenant uploads signed doc)
+TenantSigned (4)
+  │
+  ├─[Admin rejects]──▶ Rejected (6)
+  │
+  ▼  PUT /{id}/verify-signed?approve=true (Admin)
+Finalized (5)  ──▶ original Lease.statusId becomes Terminated (7); property becomes Available again
+```
+
+A `LeaseCancellation` record can originate two ways:
+1. **Tenant-initiated:** tenant submits a request → owner accepts it → a Draft `LeaseCancellation` is auto-created with `requestId` set.
+2. **Owner-initiated:** owner calls `POST /api/leasecancellation` directly with no `requestId`.
+
+Either way, only one active (non-terminal) request or cancellation can exist per lease at a time.
+
+---
+
+### Create Cancellation Request (Tenant)
+```
+POST /api/leasecancellation/requests
+Auth: Tenant (must be the tenant of the lease)
+```
+**Request body:**
+```json
+{
+  "leaseId": "uuid-of-active-lease",
+  "reason": "Relocating out of state for a new job.",
+  "requestedEffectiveDate": "2026-09-01",
+  "requestedMoveOutDate": "2026-08-28"
+}
+```
+**Validation:**
+- `leaseId`: required, must reference an **Active** lease belonging to the tenant
+- `reason`: 10–2000 chars
+- `requestedEffectiveDate`: required, not in the past
+- `requestedMoveOutDate`: optional, ≥ `requestedEffectiveDate`
+
+**Response 201:** `LeaseCancellationRequestResponseDto`
+
+---
+
+### Get My Cancellation Requests (Tenant view)
+```
+GET /api/leasecancellation/requests/my?pageNumber=&pageSize=
+Auth: Tenant
+```
+Requests submitted by the current tenant, newest first. Paginated (see §14).
+
+**Response 200:** `PagedResultDto<LeaseCancellationRequestResponseDto>`
+
+---
+
+### Get Received Cancellation Requests (Owner view)
+```
+GET /api/leasecancellation/requests/received?pageNumber=&pageSize=
+Auth: Owner
+```
+Requests against any of the owner's leases, newest first. Paginated (see §14).
+
+**Response 200:** `PagedResultDto<LeaseCancellationRequestResponseDto>`
+
+---
+
+### Accept / Reject Cancellation Request (Owner)
+```
+PUT /api/leasecancellation/requests/{id}/accept
+PUT /api/leasecancellation/requests/{id}/reject
+Auth: Owner (must own the property)
+```
+No request body. Accepting auto-creates a `LeaseCancellation` in Draft status (`requestId` set, pre-filled with the tenant's reason/dates) — surface a "Continue to Cancellation" CTA using the returned `leaseCancellationId`.
+
+**Response 200:** `LeaseCancellationRequestResponseDto`
+
+---
+
+### Create Lease Cancellation (Owner — direct, no prior request)
+```
+POST /api/leasecancellation
+Auth: Owner
+```
+**Request body:**
+```json
+{
+  "leaseId": "uuid-of-active-lease",
+  "requestId": null,
+  "reason": "Owner needs the property back for personal use.",
+  "effectiveDate": "2026-09-01",
+  "moveOutDate": "2026-08-28",
+  "securityDepositRefundAmount": 65000.00,
+  "depositDispositionNotes": "Full refund minus one month's cleaning fee.",
+  "agreementDocumentUrl": "https://cdn.example.com/cancellation-template.pdf",
+  "documents": []
+}
+```
+**Validation:**
+- `leaseId`: required, must reference an **Active** lease owned by the caller
+- `reason`: 10–2000 chars
+- `effectiveDate`: required, not in the past
+- `moveOutDate`: optional, ≥ `effectiveDate`
+- `securityDepositRefundAmount`: optional, ≥ 0
+- `agreementDocumentUrl`: optional (can be added when submitting)
+
+**Response 201:** `LeaseCancellationResponseDto`
+
+---
+
+### Update Lease Cancellation (Owner — only Draft or Submitted)
+```
+PUT /api/leasecancellation/{id}
+Auth: Owner
+```
+All fields optional (partial update). Same structure as Create minus `leaseId`/`requestId`.
+
+**Response 200:** `LeaseCancellationResponseDto`
+
+---
+
+### Submit Lease Cancellation (Owner)
+```
+PUT /api/leasecancellation/{id}/submit
+Auth: Owner
+```
+No request body. Moves Draft → Submitted (requires `agreementDocumentUrl` to be already set).
+
+**Response 200:** `LeaseCancellationResponseDto`
+
+---
+
+### Get Pending Cancellation Templates (Admin)
+```
+GET /api/leasecancellation/pending-templates?pageNumber=&pageSize=
+Auth: Admin
+```
+Returns all lease cancellations in **Submitted (2)** status awaiting template verification, oldest first. Mirror of `GET /api/lease/pending-templates` (§6). Paginated (see §14).
+
+**Response 200:** `PagedResultDto<LeaseCancellationResponseDto>`
+
+---
+
+### Verify Cancellation Template (Admin)
+```
+PUT /api/leasecancellation/{id}/verify-template?approve=true
+Auth: Admin
+```
+- `approve=true` → PendingSignature
+- `approve=false` → Rejected
+
+**Response 200:** `LeaseCancellationResponseDto`
+
+---
+
+### Sign Lease Cancellation (Tenant)
+```
+PUT /api/leasecancellation/{id}/sign
+Auth: Tenant (must be the tenant of the underlying lease)
+```
+**Request body:**
+```json
+{ "signedAgreementDocumentUrl": "https://cdn.example.com/signed-cancellation.pdf" }
+```
+`signedAgreementDocumentUrl` is required and non-empty. Moves PendingSignature → TenantSigned.
+
+**Response 200:** `LeaseCancellationResponseDto`
+
+---
+
+### Get Pending Signed Cancellations (Admin)
+```
+GET /api/leasecancellation/pending-signed?pageNumber=&pageSize=
+Auth: Admin
+```
+Returns all lease cancellations in **TenantSigned (4)** status awaiting final verification, oldest first. Mirror of `GET /api/lease/pending-signed` (§6). Paginated (see §14).
+
+**Response 200:** `PagedResultDto<LeaseCancellationResponseDto>`
+
+---
+
+### Verify Signed Cancellation (Admin)
+```
+PUT /api/leasecancellation/{id}/verify-signed?approve=true
+Auth: Admin
+```
+- `approve=true` → Finalized; the original lease's `statusId` becomes **Terminated (7)** and the property's `availabilityStatusId` reverts to **Available (1)**
+- `approve=false` → Rejected
+
+**Response 200:** `LeaseCancellationResponseDto`
+
+---
+
+### Get Lease Cancellation by ID
+```
+GET /api/leasecancellation/{id}
+Auth: Required (Owner/Tenant of the underlying lease, or Admin)
+```
+**Response 200:** `LeaseCancellationResponseDto`
+
+---
+
+### Get Lease Cancellation Documents
+```
+GET /api/leasecancellation/{id}/documents?pageNumber=&pageSize=
+Auth: Required (Owner/Tenant of the underlying lease, or Admin)
+```
+Paginated (see §14). **Response 200:** `PagedResultDto<DocumentResponseDto>`
+
+---
+
+### Upload Lease Cancellation Document (Tenant)
+```
+POST /api/leasecancellation/{id}/documents
+Auth: Tenant (must be the tenant of the underlying lease)
+```
+Lets the tenant attach supporting documents (e.g. move-out inspection report) in addition to signing.
+
+**Request body:**
+```json
+{
+  "documentTypeId": 4,
+  "documentNumber": "MOI-12345",
+  "documentUrl": "https://cdn.example.com/move-out-inspection.pdf"
+}
+```
+**Validation:** same rules as the lease document upload (§6) — `documentTypeId` 1–5, optional `documentNumber` (4–50 chars, letters/digits/hyphens), `documentUrl` required absolute URL.
+
+The cancellation must **not** be in `Draft (1)` or `Submitted (2)` status; otherwise the request is rejected with `400`.
+
+**Response 201:** `DocumentResponseDto`
+
+---
+
+### Lease Expiration (automatic — no endpoint to call)
+
+There is no tenant/owner/admin action for expiration. Any **Active** lease whose `endDate` has passed is automatically flipped to **Expired (8)** the next time it's read via `GET /api/lease/{id}` or `GET /api/lease/my-leases` — the property is freed back to Available at the same time and both parties get a notification. **UI implication:** don't assume a lease's `statusId` is stable between page loads; a lease that was Active on the list page can come back Expired after a fresh fetch once its end date passes. No polling or scheduled refresh is needed — it self-corrects on the next natural read.
+
+---
+
+## 8. Charges & Payments
 
 Charges are applied by the owner to an **Active** lease. The tenant pays against those charges.
 
@@ -1003,7 +1269,7 @@ Auth: Owner (must own the property of that lease)
 GET /api/lease/{leaseId}/charges?pageNumber=&pageSize=
 Auth: Required (Owner or Tenant of that lease)
 ```
-Paginated (see §13), newest first. **Response 200:** `PagedResultDto<ChargeResponseDto>`
+Paginated (see §14), newest first. **Response 200:** `PagedResultDto<ChargeResponseDto>`
 
 Each charge includes `amountPaid` and `balanceDue` computed fields.
 
@@ -1055,11 +1321,11 @@ A single payment can cover multiple charges (partial or full amounts).
 GET /api/lease/{leaseId}/payments?pageNumber=&pageSize=
 Auth: Required (Owner or Tenant of that lease)
 ```
-Paginated (see §13), newest first. **Response 200:** `PagedResultDto<PaymentResponseDto>`
+Paginated (see §14), newest first. **Response 200:** `PagedResultDto<PaymentResponseDto>`
 
 ---
 
-## 8. Bank Accounts
+## 9. Bank Accounts
 
 Users can register bank accounts (used for manual payment tracking / payout purposes).
 
@@ -1093,7 +1359,7 @@ Auth: Required
 GET /api/bankaccount?pageNumber=&pageSize=
 Auth: Required
 ```
-Paginated (see §13), newest first. **Response 200:** `PagedResultDto<BankAccountResponseDto>`
+Paginated (see §14), newest first. **Response 200:** `PagedResultDto<BankAccountResponseDto>`
 
 ---
 
@@ -1126,7 +1392,7 @@ Auth: Required (must own the account)
 
 ---
 
-## 9. Stripe Connect
+## 10. Stripe Connect
 
 Owners can connect a Stripe Express account to receive online rent payments from tenants.
 
@@ -1231,7 +1497,7 @@ Handles:
 
 ---
 
-## 10. Complaints
+## 11. Complaints
 
 A tenant raises a complaint against one of their **Active** leases. The owner of the property (or an admin) triages it through a status state machine, and any participant can add comments to a shared thread.
 
@@ -1315,7 +1581,7 @@ Auth: Tenant (must be the tenant of the lease)
 GET /api/complaint/my?pageNumber=&pageSize=
 Auth: Required
 ```
-Complaints created by the current user, newest first. Each item has an empty `comments` list (use Get Complaint by ID for the full thread). Paginated (see §13).
+Complaints created by the current user, newest first. Each item has an empty `comments` list (use Get Complaint by ID for the full thread). Paginated (see §14).
 
 **Response 200:** `PagedResultDto<ComplaintResponseDto>`
 
@@ -1326,7 +1592,7 @@ Complaints created by the current user, newest first. Each item has an empty `co
 GET /api/complaint/received?pageNumber=&pageSize=
 Auth: Owner
 ```
-Complaints raised on any of the owner's properties, newest first. Paginated (see §13).
+Complaints raised on any of the owner's properties, newest first. Paginated (see §14).
 
 **Response 200:** `PagedResultDto<ComplaintResponseDto>`
 
@@ -1337,7 +1603,7 @@ Complaints raised on any of the owner's properties, newest first. Paginated (see
 GET /api/complaint?pageNumber=&pageSize=
 Auth: Admin
 ```
-All complaints in the system, newest first. Paginated (see §13).
+All complaints in the system, newest first. Paginated (see §14).
 
 **Response 200:** `PagedResultDto<ComplaintResponseDto>`
 
@@ -1413,7 +1679,7 @@ Uploads a PDF or image (max 10 MB) and returns a permanent URL to use as `attach
 
 ---
 
-## 11. Admin Finance Dashboard
+## 12. Admin Finance Dashboard
 
 Admin-only, platform-wide finance views that aggregate data across every lease — not scoped to a single owner or tenant.
 
@@ -1422,7 +1688,7 @@ Admin-only, platform-wide finance views that aggregate data across every lease �
 GET /api/admin/payments?from=&to=&pageNumber=&pageSize=
 Auth: Admin
 ```
-Every payment across all leases, newest first, enriched with lease/property/owner/tenant context. `from`/`to` (`DateTime`) optionally filter on `createdAt`. Paginated (see §13).
+Every payment across all leases, newest first, enriched with lease/property/owner/tenant context. `from`/`to` (`DateTime`) optionally filter on `createdAt`. Paginated (see §14).
 
 **Response 200:** `PagedResultDto<AdminPaymentDto>`
 
@@ -1433,7 +1699,7 @@ Every payment across all leases, newest first, enriched with lease/property/owne
 GET /api/admin/charges?from=&to=&pageNumber=&pageSize=
 Auth: Admin
 ```
-Every charge across all leases, newest first, enriched with lease/property/owner/tenant context. `from`/`to` optionally filter on `createdAt`. Paginated (see §13).
+Every charge across all leases, newest first, enriched with lease/property/owner/tenant context. `from`/`to` optionally filter on `createdAt`. Paginated (see §14).
 
 **Response 200:** `PagedResultDto<AdminChargeDto>`
 
@@ -1450,7 +1716,7 @@ Server-side aggregated figures across **all** payments matching the optional `fr
 
 ---
 
-## 12. Notifications
+## 13. Notifications
 
 Real-time notifications pushed over SignalR and also readable via REST for the notification inbox/bell icon.
 
@@ -1459,7 +1725,7 @@ Real-time notifications pushed over SignalR and also readable via REST for the n
 GET /api/notification?pageNumber=&pageSize=
 Auth: Required
 ```
-Notifications addressed to the current user, newest first. Paginated (see §13).
+Notifications addressed to the current user, newest first. Paginated (see §14).
 
 **Response 200:** `PagedResultDto<NotificationResponseDto>`
 
@@ -1492,7 +1758,7 @@ On connect, the server joins the socket to a personal group keyed by the user's 
 
 ---
 
-## 13. Pagination
+## 14. Pagination
 
 Every "list" endpoint in this API (any endpoint that previously returned a bare array) now returns a **paginated envelope** instead of a raw array, and accepts standard query-string pagination parameters. This is a single, DRY mechanism applied consistently across the whole API — if you've implemented it for one paginated endpoint, every other one works identically.
 
@@ -1502,7 +1768,7 @@ Every "list" endpoint in this API (any endpoint that previously returned a bare 
 | `pageNumber` | int  | `1`     | Must be ≥ 1                           |
 | `pageSize`   | int  | `20`    | Must be between `1` and `100`         |
 
-Both are optional — omit them to get page 1 with 20 items. Values outside the constraints return **400** with a standard validation error body (see §18).
+Both are optional — omit them to get page 1 with 20 items. Values outside the constraints return **400** with a standard validation error body (see §19).
 
 ### Response envelope — `PagedResultDto<T>`
 ```typescript
@@ -1519,15 +1785,15 @@ Both are optional — omit them to get page 1 with 20 items. Values outside the 
 ### Which endpoints are paginated
 All of the following accept `?pageNumber=&pageSize=` and return `PagedResultDto<T>` — every one is cross-referenced above in its own section:
 
-`GET /api/user`, `GET /api/userverification/pending`, `GET /api/property`, `GET /api/property/my`, `GET /api/property/pending-verification`, `GET /api/property/{id}/documents`, `GET /api/leaseproposal/my-requests`, `GET /api/leaseproposal/received-requests`, `GET /api/lease/pending-templates`, `GET /api/lease/pending-signed`, `GET /api/lease/my-leases`, `GET /api/lease/{id}/documents`, `GET /api/lease/{leaseId}/charges`, `GET /api/lease/{leaseId}/payments`, `GET /api/bankaccount`, `GET /api/complaint/my`, `GET /api/complaint/received`, `GET /api/complaint`, `GET /api/admin/payments`, `GET /api/admin/charges`, `GET /api/notification`.
+`GET /api/user`, `GET /api/userverification/pending`, `GET /api/property`, `GET /api/property/my`, `GET /api/property/pending-verification`, `GET /api/property/{id}/documents`, `GET /api/leaseproposal/my-requests`, `GET /api/leaseproposal/received-requests`, `GET /api/lease/pending-templates`, `GET /api/lease/pending-signed`, `GET /api/lease/my-leases`, `GET /api/lease/{id}/documents`, `GET /api/lease/{leaseId}/charges`, `GET /api/lease/{leaseId}/payments`, `GET /api/leasecancellation/requests/my`, `GET /api/leasecancellation/requests/received`, `GET /api/leasecancellation/pending-templates`, `GET /api/leasecancellation/pending-signed`, `GET /api/leasecancellation/{id}/documents`, `GET /api/bankaccount`, `GET /api/complaint/my`, `GET /api/complaint/received`, `GET /api/complaint`, `GET /api/admin/payments`, `GET /api/admin/charges`, `GET /api/notification`.
 
-**Not paginated** (single objects, or naturally bounded thread endpoints): `GET /api/property/{id}`, `GET /api/lease/{id}`, `GET /api/complaint/{id}` (full comment thread), `GET /api/admin/finance-summary` (aggregate).
+**Not paginated** (single objects, or naturally bounded thread endpoints): `GET /api/property/{id}`, `GET /api/lease/{id}`, `GET /api/leasecancellation/{id}`, `GET /api/complaint/{id}` (full comment thread), `GET /api/admin/finance-summary` (aggregate).
 
 ---
 
-## 14. Complete Endpoint Reference
+## 15. Complete Endpoint Reference
 
-`📄` marks paginated GET endpoints — see §13 for the shared `?pageNumber=&pageSize=` / `PagedResultDto<T>` contract.
+`📄` marks paginated GET endpoints — see §14 for the shared `?pageNumber=&pageSize=` / `PagedResultDto<T>` contract.
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
@@ -1580,6 +1846,22 @@ All of the following accept `?pageNumber=&pageSize=` and return `PagedResultDto<
 | GET 📄 | `/api/lease/my-leases` | Required | Get my leases |
 | GET 📄 | `/api/lease/{id}/documents` | Required | Get lease documents |
 | POST | `/api/lease/{id}/documents` | Tenant | Upload tenant lease document |
+| POST | `/api/leasecancellation/requests` | Tenant | Create cancellation request |
+| GET 📄 | `/api/leasecancellation/requests/my` | Tenant | My outgoing cancellation requests |
+| GET 📄 | `/api/leasecancellation/requests/received` | Owner | Incoming cancellation requests |
+| PUT | `/api/leasecancellation/requests/{id}/accept` | Owner | Accept cancellation request |
+| PUT | `/api/leasecancellation/requests/{id}/reject` | Owner | Reject cancellation request |
+| POST | `/api/leasecancellation` | Owner | Create lease cancellation (direct) |
+| PUT | `/api/leasecancellation/{id}` | Owner | Update draft/submitted cancellation |
+| PUT | `/api/leasecancellation/{id}/submit` | Owner | Submit cancellation for review |
+| GET 📄 | `/api/leasecancellation/pending-templates` | Admin | List cancellation templates pending verification |
+| PUT | `/api/leasecancellation/{id}/verify-template?approve=` | Admin | Approve/reject cancellation template |
+| PUT | `/api/leasecancellation/{id}/sign` | Tenant | Sign the cancellation agreement |
+| GET 📄 | `/api/leasecancellation/pending-signed` | Admin | List signed cancellations pending verification |
+| PUT | `/api/leasecancellation/{id}/verify-signed?approve=` | Admin | Finalize/reject signed cancellation |
+| GET | `/api/leasecancellation/{id}` | Required | Get cancellation by ID (GUID) |
+| GET 📄 | `/api/leasecancellation/{id}/documents` | Required | Get cancellation documents |
+| POST | `/api/leasecancellation/{id}/documents` | Tenant | Upload cancellation supporting document |
 | POST | `/api/lease/{leaseId}/charges` | Owner | Apply charge to lease |
 | GET 📄 | `/api/lease/{leaseId}/charges` | Required | Get all charges |
 | GET | `/api/lease/{leaseId}/charges/{chargeId}` | Required | Get single charge |
@@ -1610,7 +1892,7 @@ All of the following accept `?pageNumber=&pageSize=` and return `PagedResultDto<
 
 ---
 
-## 15. All DTOs & Schemas
+## 16. All DTOs & Schemas
 
 ### UserResponseDto
 ```typescript
@@ -1718,6 +2000,45 @@ All of the following accept `?pageNumber=&pageSize=` and return `PagedResultDto<
   upfrontPayment: number | null;
   securityDeposit: number | null;
   statusId: number | null;    // 1=Draft, 2=Submitted, 3=PendingSignature, 4=TenantSigned, 5=Active, 6=Rejected, 7=Terminated, 8=Expired
+  statusName: string | null;
+  agreementDocumentUrl: string | null;
+  signedAgreementDocumentUrl: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+```
+
+### LeaseCancellationRequestResponseDto
+```typescript
+{
+  id: string;               // UUID
+  leaseId: string;          // UUID
+  tenantId: string;         // UUID
+  reason: string | null;
+  requestedEffectiveDate: string;   // "YYYY-MM-DD"
+  requestedMoveOutDate: string | null;
+  statusId: number;         // 1=Submitted, 2=Accepted, 3=Rejected, 4=Withdrawn
+  statusName: string | null;
+  reviewedBy: string | null;   // UUID of owner
+  reviewedAt: string | null;
+  leaseCancellationId: string | null;  // UUID — set once accepted; use to fetch/continue the cancellation
+  createdAt: string | null;
+}
+```
+
+### LeaseCancellationResponseDto
+```typescript
+{
+  id: string;               // UUID
+  leaseId: string;          // UUID
+  requestId: string | null; // UUID — null when owner-initiated directly
+  initiatedBy: string;      // UUID of owner
+  reason: string | null;
+  effectiveDate: string;    // "YYYY-MM-DD"
+  moveOutDate: string | null;
+  securityDepositRefundAmount: number | null;
+  depositDispositionNotes: string | null;
+  statusId: number | null;  // 1=Draft, 2=Submitted, 3=PendingSignature, 4=TenantSigned, 5=Finalized, 6=Rejected
   statusName: string | null;
   agreementDocumentUrl: string | null;
   signedAgreementDocumentUrl: string | null;
@@ -1857,7 +2178,7 @@ All fields optional — only non-null fields are applied. Proposal must be Draft
 ```
 
 ### PagedResultDto\<T\>
-The generic envelope wrapping every paginated list response (see §13).
+The generic envelope wrapping every paginated list response (see §14).
 ```typescript
 {
   items: T[];
@@ -1878,11 +2199,11 @@ The generic envelope wrapping every paginated list response (see §13).
   tenantId: string | null;     // UUID
   tenantName: string | null;
   ownerId: string | null;      // UUID
-  categoryId: number | null;   // 1–8, see §10
+  categoryId: number | null;   // 1–8, see §11
   categoryName: string | null;
-  priorityId: number | null;   // 1–4, see §10
+  priorityId: number | null;   // 1–4, see §11
   priorityName: string | null;
-  statusId: number | null;     // 1–5, see §10
+  statusId: number | null;     // 1–5, see §11
   statusName: string | null;
   subject: string | null;
   description: string | null;
@@ -1969,7 +2290,7 @@ Extends `ChargeResponseDto` (see above) with platform-wide context:
 
 ---
 
-## 16. Validation Rules Cheat Sheet
+## 17. Validation Rules Cheat Sheet
 
 | Field | Rules |
 |-------|-------|
@@ -2002,19 +2323,19 @@ Extends `ChargeResponseDto` (see above) with platform-wide context:
 | Property Document URL | Required, valid absolute URL |
 | Upload Document | PDF only, max 10 MB, `multipart/form-data` field name `file` |
 | Upload Image(s) | JPEG/PNG/GIF/WebP only, max 5 MB per file, `multipart/form-data` field name `files` (repeatable) |
-| Page Number | ≥ 1 (default 1) — see §13 |
-| Page Size | 1–100 (default 20) — see §13 |
+| Page Number | ≥ 1 (default 1) — see §14 |
+| Page Size | 1–100 (default 20) — see §14 |
 | Complaint Subject | 5–150 chars |
 | Complaint Description | 10–2000 chars |
 | Complaint Category ID | 1–8 |
 | Complaint Priority ID | 1–4 |
-| Complaint Status ID (transition) | 1–5; must be a valid transition from current status (see §10) |
+| Complaint Status ID (transition) | 1–5; must be a valid transition from current status (see §11) |
 | Comment Message | 1–2000 chars |
 | Resend Verification Email | Required, valid email format |
 
 ---
 
-## 17. Status Enums & Lookup Values
+## 18. Status Enums & Lookup Values
 
 ### User Verification Status
 | ID | Name       |
@@ -2067,6 +2388,24 @@ Extends `ChargeResponseDto` (see above) with platform-wide context:
 | 6  | Rejected         |
 | 7  | Terminated       |
 | 8  | Expired          |
+
+### Cancellation Request Status
+| ID | Name      |
+|----|-----------|
+| 1  | Submitted |
+| 2  | Accepted  |
+| 3  | Rejected  |
+| 4  | Withdrawn |
+
+### Lease Cancellation Status
+| ID | Name             |
+|----|------------------|
+| 1  | Draft            |
+| 2  | Submitted        |
+| 3  | PendingSignature |
+| 4  | TenantSigned     |
+| 5  | Finalized        |
+| 6  | Rejected         |
 
 ### Charge Type
 | ID | Name             |
@@ -2142,7 +2481,7 @@ Extends `ChargeResponseDto` (see above) with platform-wide context:
 
 ---
 
-## 18. Error Response Format
+## 19. Error Response Format
 
 The `GlobalExceptionHandler` maps exceptions to HTTP status codes consistently:
 
@@ -2180,7 +2519,7 @@ Returned before the controller executes via `ValidationFilter`. Format:
 
 ---
 
-## 19. Page-by-Page Design Guide
+## 20. Page-by-Page Design Guide
 
 This section maps pages a frontend app would need to the API calls that power them.
 
@@ -2264,6 +2603,17 @@ This section maps pages a frontend app would need to the API calls that power th
 - `GET /api/lease/{leaseId}/charges` — list all charges with balance due
 - `GET /api/lease/{leaseId}/payments` — payment history
 - CTA: "Make Payment" → Record Payment or Pay via Stripe
+- CTA: "Request Cancellation" → Request Lease Cancellation page (only while `statusId === 5` Active)
+
+#### Request Lease Cancellation (Tenant)
+- `POST /api/leasecancellation/requests` — reason, requested effective date, optional move-out date
+- `GET /api/leasecancellation/requests/my` (paginated) — track status: Submitted | Accepted | Rejected
+- Once `statusId === 2` (Accepted), show the linked cancellation (`leaseCancellationId`) — tenant waits for the owner's Draft to reach `PendingSignature` before a "Sign Cancellation" CTA appears
+
+#### Sign Lease Cancellation Page
+- `GET /api/leasecancellation/{id}` — view cancellation agreement document URL, reason, effective/move-out dates, deposit disposition
+- Tenant uploads signed copy
+- `PUT /api/leasecancellation/{id}/sign` with `signedAgreementDocumentUrl`
 
 #### Make Payment Page
 - `GET /api/lease/{leaseId}/charges` — show pending/overdue charges
@@ -2328,7 +2678,19 @@ This section maps pages a frontend app would need to the API calls that power th
 #### Lease Management
 - `GET /api/lease/my-leases`
 - Filter by status
-- Active leases: "Apply Charge" CTA
+- Active leases: "Apply Charge" CTA and "Cancel Lease" CTA
+
+#### Received Cancellation Requests (Owner)
+- `GET /api/leasecancellation/requests/received` (paginated)
+- Per request: "Accept" / "Reject" — `PUT /api/leasecancellation/requests/{id}/accept` or `.../reject`
+- On Accept: redirect to the auto-created Draft cancellation (`leaseCancellationId` in the response) to continue the pipeline
+
+#### Cancel Lease Page (Owner — direct or continuing an accepted request)
+- `POST /api/leasecancellation` (direct) — reason, effective date, move-out date, deposit refund amount/notes
+- If continuing an accepted tenant request, `GET /api/leasecancellation/{id}` shows the pre-filled Draft instead
+- `PUT /api/leasecancellation/{id}` — edit while Draft/Submitted
+- Upload cancellation agreement document, then `PUT /api/leasecancellation/{id}/submit`
+- Track status: Draft | Submitted | PendingSignature | TenantSigned | Finalized | Rejected
 
 #### Apply Charge Page
 - `POST /api/lease/{leaseId}/charges`
@@ -2360,6 +2722,16 @@ This section maps pages a frontend app would need to the API calls that power th
 - View both agreement and signed agreement URLs
 - `PUT /api/lease/{id}/verify-signed?approve=true/false`
 
+#### Lease Cancellation Template Verification Queue
+- `GET /api/leasecancellation/pending-templates` — lists all Submitted (`statusId: 2`) cancellation templates awaiting verification
+- View reason, effective/move-out dates, deposit disposition, agreement document URL
+- `PUT /api/leasecancellation/{id}/verify-template?approve=true/false`
+
+#### Signed Lease Cancellation Finalization Queue
+- `GET /api/leasecancellation/pending-signed` — lists all TenantSigned (`statusId: 4`) cancellations awaiting final verification
+- View both agreement and signed agreement URLs
+- `PUT /api/leasecancellation/{id}/verify-signed?approve=true/false` — approving sets the original lease to Terminated and frees the property
+
 #### All Complaints (Admin)
 - `GET /api/complaint` — every complaint in the system, paginated
 - Filter/sort client-side by status, category, priority
@@ -2382,7 +2754,7 @@ This section maps pages a frontend app would need to the API calls that power th
 
 #### Received Complaints (Owner)
 - `GET /api/complaint/received` (paginated)
-- Actions per status (see §10 state machine): "Start Work" (→ InProgress), "Mark Resolved", "Cancel" — via `PUT /api/complaint/{id}/status`
+- Actions per status (see §11 state machine): "Start Work" (→ InProgress), "Mark Resolved", "Cancel" — via `PUT /api/complaint/{id}/status`
 
 #### Complaint Detail (shared by tenant/owner/admin)
 - `GET /api/complaint/{id}` — full thread
@@ -2393,7 +2765,7 @@ This section maps pages a frontend app would need to the API calls that power th
 
 ### Notifications
 
-- Connect to SignalR hub `/hubs/notifications` on login (see §12); render toasts/badge count from `"ReceiveNotification"` pushes in real time
+- Connect to SignalR hub `/hubs/notifications` on login (see §13); render toasts/badge count from `"ReceiveNotification"` pushes in real time
 - `GET /api/notification` (paginated) to backfill the notification bell dropdown on page load
 - `PUT /api/notification/{id}/read` when a notification is opened/dismissed
 
@@ -2411,7 +2783,7 @@ This section maps pages a frontend app would need to the API calls that power th
 | Tenant Info Card | `TenantDetailsDto` | In proposal received view |
 | Verification Status Banner | `verificationStatusId` on user | Prompt if Unverified |
 | Stripe.js Integration | `clientSecret` from intent API | For online payments |
-| Pagination Control | `pageNumber`/`totalPages` from any `PagedResultDto<T>` | Reusable across every list page (see §13) |
+| Pagination Control | `pageNumber`/`totalPages` from any `PagedResultDto<T>` | Reusable across every list page (see §14) |
 | Complaint Comment Thread | `ComplaintResponseDto.comments[]` | Author name + role badge per comment |
 | Notification Bell | `NotificationResponseDto` via REST + SignalR | Unread count from `isRead === false` |
 
@@ -2433,8 +2805,12 @@ This section maps pages a frontend app would need to the API calls that power th
 12. **Cannot log in** unless `emailVerified === true` — surface the `EMAIL_NOT_VERIFIED` errorCode with a resend link (see §2)
 13. **Cannot raise a complaint** unless the referenced lease is Active
 14. **Cannot comment on or transition** a Closed or Cancelled complaint
-15. **All list views must read `.items`** from the `PagedResultDto<T>` envelope and drive pagers off `totalCount`/`totalPages`, not `items.length` (see §13)
+15. **All list views must read `.items`** from the `PagedResultDto<T>` envelope and drive pagers off `totalCount`/`totalPages`, not `items.length` (see §14)
+16. **Cannot request/initiate lease cancellation** unless the lease is Active (`statusId === 5`)
+17. **Cannot have two in-flight cancellations** for the same lease — only one non-terminal request or cancellation record can exist at a time; hide the "Request Cancellation"/"Cancel Lease" CTAs once one exists
+18. **Cannot sign a lease cancellation** unless it's PendingSignature (`statusId === 3`)
+19. **Lease status can change without user action** — a lease shown as Active may read back as Expired after its end date passes; always re-fetch rather than trusting cached `statusId` for gating cancellation/charge actions
 
 ---
 
-*Last updated: 2026-07-09*
+*Last updated: 2026-07-10*
