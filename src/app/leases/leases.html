@@ -7,8 +7,24 @@
   (signed)="onLeaseSigned($event)"
 />
 
+<app-agreement-document-modal
+  [(visible)]="agreementViewerVisible"
+  [documentUrl]="agreementViewerUrl()"
+  title="Lease Agreement"
+/>
+
 <div class="leases-container">
-  <h2 class="page-title">Leases</h2>
+  <div class="leases-header">
+    <h2 class="page-title">Leases</h2>
+    <p-button
+      label="My Cancellations"
+      icon="pi pi-file-excel"
+      size="small"
+      severity="secondary"
+      [outlined]="true"
+      routerLink="/cancellations"
+    />
+  </div>
   @if (!loading() && !error()) {
     <p-menu #filterMenu [model]="filterMenuItems()" [popup]="true" />
     <p-button
@@ -95,14 +111,14 @@
 
           <div class="lease-docs">
             @if (lease.agreementDocumentUrl) {
-              <a [href]="lease.agreementDocumentUrl" target="_blank" rel="noopener" class="doc-link" (click)="$event.stopPropagation()">
+              <button type="button" class="doc-link link-button" (click)="$event.stopPropagation(); openAgreementViewer(lease)">
                 <i class="pi pi-file-pdf"></i> Agreement document
-              </a>
+              </button>
             } @else {
               <span class="doc-missing"><i class="pi pi-file"></i> No agreement document</span>
             }
             @if (lease.signedAgreementDocumentUrl) {
-              <a [href]="lease.signedAgreementDocumentUrl" target="_blank" rel="noopener" class="doc-link" (click)="$event.stopPropagation()">
+              <a [href]="lease.signedAgreementDocumentUrl | safeUrl" target="_blank" rel="noopener" class="doc-link" (click)="$event.stopPropagation()">
                 <i class="pi pi-verified"></i> Signed agreement
               </a>
             }
@@ -132,6 +148,17 @@
                   icon="pi pi-pencil"
                   size="small"
                   (onClick)="openSignModal(lease)"
+                />
+              }
+              @if (canDelete(lease)) {
+                <p-button
+                  label="Delete"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  size="small"
+                  [outlined]="true"
+                  [loading]="actingId() === lease.id"
+                  (onClick)="confirmDelete(lease)"
                 />
               }
           </div>

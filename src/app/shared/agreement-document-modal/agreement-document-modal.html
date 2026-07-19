@@ -1,0 +1,57 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '760px' }"
+  [breakpoints]="{ '960px': '90vw' }"
+  styleClass="agreement-document-dialog"
+  [header]="title"
+>
+  <p-tabs value="1">
+    <p-tablist>
+      <p-tab value="0"><i class="pi pi-file-pdf"></i> Agreement Document</p-tab>
+      <p-tab value="1"><i class="pi pi-shield"></i> Rules &amp; Regulations</p-tab>
+    </p-tablist>
+    <p-tabpanels>
+      <p-tabpanel value="0">
+        @if (safeDocumentUrl) {
+          <div class="doc-frame-wrap">
+            <iframe [src]="safeDocumentUrl" class="doc-frame" title="Agreement document"></iframe>
+          </div>
+          <a [href]="documentUrl! | safeUrl" target="_blank" rel="noopener" class="open-new-tab">
+            <i class="pi pi-external-link"></i> Open in new tab
+          </a>
+        } @else {
+          <div class="doc-missing">
+            <i class="pi pi-file"></i>
+            <span>No agreement document available</span>
+          </div>
+        }
+      </p-tabpanel>
+      <p-tabpanel value="1">
+        <div class="rules-intro">
+          <i class="pi pi-info-circle"></i>
+          <span>All lease agreements are subject to the following property rules and regulations.</span>
+        </div>
+        <div class="rules-list">
+          @for (section of ruleSections; track section.title) {
+            <div class="rule-section">
+              <h4 class="rule-section-title">{{ section.title }}</h4>
+              <ul>
+                @for (rule of section.rules; track rule) {
+                  <li>{{ rule }}</li>
+                }
+              </ul>
+            </div>
+          }
+        </div>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+
+  <ng-template #footer>
+    <p-button label="Close" severity="secondary" [text]="true" (onClick)="close()" />
+  </ng-template>
+</p-dialog>

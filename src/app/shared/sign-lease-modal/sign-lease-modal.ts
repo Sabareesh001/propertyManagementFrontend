@@ -6,11 +6,13 @@ import { DividerModule } from 'primeng/divider';
 import { MessageModule } from 'primeng/message';
 import { LeaseService, LeaseResponse } from '../../core/services/lease.service';
 import { extractApiError } from '../../core/api.config';
+import { AgreementDocumentModalComponent } from '../agreement-document-modal/agreement-document-modal';
+import { SafeUrlPipe } from '../pipes/safe-url.pipe';
 
 @Component({
   selector: 'app-sign-lease-modal',
   standalone: true,
-  imports: [CommonModule, DialogModule, ButtonModule, DividerModule, MessageModule],
+  imports: [CommonModule, DialogModule, ButtonModule, DividerModule, MessageModule, AgreementDocumentModalComponent, SafeUrlPipe],
   templateUrl: './sign-lease-modal.html',
   styleUrl: './sign-lease-modal.css',
 })
@@ -28,6 +30,7 @@ export class SignLeaseModalComponent implements OnChanges {
   uploading = signal(false);
   errorMessage = signal<string | null>(null);
   success = signal(false);
+  agreementViewerVisible = signal(false);
 
   ngOnChanges(): void {
     if (this.visible && this.lease) {
@@ -37,6 +40,10 @@ export class SignLeaseModalComponent implements OnChanges {
       this.submitting.set(false);
       this.uploading.set(false);
     }
+  }
+
+  openAgreementViewer(): void {
+    this.agreementViewerVisible.set(true);
   }
 
   onDocumentSelected(event: Event): void {

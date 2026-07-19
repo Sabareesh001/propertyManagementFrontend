@@ -13,6 +13,14 @@
   color: var(--p-text-color);
 }
 
+.leases-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -119,6 +127,14 @@
 
 .doc-link:hover {
   text-decoration: underline;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 .doc-missing {

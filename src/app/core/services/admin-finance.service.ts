@@ -71,6 +71,41 @@ export interface AdminFinanceSummary {
   refundedCount: number;
 }
 
+/** Server-side aggregated figures across all charges matching the same filter as the list. */
+export interface AdminChargesSummary {
+  count: number;
+  totalCharged: number;
+  totalCollected: number;
+  totalOutstanding: number;
+}
+
+/** Filters for GET /api/admin/charges (+ /charges-summary). Combined with AND semantics, applied server-side. */
+export interface AdminChargeFilters {
+  search?: string | null;
+  chargeTypeId?: number | null;
+  statusId?: number | null;
+  minAmount?: number | null;
+  maxAmount?: number | null;
+  onlyOutstanding?: boolean | null;
+  from?: string | null;
+  to?: string | null;
+  sortField?: string | null;
+  sortOrder?: number | null; // 1 asc, -1 desc
+}
+
+/** Filters for GET /api/admin/payments (+ /finance-summary). Combined with AND semantics, applied server-side. */
+export interface AdminPaymentFilters {
+  search?: string | null;
+  statusId?: number | null;
+  paymentMethod?: string | null;
+  minAmount?: number | null;
+  maxAmount?: number | null;
+  from?: string | null;
+  to?: string | null;
+  sortField?: string | null;
+  sortOrder?: number | null; // 1 asc, -1 desc
+}
+
 /** Payment statuses (1=Pending 2=Completed 3=Failed 4=Refunded). */
 export const PAYMENT_STATUSES: ReadonlyArray<{ id: number; name: string }> = [
   { id: 1, name: 'Pending' },
@@ -84,44 +119,76 @@ export class AdminFinanceService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${API_BASE_URL}/api/admin`;
 
-  /** GET /api/admin/payments?from=&to= — every payment across the platform (Admin only), paginated. */
+  /** Append the payment filter params shared by the list and summary endpoints (only when set). */
+  private paymentParams(f: AdminPaymentFilters, params: HttpParams): HttpParams {
+    if (f.search) params = params.set('search', f.search);
+    if (f.statusId != null) params = params.set('statusId', f.statusId);
+    if (f.paymentMethod) params = params.set('paymentMethod', f.paymentMethod);
+    if (f.minAmount != null) params = params.set('minAmount', f.minAmount);
+    if (f.maxAmount != null) params = params.set('maxAmount', f.maxAmount);
+    if (f.from) params = params.set('from', f.from);
+    if (f.to) params = params.set('to', f.to);
+    return params;
+  }
+
+  /** Append the charge filter params shared by the list and summary endpoints (only when set). */
+  private chargeParams(f: AdminChargeFilters, params: HttpParams): HttpParams {
+    if (f.search) params = params.set('search', f.search);
+    if (f.chargeTypeId != null) params = params.set('chargeTypeId', f.chargeTypeId);
+    if (f.statusId != null) params = params.set('statusId', f.statusId);
+    if (f.minAmount != null) params = params.set('minAmount', f.minAmount);
+    if (f.maxAmount != null) params = params.set('maxAmount', f.maxAmount);
+    if (f.onlyOutstanding) params = params.set('onlyOutstanding', true);
+    if (f.from) params = params.set('from', f.from);
+    if (f.to) params = params.set('to', f.to);
+    return params;
+  }
+
+  /** GET /api/admin/payments — every payment across the platform (Admin only), server-filtered & paginated. */
   getPayments(
-    from?: string | null,
-    to?: string | null,
+    filters: AdminPaymentFilters = {},
     pageNumber = DEFAULT_PAGE_NUMBER,
     pageSize = DEFAULT_PAGE_SIZE,
   ): Observable<PagedResult<AdminPayment>> {
     let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
-    if (from) params = params.set('from', from);
-    if (to) params = params.set('to', to);
+    params = this.paymentParams(filters, params);
+    if (filters.sortField) params = params.set('sortField', filters.sortField);
+    if (filters.sortOrder != null) params = params.set('sortOrder', filters.sortOrder);
     return this.http.get<PagedResult<AdminPayment>>(`${this.baseUrl}/payments`, {
       ...WITH_CREDENTIALS,
       params,
     });
   }
 
-  /** GET /api/admin/charges?from=&to= — every charge across the platform (Admin only), paginated. */
+  /** GET /api/admin/charges — every charge across the platform (Admin only), server-filtered & paginated. */
   getCharges(
-    from?: string | null,
-    to?: string | null,
+    filters: AdminChargeFilters = {},
     pageNumber = DEFAULT_PAGE_NUMBER,
     pageSize = DEFAULT_PAGE_SIZE,
   ): Observable<PagedResult<AdminCharge>> {
     let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
-    if (from) params = params.set('from', from);
-    if (to) params = params.set('to', to);
+    params = this.chargeParams(filters, params);
+    if (filters.sortField) params = params.set('sortField', filters.sortField);
+    if (filters.sortOrder != null) params = params.set('sortOrder', filters.sortOrder);
     return this.http.get<PagedResult<AdminCharge>>(`${this.baseUrl}/charges`, {
       ...WITH_CREDENTIALS,
       params,
     });
   }
 
-  /** GET /api/admin/finance-summary?from=&to= — server-side aggregated KPIs (Admin only), not paginated. */
-  getFinanceSummary(from?: string | null, to?: string | null): Observable<AdminFinanceSummary> {
-    let params = new HttpParams();
-    if (from) params = params.set('from', from);
-    if (to) params = params.set('to', to);
+  /** GET /api/admin/finance-summary — payment KPIs over the same filter (Admin only), not paginated. */
+  getFinanceSummary(filters: AdminPaymentFilters = {}): Observable<AdminFinanceSummary> {
+    const params = this.paymentParams(filters, new HttpParams());
     return this.http.get<AdminFinanceSummary>(`${this.baseUrl}/finance-summary`, {
+      ...WITH_CREDENTIALS,
+      params,
+    });
+  }
+
+  /** GET /api/admin/charges-summary — charge KPIs over the same filter (Admin only), not paginated. */
+  getChargesSummary(filters: AdminChargeFilters = {}): Observable<AdminChargesSummary> {
+    const params = this.chargeParams(filters, new HttpParams());
+    return this.http.get<AdminChargesSummary>(`${this.baseUrl}/charges-summary`, {
       ...WITH_CREDENTIALS,
       params,
     });

@@ -51,11 +51,21 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   register(data: RegisterRequest): Observable<UserResponse> {
-    return this.http.post<UserResponse>(`${this.baseUrl}/register`, data);
+    return this.http.post<UserResponse>(`${this.baseUrl}/register`, data, WITH_CREDENTIALS);
   }
 
   login(data: LoginRequest): Observable<UserResponse> {
     return this.http.post<UserResponse>(`${this.baseUrl}/login`, data, WITH_CREDENTIALS);
+  }
+
+  /** POST /api/user/refresh-token — rotates the refresh_token cookie and re-issues jwt_token. */
+  refreshToken(): Observable<UserResponse> {
+    return this.http.post<UserResponse>(`${this.baseUrl}/refresh-token`, {}, WITH_CREDENTIALS);
+  }
+
+  /** POST /api/user/revoke-token — invalidates the refresh token server-side and clears both cookies. */
+  revokeToken(): Observable<unknown> {
+    return this.http.post(`${this.baseUrl}/revoke-token`, {}, WITH_CREDENTIALS);
   }
 
   /** GET /api/user/{id} — fetch a user's public profile by id. */
@@ -70,11 +80,21 @@ export class AuthService {
 
   /** GET /api/user/verify-email/{hash} — confirms the email address tied to the verification hash. */
   verifyEmail(hash: string): Observable<VerifyEmailResponse> {
-    return this.http.get<VerifyEmailResponse>(`${this.baseUrl}/verify-email/${hash}`);
+    return this.http.get<VerifyEmailResponse>(`${this.baseUrl}/verify-email/${hash}`, WITH_CREDENTIALS);
   }
 
   /** POST /api/user/resend-verification — issues a new verification hash and re-sends the email. */
   resendVerificationEmail(email: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.baseUrl}/resend-verification`, { email });
+    return this.http.post<{ message: string }>(`${this.baseUrl}/resend-verification`, { email }, WITH_CREDENTIALS);
+  }
+
+  /** POST /api/user/forgot-password — sends a password reset link if the email is registered. */
+  forgotPassword(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/forgot-password`, { email }, WITH_CREDENTIALS);
+  }
+
+  /** POST /api/user/reset-password — sets a new password using the emailed reset token. */
+  resetPassword(data: { token: string; newPassword: string }): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/reset-password`, data, WITH_CREDENTIALS);
   }
 }

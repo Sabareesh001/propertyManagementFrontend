@@ -62,9 +62,13 @@ export class AuthEffects {
     () =>
       this.actions$.pipe(
         ofType(AuthActions.logout),
+        switchMap(() =>
+          this.auth.revokeToken().pipe(
+            catchError(() => of(null)),
+          ),
+        ),
         tap(() => {
           localStorage.removeItem('auth_user');
-          document.cookie = 'jwt_token=; Max-Age=0; path=/';
           this.notifications.disconnect();
           this.router.navigate(['/auth/login']);
         }),

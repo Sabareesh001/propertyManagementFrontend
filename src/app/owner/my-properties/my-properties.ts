@@ -9,8 +9,8 @@ import { TagModule } from 'primeng/tag';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageService, ConfirmationService } from 'primeng/api';
-import { PropertyCardComponent, Property } from '../../shared/property-card/property-card';
-import { PropertyService, PropertyDetail } from '../../core/services/property.service';
+import { PropertyCardComponent } from '../../shared/property-card/property-card';
+import { Property, PropertyService, PropertyDetail } from '../../core/services/property.service';
 import { extractApiError } from '../../core/api.config';
 
 interface FilterOption {

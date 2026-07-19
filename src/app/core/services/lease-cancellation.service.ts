@@ -66,6 +66,10 @@ export interface LeaseCancellationResponse {
   signedAgreementDocumentUrl: string | null;
   createdAt: string | null;
   updatedAt: string | null;
+  /** Admin verification remarks (e.g. rejection reason). Requires a backend change — see instructions relayed alongside this change. */
+  remarks?: string | null;
+  /** UUID of the admin who last verified/rejected this cancellation. Requires a backend change. */
+  verifiedBy?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -125,13 +129,21 @@ export class LeaseCancellationService {
     return this.http.get<LeaseCancellationResponse>(`${this.baseUrl}/${id}`, WITH_CREDENTIALS);
   }
 
+  /**
+   * `history=false` (default): cancellation templates awaiting review, oldest first.
+   * `history=true`: templates already decided (past Submitted, or Rejected), newest first.
+   * NOTE: the `history` param requires a backend change — see instructions relayed alongside this change.
+   */
   getPendingTemplates(
     pageNumber = DEFAULT_PAGE_NUMBER,
     pageSize = DEFAULT_PAGE_SIZE,
+    history = false,
   ): Observable<PagedResult<LeaseCancellationResponse>> {
+    let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
+    if (history) params = params.set('history', true);
     return this.http.get<PagedResult<LeaseCancellationResponse>>(`${this.baseUrl}/pending-templates`, {
       ...WITH_CREDENTIALS,
-      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+      params,
     });
   }
 
@@ -151,13 +163,21 @@ export class LeaseCancellationService {
     );
   }
 
+  /**
+   * `history=false` (default): signed cancellations awaiting final review, oldest first.
+   * `history=true`: signed cancellations already decided (Finalized, or Rejected), newest first.
+   * NOTE: the `history` param requires a backend change — see instructions relayed alongside this change.
+   */
   getPendingSigned(
     pageNumber = DEFAULT_PAGE_NUMBER,
     pageSize = DEFAULT_PAGE_SIZE,
+    history = false,
   ): Observable<PagedResult<LeaseCancellationResponse>> {
+    let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
+    if (history) params = params.set('history', true);
     return this.http.get<PagedResult<LeaseCancellationResponse>>(`${this.baseUrl}/pending-signed`, {
       ...WITH_CREDENTIALS,
-      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+      params,
     });
   }
 

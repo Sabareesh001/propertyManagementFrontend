@@ -2,7 +2,7 @@
 
 > This document is the single source of truth for UI/frontend designers building against the Property Management API.
 > It covers every endpoint, request/response schema, validation rule, status enum, and business flow.
-> Base URL: `http://localhost:5000` (dev). Auth: JWT Bearer token or `jwt_token` HttpOnly cookie set on login.
+> Base URL: `http://localhost:5000` (dev). Auth: JWT Bearer token or `jwt_token` HttpOnly cookie set on login (1hr expiry), refreshed via the `refresh_token` HttpOnly cookie (7 day expiry, see §2).
 
 ---
 
@@ -95,9 +95,11 @@ Auth: None
   "password": "StrongPass1!"
 }
 ```
-**Response 200:** `UserResponseDto` + sets `jwt_token` HttpOnly cookie (expires 1 hour)
+**Response 200:** `UserResponseDto` + sets two HttpOnly cookies:
+- `jwt_token` — access token, expires in **1 hour**
+- `refresh_token` — expires in **7 days**, scoped to path `/api/user` (browser only sends it to `/api/user/*` requests)
 
-> The JWT is also returned in the `Authorization: Bearer <token>` header pattern for non-cookie clients.
+> The JWT is also returned in the `Authorization: Bearer <token>` header pattern for non-cookie clients. The refresh token is cookie-only and never returned in the response body.
 
 **Email verification gate:** Login fails with **403** if the account's email is not yet verified:
 ```json
@@ -108,6 +110,38 @@ Auth: None
 }
 ```
 > **UI guidance:** On login, check `error.errorCode === "EMAIL_NOT_VERIFIED"` and show a "Resend verification email" link that calls `POST /api/user/resend-verification`.
+
+---
+
+### Refresh Token
+```
+POST /api/user/refresh-token
+Auth: None (relies on the `refresh_token` cookie)
+```
+No request body. Reads the `refresh_token` HttpOnly cookie, validates it, and — if valid — issues a new `jwt_token` (1 hour) and a **new, rotated** `refresh_token` (7 days), both re-set as HttpOnly cookies. The old refresh token is invalidated as part of rotation (single active refresh token per user).
+
+**Response 200:** `UserResponseDto`
+
+**Errors:**
+- 403: `refresh_token` cookie missing, unknown, or expired — treat as a full logout and redirect to login
+
+> **UI guidance:** Call this endpoint when an API request comes back 401/expired-token, then retry the original request once. Since `withCredentials`/`credentials: 'include'` must be set for the cookie to be sent, ensure the HTTP client is configured accordingly for all `/api/user/*` calls.
+
+---
+
+### Revoke Token (Logout)
+```
+POST /api/user/revoke-token
+Auth: None (relies on the `refresh_token` cookie)
+```
+No request body. Revokes the current refresh token server-side and clears both the `jwt_token` and `refresh_token` cookies.
+
+**Response 200:**
+```json
+{ "message": "Logged out successfully." }
+```
+
+> **UI guidance:** Call this on logout instead of just clearing local state — it invalidates the refresh token server-side so a stolen cookie can't be replayed later.
 
 ---
 
@@ -143,6 +177,58 @@ Auth: None
 ```json
 { "message": "If an account with that email exists and is not yet verified, a new verification link has been sent." }
 ```
+
+---
+
+### Forgot Password
+```
+POST /api/user/forgot-password
+Auth: None
+```
+**Request body:**
+```json
+{ "email": "user@example.com" }
+```
+
+**Response 200:** Always returns a generic success message regardless of whether the email is registered (avoids leaking registered emails):
+```json
+{ "message": "If an account with that email exists, a password reset link has been sent." }
+```
+
+If the account exists, an email is sent with a link to `{FrontendUrl}/auth/reset-password/{token}`. The token expires after **1 hour**.
+
+> **UI guidance:** Show this generic message unconditionally — do not tell the user whether the email was found.
+
+---
+
+### Reset Password
+```
+POST /api/user/reset-password
+Auth: None
+```
+`token` is the value from the reset link (`{FrontendUrl}/auth/reset-password/{token}`).
+
+**Request body:**
+```json
+{
+  "token": "the-token-from-the-reset-link",
+  "newPassword": "NewStrongPass1!"
+}
+```
+**Validation:**
+- `token`: required
+- `newPassword`: min 12 chars, must have uppercase, lowercase, digit, special char (same rules as registration password)
+
+**Response 200:**
+```json
+{ "message": "Password reset successfully." }
+```
+
+**Errors:**
+- 404: token is unknown/invalid
+- 400: token has expired (links expire 1 hour after request), or `newPassword` fails validation
+
+> **UI guidance:** The reset token is single-use — once consumed (or expired), the same link cannot be reused. Direct the user back to the "Forgot Password" flow to request a new one.
 
 ---
 
@@ -390,10 +476,16 @@ Auth: Owner
 
 ### Get All Properties (public)
 ```
-GET /api/property?pageNumber=&pageSize=
+GET /api/property?pageNumber=&pageSize=&sortField=&sortOrder=
 Auth: None
 ```
-Paginated (see §14), newest first. **Response 200:** `PagedResultDto<PropertyResponseDto>`
+Paginated (see §14), newest first by default. Sorting is applied server-side to the full filtered result set before pagination.
+
+| Param | Type | Values | Notes |
+|---|---|---|---|
+| `sortField` / `sortOrder` | string / int (`1`=asc, `-1`=desc) | Supported fields: `monthlyRent`, `upfrontPayment`, `securityDeposit`. Default: newest first. |
+
+**Response 200:** `PagedResultDto<PropertyResponseDto>`
 
 ---
 
@@ -594,12 +686,16 @@ Draft (1)  ──[tenant submits]──▶  Submitted (2)
     │                              ┌─────┴──────┐
     │                              ▼            ▼
     │                         Approved(3)   Rejected(4)
-    │
-    └──[tenant cancels]──▶  Cancelled(6)
-    │
-Submitted ──[tenant cancels]──▶  Cancelled(6)
+    │                              │
+    └──[tenant withdraws]──▶  Cancelled(6)  ◀──[tenant withdraws]──┘
+    │                              ▲
+Submitted ──[tenant withdraws]─────┘   (Approved: only while no active lease flow exists)
 ```
 Also: `Expired (5)` — set by system when proposal is not acted on.
+
+**Withdrawal (cancel) is allowed when the proposal is:**
+- `Draft (1)` or `Submitted (2)` — always
+- `Approved (3)` — **only while no active lease flow exists**: the owner has not yet created a lease, or the existing lease is terminal (`Rejected`/`Terminated`/`Expired`). Once a lease is in the active pipeline (Draft/Submitted/PendingSignature/TenantSigned/Active), withdrawal is blocked with `400`.
 
 ---
 
@@ -682,14 +778,37 @@ All five fields must be provided. Same validation rules as Create apply (`startD
 
 ---
 
-### Cancel Proposal (Tenant)
+### Withdraw / Cancel Proposal (Tenant)
 ```
 PUT /api/leaseproposal/{id}/cancel
 Auth: Tenant (must be proposal owner)
 ```
-Can cancel if status is Draft or Submitted.
+Withdraws the proposal, moving it to `Cancelled (6)`. Allowed when the proposal is:
+- `Draft (1)` or `Submitted (2)` — always
+- `Approved (3)` — only while **no active lease flow exists** (owner hasn't created a lease, or the lease is `Rejected`/`Terminated`/`Expired`)
 
 **Response 200:** `LeaseProposalResponseDto`
+
+**Response 400** — a lease is already in progress and the proposal can no longer be withdrawn:
+```json
+{ "message": "This proposal can no longer be withdrawn because a lease is already in progress." }
+```
+**Response 403** — the caller is not the tenant who created the proposal.
+
+**Frontend gating.** The proposal DTO does not indicate whether a lease exists, so decide button visibility from the lease you already load for the proposal; treat lease statuses `6 (Rejected)`, `7 (Terminated)`, `8 (Expired)` as terminal:
+
+```ts
+const TERMINAL_LEASE = [6, 7, 8];
+
+function canWithdraw(proposal, leaseForProposal /* may be undefined */): boolean {
+  const s = proposal.statusId;
+  if (s === 1 || s === 2) return true;                  // Draft / Submitted
+  if (s === 3) return !leaseForProposal || TERMINAL_LEASE.includes(leaseForProposal.statusId);
+  return false;                                          // Rejected/Expired/Cancelled/Terminated
+}
+```
+
+If the lease isn't handy in a given view, it's safe to show the button for `Approved` too and let the API be the source of truth — on `400`, show the message and reload so the button state corrects itself. Label the action **"Withdraw"** on Approved proposals and confirm before calling, since it prevents the owner from creating a lease from that proposal.
 
 ---
 
@@ -1683,25 +1802,48 @@ Uploads a PDF or image (max 10 MB) and returns a permanent URL to use as `attach
 
 Admin-only, platform-wide finance views that aggregate data across every lease — not scoped to a single owner or tenant.
 
+All list endpoints below apply **filtering, searching, and sorting server-side, before pagination** — so a search/filter reflects the entire matching set across the whole table, not just the loaded page. All filters combine with **AND** semantics; an omitted parameter is not filtered on. Debounce the `search` input client-side (one request per settled query, not per keystroke).
+
+The KPI/summary tiles must reflect the active filter, so they cannot be summed from a single page — call the dedicated summary endpoints with the **same** filter parameters as the list.
+
 ### Get All Payments (Admin only)
 ```
-GET /api/admin/payments?from=&to=&pageNumber=&pageSize=
+GET /api/admin/payments?search=&statusId=&paymentMethod=&minAmount=&maxAmount=&from=&to=&sortField=&sortOrder=&pageNumber=&pageSize=
 Auth: Admin
 ```
-Every payment across all leases, newest first, enriched with lease/property/owner/tenant context. `from`/`to` (`DateTime`) optionally filter on `createdAt`. Paginated (see §14).
+Every payment across all leases (newest first by default), enriched with lease/property/owner/tenant context. Paginated (see §14).
 
-**Response 200:** `PagedResultDto<AdminPaymentDto>`
+| Param | Type | Semantics |
+|-------|------|-----------|
+| `search` | string | Case-insensitive substring across: transaction ref, tenant name, tenant email, property title, owner name, payment id. |
+| `statusId` | int | Exact match (1=Pending 2=Completed 3=Failed 4=Refunded). |
+| `paymentMethod` | string | Exact match on payment method name. |
+| `minAmount` / `maxAmount` | decimal | Inclusive range on amount. |
+| `from` / `to` | DateTime | Inclusive range on **`paidAt`** (falls back to `createdAt` when the payment has not settled). |
+| `sortField` / `sortOrder` | string / int (`1`=asc, `-1`=desc) | Supported fields: `amount`, `platformFee`, `statusId`, `paidAt`. Default: newest first. |
+
+**Response 200:** `PagedResultDto<AdminPaymentDto>` — `totalCount` reflects the filtered total.
 
 ---
 
 ### Get All Charges (Admin only)
 ```
-GET /api/admin/charges?from=&to=&pageNumber=&pageSize=
+GET /api/admin/charges?search=&chargeTypeId=&statusId=&minAmount=&maxAmount=&onlyOutstanding=&from=&to=&sortField=&sortOrder=&pageNumber=&pageSize=
 Auth: Admin
 ```
-Every charge across all leases, newest first, enriched with lease/property/owner/tenant context. `from`/`to` optionally filter on `createdAt`. Paginated (see §14).
+Every charge across all leases (newest first by default), enriched with lease/property/owner/tenant context. Paginated (see §14).
 
-**Response 200:** `PagedResultDto<AdminChargeDto>`
+| Param | Type | Semantics |
+|-------|------|-----------|
+| `search` | string | Case-insensitive substring across: charge type name, description, property title, tenant name, tenant email, owner name, charge id. |
+| `chargeTypeId` | int | Exact match on charge type. |
+| `statusId` | int | Exact match (1=Pending 2=PartiallyPaid 3=Paid 4=Overdue 5=Cancelled). |
+| `minAmount` / `maxAmount` | decimal | Inclusive range on amount. |
+| `onlyOutstanding` | bool | When `true`, only charges with `balanceDue > 0`. |
+| `from` / `to` | DateTime | Inclusive range on **`dueDate`**. |
+| `sortField` / `sortOrder` | string / int (`1`=asc, `-1`=desc) | Supported fields: `chargeTypeName`, `amount`, `balanceDue`, `statusId`, `dueDate`. Default: newest first. |
+
+**Response 200:** `PagedResultDto<AdminChargeDto>` — `totalCount` reflects the filtered total.
 
 ---
 
@@ -1710,9 +1852,39 @@ Every charge across all leases, newest first, enriched with lease/property/owner
 GET /api/admin/finance-summary?from=&to=
 Auth: Admin
 ```
-Server-side aggregated figures across **all** payments matching the optional `from`/`to` filter — **not paginated** (it's a single object, not a list).
+Server-side aggregated figures across **all** payments matching the optional `from`/`to` filter (on `createdAt`) — **not paginated** (it's a single object, not a list). Unchanged legacy endpoint; for filter-aware transaction tiles use `GET /api/admin/payments/summary` below.
 
 **Response 200:** `AdminFinanceSummaryDto`
+
+---
+
+### Get Charges Summary (Admin only)
+```
+GET /api/admin/charges/summary?search=&chargeTypeId=&statusId=&minAmount=&maxAmount=&onlyOutstanding=&from=&to=
+Auth: Admin
+```
+Filter-aware aggregates for the charges KPI tiles. Accepts the **same** filter/search params as `GET /api/admin/charges` (pagination and sort params are ignored). Aggregates the whole filtered set, not one page. **Not paginated.**
+
+**Response 200:** `AdminChargeSummaryDto`
+```typescript
+{
+  count: number;             // charges matching the filter
+  totalCharged: number;      // Σ amount
+  totalCollected: number;    // Σ amount applied by completed payments
+  totalOutstanding: number;  // Σ balanceDue over non-cancelled charges
+}
+```
+
+---
+
+### Get Payments Summary (Admin only)
+```
+GET /api/admin/payments/summary?search=&statusId=&paymentMethod=&minAmount=&maxAmount=&from=&to=
+Auth: Admin
+```
+Filter-aware aggregates for the transactions KPI tiles. Accepts the **same** filter/search params as `GET /api/admin/payments` (pagination and sort params are ignored). Aggregates the whole filtered set, not one page. **Not paginated.**
+
+**Response 200:** `AdminFinanceSummaryDto` — over the filtered set: `paymentCount` (filtered count), `grossVolume` (Σ amount of completed), `companyRevenue` (Σ platform fee of completed), plus `pendingAmount` and the per-status counts.
 
 ---
 
@@ -1787,7 +1959,7 @@ All of the following accept `?pageNumber=&pageSize=` and return `PagedResultDto<
 
 `GET /api/user`, `GET /api/userverification/pending`, `GET /api/property`, `GET /api/property/my`, `GET /api/property/pending-verification`, `GET /api/property/{id}/documents`, `GET /api/leaseproposal/my-requests`, `GET /api/leaseproposal/received-requests`, `GET /api/lease/pending-templates`, `GET /api/lease/pending-signed`, `GET /api/lease/my-leases`, `GET /api/lease/{id}/documents`, `GET /api/lease/{leaseId}/charges`, `GET /api/lease/{leaseId}/payments`, `GET /api/leasecancellation/requests/my`, `GET /api/leasecancellation/requests/received`, `GET /api/leasecancellation/pending-templates`, `GET /api/leasecancellation/pending-signed`, `GET /api/leasecancellation/{id}/documents`, `GET /api/bankaccount`, `GET /api/complaint/my`, `GET /api/complaint/received`, `GET /api/complaint`, `GET /api/admin/payments`, `GET /api/admin/charges`, `GET /api/notification`.
 
-**Not paginated** (single objects, or naturally bounded thread endpoints): `GET /api/property/{id}`, `GET /api/lease/{id}`, `GET /api/leasecancellation/{id}`, `GET /api/complaint/{id}` (full comment thread), `GET /api/admin/finance-summary` (aggregate).
+**Not paginated** (single objects, or naturally bounded thread endpoints): `GET /api/property/{id}`, `GET /api/lease/{id}`, `GET /api/leasecancellation/{id}`, `GET /api/complaint/{id}` (full comment thread), `GET /api/admin/finance-summary`, `GET /api/admin/charges/summary`, `GET /api/admin/payments/summary` (aggregates).
 
 ---
 
@@ -1801,6 +1973,8 @@ All of the following accept `?pageNumber=&pageSize=` and return `PagedResultDto<
 | POST | `/api/user/login` | None | Login, set JWT cookie |
 | GET | `/api/user/verify-email/{hash}` | None | Confirm email address |
 | POST | `/api/user/resend-verification` | None | Resend verification email |
+| POST | `/api/user/forgot-password` | None | Request password reset link |
+| POST | `/api/user/reset-password` | None | Reset password with token |
 | GET 📄 | `/api/user` | Required | Get all users |
 | GET | `/api/user/{id}` | None | Get user by ID |
 | PUT | `/api/user/{id}` | None | Update user |
@@ -1884,11 +2058,14 @@ All of the following accept `?pageNumber=&pageSize=` and return `PagedResultDto<
 | PUT | `/api/complaint/{id}/status` | Required | Transition complaint status |
 | POST | `/api/complaint/{id}/comments` | Required | Add comment to thread |
 | POST | `/api/complaint/upload-document` | Required | Upload complaint attachment (multipart) |
-| GET 📄 | `/api/admin/payments` | Admin | Platform-wide payments |
-| GET 📄 | `/api/admin/charges` | Admin | Platform-wide charges |
-| GET | `/api/admin/finance-summary` | Admin | Aggregated finance figures |
+| GET 📄 | `/api/admin/payments` | Admin | Platform-wide payments (filter/search/sort) |
+| GET 📄 | `/api/admin/charges` | Admin | Platform-wide charges (filter/search/sort) |
+| GET | `/api/admin/finance-summary` | Admin | Aggregated finance figures (from/to) |
+| GET | `/api/admin/charges/summary` | Admin | Filter-aware charges KPI aggregates |
+| GET | `/api/admin/payments/summary` | Admin | Filter-aware payments KPI aggregates |
 | GET 📄 | `/api/notification` | Required | My notifications |
 | PUT | `/api/notification/{id}/read` | Required | Mark notification as read |
+| POST | `/api/chatbot/ask` | Required | Ask the support chatbot a question |
 
 ---
 
@@ -2288,6 +2465,21 @@ Extends `ChargeResponseDto` (see above) with platform-wide context:
 }
 ```
 
+### ChatRequestDto
+```typescript
+{
+  question: string;   // required, max 2000 chars
+}
+```
+
+### ChatResponseDto
+```typescript
+{
+  answer: string;
+  sources: string[];   // knowledge-base excerpts used to ground the answer; empty if none found
+}
+```
+
 ---
 
 ## 17. Validation Rules Cheat Sheet
@@ -2325,6 +2517,7 @@ Extends `ChargeResponseDto` (see above) with platform-wide context:
 | Upload Image(s) | JPEG/PNG/GIF/WebP only, max 5 MB per file, `multipart/form-data` field name `files` (repeatable) |
 | Page Number | ≥ 1 (default 1) — see §14 |
 | Page Size | 1–100 (default 20) — see §14 |
+| Chatbot Question | Required, max 2000 chars |
 | Complaint Subject | 5–150 chars |
 | Complaint Description | 10–2000 chars |
 | Complaint Category ID | 1–8 |
@@ -2332,6 +2525,9 @@ Extends `ChargeResponseDto` (see above) with platform-wide context:
 | Complaint Status ID (transition) | 1–5; must be a valid transition from current status (see §11) |
 | Comment Message | 1–2000 chars |
 | Resend Verification Email | Required, valid email format |
+| Forgot Password Email | Required, valid email format |
+| Reset Password Token | Required (non-empty) |
+| New Password (reset) | Min 12 chars, uppercase, lowercase, digit, special char (same as registration) |
 
 ---
 
@@ -2493,6 +2689,7 @@ The `GlobalExceptionHandler` maps exceptions to HTTP status codes consistently:
 | `EmailNotVerifiedException` | 403         | Login blocked, unverified email — subclass of `UnauthorizedAccessException`, checked first (see §2) |
 | `StripeException` (invalid) | 400         | Invalid Stripe request              |
 | `StripeException` (other)   | 502         | Stripe downstream error             |
+| `ChatbotServiceException`   | 502         | Chatbot backend unreachable or returned an error — show a "support assistant is temporarily unavailable" message, not a generic error |
 
 **Machine-readable error codes:** Some 4xx responses include an `errorCode` extension on the standard ProblemDetails body so the frontend can branch without string-matching `detail`. Currently only `EMAIL_NOT_VERIFIED` (see §2) uses this — check `error.errorCode` before falling back to `error.detail` for display.
 
@@ -2552,6 +2749,27 @@ This section maps pages a frontend app would need to the API calls that power th
 - `POST /api/user/login`
 - Fields: email, password
 - On success: store user in context, redirect to role-appropriate dashboard
+- Include a "Forgot password?" link below the password field → routes to Forgot Password Page
+
+#### Forgot Password Page
+- Route: `/auth/forgot-password`
+- `POST /api/user/forgot-password`
+- Fields: email
+- Submit button: "Send reset link"
+- On submit (regardless of response content — the API always returns the same generic message to avoid leaking which emails are registered): show a confirmation state, e.g. "If an account with that email exists, we've sent a password reset link." Do **not** branch UI behavior on whether the account exists.
+- Provide a "Back to login" link
+- No loading-state ambiguity needed beyond a spinner on submit — there's only one success path from the UI's perspective
+
+#### Reset Password Page
+- Route: `/auth/reset-password/:token` — this is exactly the link emailed to the user (`{FrontendUrl}/auth/reset-password/{token}`), so read `token` from the route param, not from user input
+- `POST /api/user/reset-password` with `{ token, newPassword }`
+- Fields: new password, confirm password (client-side check that they match before submitting)
+- Apply the same password strength rules/inline validation as Register (min 12 chars, upper/lower/digit/special char — see §17)
+- On success (200): show a success message and redirect to Login (do not auto-login — the user must sign in with the new password)
+- On error:
+  - 404 (invalid/unknown token) or 400 with an expiry message → show "This reset link is invalid or has expired." with a link back to the Forgot Password Page to request a new one
+  - 400 from validation (weak password) → show inline field error, let the user retry with the same token
+- **Do not** let the user submit the form without a token in the URL — if `:token` is missing, redirect straight to the Forgot Password Page
 
 ---
 
@@ -2738,10 +2956,10 @@ This section maps pages a frontend app would need to the API calls that power th
 - Click through to complaint detail (same view as owner/tenant, with full comment thread)
 
 #### Finance Dashboard (Admin)
-- `GET /api/admin/finance-summary?from=&to=` — headline stat tiles (company revenue, gross volume, pending amount, payment counts)
-- `GET /api/admin/payments?from=&to=` (paginated) — full payment ledger table with lease/property/owner/tenant columns
-- `GET /api/admin/charges?from=&to=` (paginated) — full charge ledger table
-- Date range picker drives `from`/`to` on all three calls
+- `GET /api/admin/finance-summary?from=&to=` — legacy headline stat tiles (company revenue, gross volume, pending amount, payment counts) over a `createdAt` date range
+- **Charges tab:** `GET /api/admin/charges` (paginated ledger table) + `GET /api/admin/charges/summary` (KPI tiles) — send the **same** `search`/`chargeTypeId`/`statusId`/`minAmount`/`maxAmount`/`onlyOutstanding`/`from`/`to` (on `dueDate`)/`sortField`/`sortOrder` to both so the tiles match the filtered table
+- **Transactions tab:** `GET /api/admin/payments` (paginated ledger table) + `GET /api/admin/payments/summary` (KPI tiles) — send the same `search`/`statusId`/`paymentMethod`/`minAmount`/`maxAmount`/`from`/`to` (on `paidAt`)/`sortField`/`sortOrder` to both
+- All filtering/searching/sorting is server-side (see §12) — do **not** filter the loaded page client-side, or off-page matches are missed. Debounce the search box.
 
 ---
 
@@ -2771,6 +2989,19 @@ This section maps pages a frontend app would need to the API calls that power th
 
 ---
 
+### Support Chatbot
+
+- A floating chat widget, available on every authenticated page (any role — Tenant/Owner/Admin), not tied to a specific dashboard.
+- On send: `POST /api/chatbot/ask` with `{ question }`; render `answer` as the bot's reply. Sanitize/render as plain text or basic Markdown — the backend may return Markdown-formatted answers (headings, numbered lists, bold).
+- `sources` is an array of knowledge-base excerpts used to ground the answer; treat as optional/debug-level detail (e.g. a collapsible "Sources" disclosure) rather than primary UI — most users won't need it, and it's empty when nothing relevant was found.
+- Loading state: disable the input and show a typing/spinner indicator while awaiting the response — answers can take a few seconds since they call an LLM.
+- Empty-result case: when nothing relevant is found in the knowledge base, the backend already returns a graceful fallback answer directing the user to contact support with `sources: []` — no special client-side handling needed beyond rendering it like any other answer.
+- Error handling: on a 502 (`ChatbotServiceException`, see §19), show a friendly "Support assistant is temporarily unavailable, please try again shortly" message rather than a raw error, and re-enable the input so the user can retry.
+- Requires the user to be logged in (`[Authorize]`) — hide/disable the widget entry point for logged-out visitors, or route them to login first.
+- No conversation history is persisted server-side; each request is stateless (one question → one answer), so if you want a scrollback/history UI, keep it client-side only (e.g. component state), and there's no need to send prior turns back to the API.
+
+---
+
 ### Shared Components Needed
 
 | Component | Data Source | Notes |
@@ -2786,6 +3017,7 @@ This section maps pages a frontend app would need to the API calls that power th
 | Pagination Control | `pageNumber`/`totalPages` from any `PagedResultDto<T>` | Reusable across every list page (see §14) |
 | Complaint Comment Thread | `ComplaintResponseDto.comments[]` | Author name + role badge per comment |
 | Notification Bell | `NotificationResponseDto` via REST + SignalR | Unread count from `isRead === false` |
+| Support Chatbot Widget | `ChatResponseDto` via `POST /api/chatbot/ask` | Floating widget on all authenticated pages, stateless per-question |
 
 ---
 

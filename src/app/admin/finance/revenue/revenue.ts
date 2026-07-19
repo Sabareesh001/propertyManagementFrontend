@@ -199,8 +199,8 @@ export class RevenueComponent implements OnInit {
     this.error.set(false);
     forkJoin({
       // Aggregates are computed client-side over the loaded set, so pull a large page (backend caps at 100).
-      payments: this.finance.getPayments(null, null, 1, 100).pipe(map((res) => res.items)),
-      charges: this.finance.getCharges(null, null, 1, 100).pipe(map((res) => res.items)),
+      payments: this.finance.getPayments({}, 1, 100).pipe(map((res) => res.items)),
+      charges: this.finance.getCharges({}, 1, 100).pipe(map((res) => res.items)),
     }).subscribe({
       next: ({ payments, charges }) => {
         this.payments.set(payments ?? []);

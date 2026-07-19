@@ -39,10 +39,33 @@ export interface NotificationDto {
   createdAt: string;
 }
 
-/** Route prefix to deep-link into when a notification is clicked. Only entity types with a matching detail route are listed. */
-const ROUTE_BY_ENTITY_TYPE: Record<string, string> = {
-  Lease: '/leases',
-  LeaseCancellation: '/cancellations',
+/**
+ * Deep-link destination per NotificationType, keyed to this app's actual routes.
+ * - `list` routes ignore relatedEntityId (no detail page exists, e.g. proposal inbox/admin queues).
+ * - `detail` routes append relatedEntityId to the given prefix; falls back to the list page if the id is missing.
+ */
+type NotificationRoute = { kind: 'list'; path: string } | { kind: 'detail'; prefix: string };
+
+const ROUTE_BY_NOTIFICATION_TYPE: Record<NotificationType, NotificationRoute> = {
+  [NotificationType.ProposalSubmitted]: { kind: 'list', path: '/owner/received-requests' },
+  [NotificationType.ProposalApproved]: { kind: 'list', path: '/my-requests' },
+  [NotificationType.ProposalRejected]: { kind: 'list', path: '/my-requests' },
+  [NotificationType.LeaseSubmittedForApproval]: { kind: 'list', path: '/admin/verifications/lease' },
+  [NotificationType.LeaseTemplateApproved]: { kind: 'detail', prefix: '/leases' },
+  [NotificationType.LeaseTemplateRejected]: { kind: 'detail', prefix: '/leases' },
+  [NotificationType.LeaseSignedSubmitted]: { kind: 'list', path: '/admin/verifications/signed-lease' },
+  [NotificationType.LeaseSignedApproved]: { kind: 'detail', prefix: '/leases' },
+  [NotificationType.LeaseSignedRejected]: { kind: 'detail', prefix: '/leases' },
+  [NotificationType.CancellationRequestSubmitted]: { kind: 'list', path: '/owner/cancellations/requests' },
+  [NotificationType.CancellationRequestAccepted]: { kind: 'detail', prefix: '/cancellations' },
+  [NotificationType.CancellationRequestRejected]: { kind: 'detail', prefix: '/cancellations' },
+  [NotificationType.LeaseCancellationSubmittedForApproval]: { kind: 'list', path: '/admin/verifications/cancellation-template' },
+  [NotificationType.LeaseCancellationTemplateApproved]: { kind: 'detail', prefix: '/cancellations' },
+  [NotificationType.LeaseCancellationTemplateRejected]: { kind: 'detail', prefix: '/cancellations' },
+  [NotificationType.LeaseCancellationSignedSubmitted]: { kind: 'list', path: '/admin/verifications/cancellation-signed' },
+  [NotificationType.LeaseCancellationFinalized]: { kind: 'detail', prefix: '/cancellations' },
+  [NotificationType.LeaseCancellationRejected]: { kind: 'detail', prefix: '/cancellations' },
+  [NotificationType.LeaseExpired]: { kind: 'detail', prefix: '/leases' },
 };
 
 @Injectable({ providedIn: 'root' })
@@ -73,9 +96,10 @@ export class NotificationService {
   }
 
   routeForNotification(n: NotificationDto): string | null {
-    if (!n.relatedEntityType || !n.relatedEntityId) return null;
-    const prefix = ROUTE_BY_ENTITY_TYPE[n.relatedEntityType];
-    return prefix ? `${prefix}/${n.relatedEntityId}` : null;
+    const route = ROUTE_BY_NOTIFICATION_TYPE[n.typeId];
+    if (!route) return null;
+    if (route.kind === 'list') return route.path;
+    return n.relatedEntityId ? `${route.prefix}/${n.relatedEntityId}` : route.prefix;
   }
 
   connect(): void {

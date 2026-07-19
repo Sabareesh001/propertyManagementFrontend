@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
@@ -11,11 +11,15 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
+import { MessageModule } from 'primeng/message';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { FormsModule } from '@angular/forms';
-import { MessageService } from 'primeng/api';
+import { MessageService, ConfirmationService } from 'primeng/api';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { LeaseService, LeaseResponse } from '../../core/services/lease.service';
+import { extractApiError } from '../../core/api.config';
 import {
   ChargeService,
   ChargeResponse,
@@ -24,6 +28,8 @@ import {
 import { selectCurrentUser } from '../../store/auth/auth.selectors';
 import { AddChargeModalComponent } from '../../shared/add-charge-modal/add-charge-modal';
 import { PayChargesModalComponent } from '../../shared/pay-charges-modal/pay-charges-modal';
+import { AgreementDocumentModalComponent } from '../../shared/agreement-document-modal/agreement-document-modal';
+import { SafeUrlPipe } from '../../shared/pipes/safe-url.pipe';
 
 type ChargeFilter = 'all' | 'outstanding' | 'paid' | 'overdue';
 
@@ -42,10 +48,15 @@ type ChargeFilter = 'all' | 'outstanding' | 'paid' | 'overdue';
     SelectButtonModule,
     TooltipModule,
     SkeletonModule,
+    MessageModule,
+    InputNumberModule,
+    ConfirmDialogModule,
     AddChargeModalComponent,
     PayChargesModalComponent,
+    AgreementDocumentModalComponent,
+    SafeUrlPipe,
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './lease-detail.html',
   styleUrl: './lease-detail.css',
 })
@@ -54,7 +65,9 @@ export class LeaseDetailComponent implements OnInit {
   private leaseService = inject(LeaseService);
   private chargeService = inject(ChargeService);
   private messageService = inject(MessageService);
+  private confirmationService = inject(ConfirmationService);
   private store = inject(Store);
+  private router = inject(Router);
 
   private currentUser = toSignal(this.store.select(selectCurrentUser), { initialValue: null });
 
@@ -67,6 +80,19 @@ export class LeaseDetailComponent implements OnInit {
 
   addChargeVisible = signal(false);
   payChargesVisible = signal(false);
+
+  uploadingDocument = signal(false);
+  documentError = signal<string | null>(null);
+  agreementViewerVisible = signal(false);
+
+  editingFinancials = signal(false);
+  savingFinancials = signal(false);
+  financialsError = signal<string | null>(null);
+  editUpfrontPayment: number | null = null;
+  editSecurityDeposit: number | null = null;
+
+  deleting = signal(false);
+  submitting = signal(false);
 
   chargeFilter = signal<ChargeFilter>('all');
   chargeFilterOptions: Array<{ label: string; value: ChargeFilter }> = [
@@ -86,6 +112,9 @@ export class LeaseDetailComponent implements OnInit {
   isOwner = computed(() => !this.isTenant());
 
   isActive = computed(() => this.lease()?.statusId === 5);
+
+  /** Owner can edit the lease (financials, agreement document) while it's still Draft. */
+  canEditLease = computed(() => this.isOwner() && this.lease()?.statusId === 1);
 
   totalCharged = computed(() =>
     this.activeCharges().reduce((sum, c) => sum + (c.amount ?? 0), 0),
@@ -124,6 +153,15 @@ export class LeaseDetailComponent implements OnInit {
 
   ngOnInit(): void {
     this.leaseId = this.route.snapshot.paramMap.get('id') ?? '';
+    if (this.route.snapshot.queryParamMap.get('justCreated') === '1') {
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Lease Created',
+        detail: 'This draft lease must be submitted for admin approval before it becomes active.',
+        life: 8000,
+      });
+      this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
+    }
     this.load();
   }
 
@@ -196,6 +234,144 @@ export class LeaseDetailComponent implements OnInit {
       detail: 'Your payment was processed by Stripe. Charges will update shortly.',
     });
     this.refreshChargesAndPayments();
+  }
+
+  openAgreementViewer(): void {
+    this.agreementViewerVisible.set(true);
+  }
+
+  onDocumentSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    this.uploadingDocument.set(true);
+    this.documentError.set(null);
+
+    this.leaseService.uploadDocument(file).subscribe({
+      next: ({ url }) => {
+        this.leaseService.update(this.leaseId, { agreementDocumentUrl: url }).subscribe({
+          next: (updated) => {
+            this.lease.set(updated);
+            this.uploadingDocument.set(false);
+            input.value = '';
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Document Attached',
+              detail: 'The agreement document has been attached to this lease.',
+            });
+          },
+          error: (err) => {
+            this.uploadingDocument.set(false);
+            this.documentError.set(extractApiError(err, 'Failed to attach the agreement document.'));
+            input.value = '';
+          },
+        });
+      },
+      error: (err) => {
+        this.uploadingDocument.set(false);
+        this.documentError.set(extractApiError(err, 'Failed to upload the agreement document.'));
+        input.value = '';
+      },
+    });
+  }
+
+  startEditFinancials(): void {
+    const lease = this.lease();
+    if (!lease) return;
+    this.editUpfrontPayment = lease.upfrontPayment;
+    this.editSecurityDeposit = lease.securityDeposit;
+    this.financialsError.set(null);
+    this.editingFinancials.set(true);
+  }
+
+  cancelEditFinancials(): void {
+    this.editingFinancials.set(false);
+    this.financialsError.set(null);
+  }
+
+  saveFinancials(): void {
+    this.savingFinancials.set(true);
+    this.financialsError.set(null);
+
+    this.leaseService.update(this.leaseId, {
+      upfrontPayment: this.editUpfrontPayment,
+      securityDeposit: this.editSecurityDeposit,
+    }).subscribe({
+      next: (updated) => {
+        this.lease.set(updated);
+        this.savingFinancials.set(false);
+        this.editingFinancials.set(false);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Lease Updated',
+          detail: 'The lease terms have been updated.',
+        });
+      },
+      error: (err) => {
+        this.savingFinancials.set(false);
+        this.financialsError.set(extractApiError(err, 'Failed to update the lease.'));
+      },
+    });
+  }
+
+  confirmSubmit(): void {
+    const lease = this.lease();
+    if (!lease?.agreementDocumentUrl) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Agreement Required',
+        detail: 'Attach an agreement document to this lease before submitting it for review.',
+      });
+      return;
+    }
+    this.confirmationService.confirm({
+      message: "Submit this lease for admin review? You won't be able to edit it afterwards.",
+      header: 'Submit Lease',
+      icon: 'pi pi-send',
+      acceptLabel: 'Submit',
+      accept: () => this.doSubmit(),
+    });
+  }
+
+  private doSubmit(): void {
+    this.submitting.set(true);
+    this.leaseService.submit(this.leaseId).subscribe({
+      next: (updated) => {
+        this.lease.set(updated);
+        this.submitting.set(false);
+        this.messageService.add({ severity: 'success', summary: 'Submitted', detail: 'The lease has been submitted for admin review.' });
+      },
+      error: () => {
+        this.submitting.set(false);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to submit the lease.' });
+      },
+    });
+  }
+
+  confirmDelete(): void {
+    this.confirmationService.confirm({
+      message: 'Delete this draft lease? This cannot be undone.',
+      header: 'Delete Lease',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      accept: () => this.deleteLease(),
+    });
+  }
+
+  private deleteLease(): void {
+    this.deleting.set(true);
+    this.leaseService.delete(this.leaseId).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Deleted', detail: 'The draft lease has been deleted.' });
+        this.router.navigate(['/leases']);
+      },
+      error: () => {
+        this.deleting.set(false);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete the lease.' });
+      },
+    });
   }
 
   chargeForId(chargeId: string): ChargeResponse | undefined {

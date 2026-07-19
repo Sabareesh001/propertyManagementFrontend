@@ -9,6 +9,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { ToastModule } from 'primeng/toast';
 import { MessageModule } from 'primeng/message';
 import { MessageService } from 'primeng/api';
@@ -16,7 +17,9 @@ import { DividerModule } from 'primeng/divider';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ChipModule } from 'primeng/chip';
 import { PropertyService, PropertyPayload, PropertyImagePayload, PropertyDocument, AddPropertyDocumentPayload } from '../../core/services/property.service';
+import { CityService } from '../../core/services/city.service';
 import { selectCurrentUser } from '../../store/auth/auth.selectors';
+import { SafeUrlPipe } from '../../shared/pipes/safe-url.pipe';
 
 interface CityOption {
   label: string;
@@ -49,11 +52,13 @@ interface PendingDeed {
     TextareaModule,
     InputNumberModule,
     SelectModule,
+    MultiSelectModule,
     ToastModule,
     MessageModule,
     DividerModule,
     ProgressSpinnerModule,
     ChipModule,
+    SafeUrlPipe,
   ],
   providers: [MessageService],
   templateUrl: './property-form.html',
@@ -63,6 +68,7 @@ export class PropertyFormComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private propertyService = inject(PropertyService);
+  private cityService = inject(CityService);
   private fb = inject(FormBuilder);
   private messageService = inject(MessageService);
   private store = inject(Store);
@@ -89,13 +95,23 @@ export class PropertyFormComponent implements OnInit {
   pendingDeedNumber = signal<string>('');
   deedNumberError = signal<string | null>(null);
 
-  cities: CityOption[] = [
-    { label: 'Bengaluru', value: 1 },
-    { label: 'Mumbai', value: 2 },
-    { label: 'Delhi', value: 3 },
-    { label: 'Chennai', value: 4 },
-    { label: 'Hyderabad', value: 5 },
-    { label: 'Pune', value: 6 },
+  cities = signal<CityOption[]>([]);
+
+  visitPreferenceOptions = [
+    { label: 'All Days', value: 'AllDays' },
+    { label: 'Weekdays (Mon-Fri)', value: 'Weekdays' },
+    { label: 'Weekends (Sat-Sun)', value: 'Weekends' },
+    { label: 'Specific Days', value: 'Specific' },
+  ];
+
+  dayOptions = [
+    { label: 'Monday', value: 'Monday' },
+    { label: 'Tuesday', value: 'Tuesday' },
+    { label: 'Wednesday', value: 'Wednesday' },
+    { label: 'Thursday', value: 'Thursday' },
+    { label: 'Friday', value: 'Friday' },
+    { label: 'Saturday', value: 'Saturday' },
+    { label: 'Sunday', value: 'Sunday' },
   ];
 
   form: FormGroup = this.fb.group({
@@ -106,6 +122,10 @@ export class PropertyFormComponent implements OnInit {
     monthlyRent: [null, [Validators.required, Validators.min(0)]],
     upfrontPayment: [null, [Validators.required, Validators.min(0)]],
     securityDeposit: [null, [Validators.required, Validators.min(0)]],
+    visitPreferences: ['AllDays', Validators.required],
+    specificVisitDays: [[]],
+    visitStartTime: ['09:00', Validators.required],
+    visitEndTime: ['18:00', Validators.required],
   });
 
   get isVerified(): boolean {
@@ -177,7 +197,21 @@ export class PropertyFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.cityService.getAll().subscribe((cities) => {
+      this.cities.set(cities.map((c) => ({ label: c.name, value: c.id })));
+    });
+
     this.form.valueChanges.subscribe(() => this.clearBackendErrors());
+    
+    this.form.get('visitPreferences')?.valueChanges.subscribe(val => {
+      const specificDaysControl = this.form.get('specificVisitDays');
+      if (val === 'Specific') {
+        specificDaysControl?.setValidators(Validators.required);
+      } else {
+        specificDaysControl?.clearValidators();
+      }
+      specificDaysControl?.updateValueAndValidity();
+    });
 
     const idParam = this.route.snapshot.paramMap.get('id');
     if (!idParam) return;
@@ -205,6 +239,10 @@ export class PropertyFormComponent implements OnInit {
             monthlyRent: property.monthlyRent,
             upfrontPayment: property.upfrontPayment,
             securityDeposit: property.securityDeposit,
+            visitPreferences: property.visitPreferences || 'AllDays',
+            specificVisitDays: property.specificVisitDays ? property.specificVisitDays.split(',') : [],
+            visitStartTime: property.visitStartTime ? property.visitStartTime.substring(0, 5) : '09:00',
+            visitEndTime: property.visitEndTime ? property.visitEndTime.substring(0, 5) : '18:00',
           });
 
           this.thumbnailUrl.set(property.thumbnailImgUrl);
@@ -408,6 +446,10 @@ export class PropertyFormComponent implements OnInit {
       securityDeposit: v.securityDeposit,
       thumbnailImgUrl,
       propertyImages,
+      visitPreferences: v.visitPreferences,
+      specificVisitDays: v.visitPreferences === 'Specific' ? (v.specificVisitDays || []).join(',') : null,
+      visitStartTime: v.visitStartTime ? `${v.visitStartTime}:00` : null,
+      visitEndTime: v.visitEndTime ? `${v.visitEndTime}:00` : null,
     };
   }
 

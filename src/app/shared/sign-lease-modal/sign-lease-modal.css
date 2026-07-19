@@ -33,6 +33,7 @@
 .doc-download {
   display: flex;
   align-items: center;
+  width: 100%;
   gap: 0.5rem;
   padding: 0.6rem 0.75rem;
   font-size: 0.875rem;
@@ -42,6 +43,8 @@
   border-radius: 0.5rem;
   background: var(--p-content-hover-background);
   transition: background 0.15s;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 .doc-download:hover {

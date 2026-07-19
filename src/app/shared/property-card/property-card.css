@@ -128,6 +128,32 @@
   letter-spacing: 0.03em;
 }
 
+.compare-checkbox-container {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 0.75rem;
+  z-index: 3;
+  padding: 0.25rem 0.625rem 0.25rem 0.5rem;
+  border-radius: 999px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.compare-checkbox-container ::ng-deep .p-checkbox-label {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.compare-checkbox-container ::ng-deep .p-checkbox-box {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+}
+
+.compare-checkbox-container ::ng-deep .p-checkbox-icon {
+  font-size: 0.65rem;
+}
+
 .avail-dot {
   width: 6px;
   height: 6px;

@@ -1,4 +1,5 @@
 <p-toast />
+<p-confirmdialog />
 
 <app-add-charge-modal
   [(visible)]="addChargeVisible"
@@ -11,6 +12,12 @@
   [leaseId]="leaseId"
   [charges]="payableCharges()"
   (paid)="onPaymentComplete()"
+/>
+
+<app-agreement-document-modal
+  [(visible)]="agreementViewerVisible"
+  [documentUrl]="lease()?.agreementDocumentUrl ?? null"
+  title="Lease Agreement"
 />
 
 <div class="lease-detail-container">
@@ -73,23 +80,117 @@
           />
         }
       }
+      @if (canEditLease()) {
+        <p-button
+          label="Submit for Approval"
+          icon="pi pi-send"
+          size="small"
+          [loading]="submitting()"
+          (onClick)="confirmSubmit()"
+        />
+        <p-button
+          label="Delete Lease"
+          icon="pi pi-trash"
+          severity="danger"
+          size="small"
+          [outlined]="true"
+          [loading]="deleting()"
+          (onClick)="confirmDelete()"
+        />
+      }
     </div>
+
+    @if (canEditLease()) {
+      <p-message severity="warn" styleClass="w-full draft-notice">
+        This lease is a <strong>Draft</strong> and is not visible to the tenant or admin yet.
+        Attach an agreement document and submit it for admin approval to move it forward.
+      </p-message>
+    }
 
     <!-- ── Lease summary ──────────────────────────────────────── -->
     <div class="section-card">
+      <div class="section-header">
+        <h3 class="section-title"><i class="pi pi-file"></i> Lease Summary</h3>
+        @if (canEditLease() && !editingFinancials()) {
+          <p-button
+            label="Edit"
+            icon="pi pi-pencil"
+            severity="secondary"
+            [text]="true"
+            size="small"
+            (onClick)="startEditFinancials()"
+          />
+        }
+      </div>
+
+      @if (editingFinancials()) {
+        <div class="edit-financials-grid">
+          <div class="field">
+            <label class="detail-label">Monthly Rent <span class="optional">(locked to lease)</span></label>
+            <div class="readonly-value">{{ formatCurrency(lease()!.monthlyRent) }}</div>
+          </div>
+          <div class="field">
+            <label class="detail-label">Upfront Payment</label>
+            <p-inputnumber
+              [(ngModel)]="editUpfrontPayment"
+              mode="currency"
+              currency="INR"
+              locale="en-IN"
+              [min]="0"
+              [fluid]="true"
+            />
+          </div>
+          <div class="field">
+            <label class="detail-label">Security Deposit</label>
+            <p-inputnumber
+              [(ngModel)]="editSecurityDeposit"
+              mode="currency"
+              currency="INR"
+              locale="en-IN"
+              [min]="0"
+              [fluid]="true"
+            />
+          </div>
+        </div>
+
+        @if (financialsError()) {
+          <p-message severity="error" [text]="financialsError()!" styleClass="w-full" />
+        }
+
+        <div class="edit-actions">
+          <p-button
+            label="Cancel"
+            severity="secondary"
+            [text]="true"
+            size="small"
+            [disabled]="savingFinancials()"
+            (onClick)="cancelEditFinancials()"
+          />
+          <p-button
+            label="Save"
+            icon="pi pi-check"
+            size="small"
+            [loading]="savingFinancials()"
+            (onClick)="saveFinancials()"
+          />
+        </div>
+      }
+
       <div class="lease-summary-grid">
-        <div class="detail-item">
-          <span class="detail-label">Monthly Rent</span>
-          <span class="detail-value">{{ formatCurrency(lease()!.monthlyRent) }}</span>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Upfront Payment</span>
-          <span class="detail-value">{{ formatCurrency(lease()!.upfrontPayment) }}</span>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Security Deposit</span>
-          <span class="detail-value">{{ formatCurrency(lease()!.securityDeposit) }}</span>
-        </div>
+        @if (!editingFinancials()) {
+          <div class="detail-item">
+            <span class="detail-label">Monthly Rent</span>
+            <span class="detail-value">{{ formatCurrency(lease()!.monthlyRent) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Upfront Payment</span>
+            <span class="detail-value">{{ formatCurrency(lease()!.upfrontPayment) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Security Deposit</span>
+            <span class="detail-value">{{ formatCurrency(lease()!.securityDeposit) }}</span>
+          </div>
+        }
         <div class="detail-item">
           <span class="detail-label">Property</span>
           <a [routerLink]="['/property', lease()!.propertyId]" class="detail-link">
@@ -99,15 +200,39 @@
         @if (lease()!.agreementDocumentUrl) {
           <div class="detail-item">
             <span class="detail-label">Agreement</span>
-            <a [href]="lease()!.agreementDocumentUrl" target="_blank" rel="noopener" class="detail-link">
+            <button type="button" (click)="openAgreementViewer()" class="detail-link link-button">
               <i class="pi pi-file-pdf"></i> View document
-            </a>
+            </button>
+            @if (canEditLease()) {
+              <label class="upload-btn" [class.disabled]="uploadingDocument()">
+                <i class="pi" [class.pi-upload]="!uploadingDocument()" [class.pi-spin]="uploadingDocument()" [class.pi-spinner]="uploadingDocument()"></i>
+                <span>{{ uploadingDocument() ? 'Uploading…' : 'Replace' }}</span>
+                <input type="file" accept="application/pdf" (change)="onDocumentSelected($event)" [disabled]="uploadingDocument()" hidden />
+              </label>
+            }
+          </div>
+        } @else if (canEditLease()) {
+          <div class="detail-item">
+            <span class="detail-label">Agreement</span>
+            <label class="upload-btn" [class.disabled]="uploadingDocument()">
+              <i class="pi" [class.pi-upload]="!uploadingDocument()" [class.pi-spin]="uploadingDocument()" [class.pi-spinner]="uploadingDocument()"></i>
+              <span>{{ uploadingDocument() ? 'Uploading…' : 'Upload agreement PDF' }}</span>
+              <input type="file" accept="application/pdf" (change)="onDocumentSelected($event)" [disabled]="uploadingDocument()" hidden />
+            </label>
+            <button type="button" class="rules-preview-link link-button" (click)="openAgreementViewer()">
+              <i class="pi pi-shield"></i> Preview rules &amp; regulations
+            </button>
+          </div>
+        }
+        @if (documentError()) {
+          <div class="detail-item detail-item-full">
+            <p-message severity="error" [text]="documentError()!" styleClass="w-full" />
           </div>
         }
         @if (lease()!.signedAgreementDocumentUrl) {
           <div class="detail-item">
             <span class="detail-label">Signed Agreement</span>
-            <a [href]="lease()!.signedAgreementDocumentUrl" target="_blank" rel="noopener" class="detail-link">
+            <a [href]="lease()!.signedAgreementDocumentUrl | safeUrl" target="_blank" rel="noopener" class="detail-link">
               <i class="pi pi-verified"></i> View document
             </a>
           </div>

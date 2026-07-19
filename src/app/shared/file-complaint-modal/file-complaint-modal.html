@@ -110,7 +110,7 @@
       @if (attachmentUrl()) {
         <div class="doc-chip">
           <i class="pi pi-paperclip"></i>
-          <a [href]="attachmentUrl()!" target="_blank" rel="noopener" class="doc-link">View attached file</a>
+          <a [href]="attachmentUrl()! | safeUrl" target="_blank" rel="noopener" class="doc-link">View attached file</a>
           <p-button
             icon="pi pi-times"
             severity="secondary"

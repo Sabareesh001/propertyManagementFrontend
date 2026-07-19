@@ -7,18 +7,32 @@ import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { FormsModule } from '@angular/forms';
 import { ConfirmationService } from 'primeng/api';
 import { LeaseCancellationService, LeaseCancellationResponse } from '../../core/services/lease-cancellation.service';
+import { SafeUrlPipe } from '../../shared/pipes/safe-url.pipe';
 
 type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast';
+type ViewMode = 'pending' | 'history';
 
 @Component({
   selector: 'app-cancellation-verifications',
   standalone: true,
-  imports: [CommonModule, RouterLink, TableModule, TagModule, ButtonModule, TooltipModule, SkeletonModule, ConfirmDialogModule],
+  imports: [CommonModule, FormsModule, RouterLink, TableModule, TagModule, ButtonModule, TooltipModule, SkeletonModule, ConfirmDialogModule, SelectButtonModule, SafeUrlPipe],
   providers: [ConfirmationService],
   template: `
     <p-confirmDialog />
+
+    <div class="view-toggle">
+      <p-selectbutton
+        [options]="viewOptions"
+        [(ngModel)]="mode"
+        optionLabel="label"
+        optionValue="value"
+        (onChange)="load()"
+      />
+    </div>
 
     @if (loading()) {
       <div class="loading-state">
@@ -54,7 +68,7 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
             <th style="text-align: right">Deposit Refund</th>
             <th style="text-align: center">Agreement</th>
             <th style="text-align: center">Status</th>
-            <th style="text-align: center">Actions</th>
+            <th style="text-align: center">{{ mode === 'history' ? 'Reviewed' : 'Actions' }}</th>
           </tr>
         </ng-template>
 
@@ -80,7 +94,7 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
             </td>
             <td style="text-align: center">
               @if (c.agreementDocumentUrl) {
-                <a [href]="c.agreementDocumentUrl" target="_blank" rel="noopener" class="doc-link" pTooltip="Agreement" tooltipPosition="top">
+                <a [href]="c.agreementDocumentUrl | safeUrl" target="_blank" rel="noopener" class="doc-link" pTooltip="Agreement" tooltipPosition="top">
                   <i class="pi pi-file-pdf"></i>
                 </a>
               } @else {
@@ -88,33 +102,42 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
               }
             </td>
             <td style="text-align: center">
-              <p-tag [value]="statusLabel(c.statusId)" [severity]="statusSeverity(c.statusId)" />
+              <p-tag
+                [value]="statusLabel(c.statusId)"
+                [severity]="statusSeverity(c.statusId)"
+                [pTooltip]="c.remarks ?? undefined"
+                tooltipPosition="top"
+              />
             </td>
             <td style="text-align: center">
-              <div class="action-buttons">
-                <p-button
-                  icon="pi pi-check"
-                  severity="success"
-                  size="small"
-                  pTooltip="Approve Template"
-                  tooltipPosition="top"
-                  [rounded]="true"
-                  [text]="true"
-                  [loading]="actioningId() === c.id && actionType() === 'approve'"
-                  (onClick)="approve(c)"
-                />
-                <p-button
-                  icon="pi pi-times"
-                  severity="danger"
-                  size="small"
-                  pTooltip="Reject"
-                  tooltipPosition="top"
-                  [rounded]="true"
-                  [text]="true"
-                  [loading]="actioningId() === c.id && actionType() === 'reject'"
-                  (onClick)="reject(c)"
-                />
-              </div>
+              @if (mode === 'pending') {
+                <div class="action-buttons">
+                  <p-button
+                    icon="pi pi-check"
+                    severity="success"
+                    size="small"
+                    pTooltip="Approve Template"
+                    tooltipPosition="top"
+                    [rounded]="true"
+                    [text]="true"
+                    [loading]="actioningId() === c.id && actionType() === 'approve'"
+                    (onClick)="approve(c)"
+                  />
+                  <p-button
+                    icon="pi pi-times"
+                    severity="danger"
+                    size="small"
+                    pTooltip="Reject"
+                    tooltipPosition="top"
+                    [rounded]="true"
+                    [text]="true"
+                    [loading]="actioningId() === c.id && actionType() === 'reject'"
+                    (onClick)="reject(c)"
+                  />
+                </div>
+              } @else {
+                <span class="term">{{ formatDate(c.updatedAt) }}</span>
+              }
             </td>
           </tr>
         </ng-template>
@@ -123,7 +146,9 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
           <tr>
             <td colspan="7" style="text-align: center; padding: 2rem;">
               <i class="pi pi-check-circle" style="font-size: 2rem; color: var(--p-green-500); display: block; margin-bottom: 0.5rem;"></i>
-              <span style="color: var(--p-text-muted-color);">No cancellation templates awaiting verification</span>
+              <span style="color: var(--p-text-muted-color);">
+                {{ mode === 'history' ? 'No reviewed cancellation templates yet' : 'No cancellation templates awaiting verification' }}
+              </span>
             </td>
           </tr>
         </ng-template>
@@ -133,9 +158,17 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
   styles: [`
     :host {
       display: flex;
+      flex-direction: column;
       flex: 1;
       min-height: 0;
       min-width: 0;
+    }
+
+    .view-toggle {
+      display: flex;
+      justify-content: flex-end;
+      padding: 0 0 0.75rem;
+      flex-shrink: 0;
     }
 
     :host ::ng-deep .transparent-table {
@@ -258,6 +291,12 @@ export class CancellationVerificationsComponent implements OnInit {
   private cancellationService = inject(LeaseCancellationService);
   private confirmationService = inject(ConfirmationService);
 
+  mode: ViewMode = 'pending';
+  viewOptions = [
+    { label: 'Pending Review', value: 'pending' },
+    { label: 'History', value: 'history' },
+  ];
+
   requests = signal<LeaseCancellationResponse[]>([]);
   loading = signal(true);
   error = signal(false);
@@ -271,7 +310,7 @@ export class CancellationVerificationsComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.error.set(false);
-    this.cancellationService.getPendingTemplates(1, 100).subscribe({
+    this.cancellationService.getPendingTemplates(1, 100, this.mode === 'history').subscribe({
       next: (res) => {
         this.requests.set(res.items);
         this.loading.set(false);

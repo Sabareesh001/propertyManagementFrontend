@@ -20,6 +20,7 @@ import {
 } from '../../core/services/complaint.service';
 import { selectCurrentUser, selectIsAdmin } from '../../store/auth/auth.selectors';
 import { extractApiError } from '../../core/api.config';
+import { SafeUrlPipe } from '../../shared/pipes/safe-url.pipe';
 
 /** A queued status transition awaiting confirmation (with an optional note). */
 interface PendingStatus {
@@ -44,6 +45,7 @@ interface PendingStatus {
     DialogModule,
     TextareaModule,
     MessageModule,
+    SafeUrlPipe,
   ],
   providers: [MessageService],
   templateUrl: './complaint-detail.html',

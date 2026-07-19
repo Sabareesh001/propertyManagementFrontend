@@ -1,0 +1,49 @@
+.schedule-form {
+  padding-top: 1rem;
+}
+.preferences-box {
+  background: var(--p-surface-100);
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+  border: 1px solid var(--p-surface-200);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem 2rem;
+}
+.preference-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.preference-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--p-text-muted-color);
+}
+.preference-value {
+  font-size: 0.9rem;
+  color: var(--p-text-color);
+  overflow-wrap: break-word;
+}
+
+.fields-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+.field {
+  min-width: 0;
+}
+.field-label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: block;
+  font-size: 0.875rem;
+}
+.required {
+  color: var(--p-red-500);
+}

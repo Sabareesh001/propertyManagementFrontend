@@ -2,6 +2,8 @@ import { Routes } from '@angular/router';
 import { RegisterComponent } from './auth/register/register';
 import { LoginComponent } from './auth/login/login';
 import { VerifyEmailComponent } from './auth/verify-email/verify-email';
+import { ForgotPasswordComponent } from './auth/forgot-password/forgot-password';
+import { ResetPasswordComponent } from './auth/reset-password/reset-password';
 import { NotFoundComponent } from './not-found/not-found';
 import { LayoutComponent } from './layout/layout';
 import { DashboardComponent } from './dashboard/dashboard';
@@ -25,11 +27,16 @@ import { VerificationsComponent } from './admin/verifications/verifications';
 import { FinanceComponent } from './admin/finance/finance';
 import { ComplaintsListComponent } from './complaints/complaints-list/complaints-list';
 import { ComplaintDetailComponent } from './complaints/complaint-detail/complaint-detail';
+import { TenantSiteVisitsComponent } from './tenant/site-visits/tenant-site-visits';
+import { OwnerSiteVisitsComponent } from './owner/site-visits/owner-site-visits';
+import { ComparePropertiesComponent } from './compare/compare';
 
 export const routes: Routes = [
   { path: 'auth/register', component: RegisterComponent },
   { path: 'auth/login', component: LoginComponent },
   { path: 'auth/verify-email/:hash', component: VerifyEmailComponent },
+  { path: 'auth/forgot-password', component: ForgotPasswordComponent },
+  { path: 'auth/reset-password/:token', component: ResetPasswordComponent },
   {
     path: '',
     component: LayoutComponent,
@@ -78,6 +85,20 @@ export const routes: Routes = [
       {
         path: 'owner/cancellations/new',
         component: CancellationDetailComponent,
+      },
+      {
+        path: 'site-visits',
+        component: TenantSiteVisitsComponent,
+        canActivate: [authGuard, nonAdminGuard],
+      },
+      {
+        path: 'compare',
+        component: ComparePropertiesComponent,
+        canActivate: [authGuard, nonAdminGuard],
+      },
+      {
+        path: 'owner/site-visits',
+        component: OwnerSiteVisitsComponent,
         canActivate: [authGuard, ownerGuard],
       },
       {

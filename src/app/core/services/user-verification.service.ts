@@ -59,14 +59,22 @@ export class UserVerificationService {
     return this.http.post<{ url: string }>(`${this.baseUrl}/upload-document`, form, WITH_CREDENTIALS);
   }
 
-  /** GET /api/userverification/pending — all pending verification requests (admin), paginated. */
+  /**
+   * GET /api/userverification/pending — paginated.
+   * `history=false` (default): pending requests only, oldest first.
+   * `history=true`: already-decided requests (Verified/Rejected), newest first.
+   * NOTE: the `history` param requires a backend change — see instructions relayed alongside this change.
+   */
   getPending(
     pageNumber = DEFAULT_PAGE_NUMBER,
     pageSize = DEFAULT_PAGE_SIZE,
+    history = false,
   ): Observable<PagedResult<UserVerificationResponse>> {
+    let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
+    if (history) params = params.set('history', true);
     return this.http.get<PagedResult<UserVerificationResponse>>(`${this.baseUrl}/pending`, {
       ...WITH_CREDENTIALS,
-      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+      params,
     });
   }
 

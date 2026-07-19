@@ -10,10 +10,13 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { DialogModule } from 'primeng/dialog';
 import { TextareaModule } from 'primeng/textarea';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { ConfirmationService } from 'primeng/api';
 import { LeaseService, LeaseResponse } from '../../core/services/lease.service';
+import { SafeUrlPipe } from '../../shared/pipes/safe-url.pipe';
 
 type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast';
+type ViewMode = 'pending' | 'history';
 
 @Component({
   selector: 'app-lease-verifications',
@@ -30,6 +33,8 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
     DialogModule,
     TextareaModule,
     ConfirmDialogModule,
+    SelectButtonModule,
+    SafeUrlPipe,
   ],
   providers: [ConfirmationService],
   template: `
@@ -82,6 +87,16 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
       </ng-template>
     </p-dialog>
 
+    <div class="view-toggle">
+      <p-selectbutton
+        [options]="viewOptions"
+        [(ngModel)]="mode"
+        optionLabel="label"
+        optionValue="value"
+        (onChange)="load()"
+      />
+    </div>
+
     @if (loading()) {
       <div class="loading-state">
         <p-skeleton height="3rem" styleClass="mb-2" />
@@ -117,7 +132,7 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
             <th style="text-align: center">Term</th>
             <th style="text-align: center">Documents</th>
             <th style="text-align: center">Status</th>
-            <th style="text-align: center">Actions</th>
+            <th style="text-align: center">{{ mode === 'history' ? 'Reviewed' : 'Actions' }}</th>
           </tr>
         </ng-template>
 
@@ -139,12 +154,12 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
             <td style="text-align: center">
               <div class="doc-links">
                 @if (lease.agreementDocumentUrl) {
-                  <a [href]="lease.agreementDocumentUrl" target="_blank" rel="noopener" class="doc-link" pTooltip="Agreement template" tooltipPosition="top">
+                  <a [href]="lease.agreementDocumentUrl | safeUrl" target="_blank" rel="noopener" class="doc-link" pTooltip="Agreement template" tooltipPosition="top">
                     <i class="pi pi-file-pdf"></i>
                   </a>
                 }
                 @if (lease.signedAgreementDocumentUrl) {
-                  <a [href]="lease.signedAgreementDocumentUrl" target="_blank" rel="noopener" class="doc-link" pTooltip="Signed agreement" tooltipPosition="top">
+                  <a [href]="lease.signedAgreementDocumentUrl | safeUrl" target="_blank" rel="noopener" class="doc-link" pTooltip="Signed agreement" tooltipPosition="top">
                     <i class="pi pi-verified"></i>
                   </a>
                 }
@@ -154,11 +169,16 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
               </div>
             </td>
             <td style="text-align: center">
-              <p-tag [value]="statusLabel(lease.statusId)" [severity]="statusSeverity(lease.statusId)" />
+              <p-tag
+                [value]="statusLabel(lease.statusId)"
+                [severity]="statusSeverity(lease.statusId)"
+                [pTooltip]="lease.remarks ?? undefined"
+                tooltipPosition="top"
+              />
             </td>
             <td style="text-align: center">
-              <div class="action-buttons">
-                @if (canAct(lease.statusId)) {
+              @if (mode === 'pending' && canAct(lease.statusId)) {
+                <div class="action-buttons">
                   <p-button
                     icon="pi pi-check"
                     severity="success"
@@ -181,10 +201,12 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
                     [loading]="actioningId() === lease.id && actionType() === 'reject'"
                     (onClick)="openRejectDialog(lease)"
                   />
-                } @else {
-                  <span class="no-action">—</span>
-                }
-              </div>
+                </div>
+              } @else if (mode === 'history') {
+                <span class="submitted-date">{{ formatDate(lease.updatedAt) }}</span>
+              } @else {
+                <span class="no-action">—</span>
+              }
             </td>
           </tr>
         </ng-template>
@@ -193,7 +215,9 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
           <tr>
             <td colspan="7" style="text-align: center; padding: 2rem;">
               <i class="pi pi-check-circle" style="font-size: 2rem; color: var(--p-green-500); display: block; margin-bottom: 0.5rem;"></i>
-              <span style="color: var(--p-text-muted-color);">No lease templates awaiting verification</span>
+              <span style="color: var(--p-text-muted-color);">
+                {{ mode === 'history' ? 'No reviewed lease templates yet' : 'No lease templates awaiting verification' }}
+              </span>
             </td>
           </tr>
         </ng-template>
@@ -203,9 +227,17 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
   styles: [`
     :host {
       display: flex;
+      flex-direction: column;
       flex: 1;
       min-height: 0;
       min-width: 0;
+    }
+
+    .view-toggle {
+      display: flex;
+      justify-content: flex-end;
+      padding: 0 0 0.75rem;
+      flex-shrink: 0;
     }
 
     :host ::ng-deep .transparent-table {
@@ -369,6 +401,12 @@ export class LeaseVerificationsComponent implements OnInit {
   private leaseService = inject(LeaseService);
   private confirmationService = inject(ConfirmationService);
 
+  mode: ViewMode = 'pending';
+  viewOptions = [
+    { label: 'Pending Review', value: 'pending' },
+    { label: 'History', value: 'history' },
+  ];
+
   requests = signal<LeaseResponse[]>([]);
   loading = signal(true);
   error = signal(false);
@@ -387,7 +425,7 @@ export class LeaseVerificationsComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.error.set(false);
-    this.leaseService.getPendingTemplates(1, 100).subscribe({
+    this.leaseService.getPendingTemplates(1, 100, this.mode === 'history').subscribe({
       next: (res) => {
         this.requests.set(res.items);
         this.loading.set(false);

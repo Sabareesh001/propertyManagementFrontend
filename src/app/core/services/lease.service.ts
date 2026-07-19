@@ -25,6 +25,16 @@ export interface CreateLeasePayload {
   documents?: LeaseDocumentPayload[];
 }
 
+/** Body for PUT /api/lease/{id} — all fields optional (partial update). */
+export interface UpdateLeasePayload {
+  startDate?: string;
+  endDate?: string;
+  monthlyRent?: number | null;
+  upfrontPayment?: number | null;
+  securityDeposit?: number | null;
+  agreementDocumentUrl?: string | null;
+}
+
 /** Matches the backend LeaseResponseDto. */
 export interface LeaseResponse {
   id: string;
@@ -42,6 +52,10 @@ export interface LeaseResponse {
   signedAgreementDocumentUrl: string | null;
   createdAt: string | null;
   updatedAt: string | null;
+  /** Admin verification remarks (e.g. rejection reason). Requires a backend change — see instructions relayed alongside this change. */
+  remarks?: string | null;
+  /** UUID of the admin who last verified/rejected this lease. Requires a backend change. */
+  verifiedBy?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -68,6 +82,16 @@ export class LeaseService {
   /** GET /api/lease/{id} — a single lease. */
   getById(id: string): Observable<LeaseResponse> {
     return this.http.get<LeaseResponse>(`${this.baseUrl}/${id}`, WITH_CREDENTIALS);
+  }
+
+  /** PUT /api/lease/{id} — owner updates a Draft or Submitted lease (e.g. attaches the agreement document). */
+  update(id: string, payload: UpdateLeasePayload): Observable<LeaseResponse> {
+    return this.http.put<LeaseResponse>(`${this.baseUrl}/${id}`, payload, WITH_CREDENTIALS);
+  }
+
+  /** DELETE /api/lease/{id} — owner deletes a lease while it's still Draft. */
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`, WITH_CREDENTIALS);
   }
 
   /** PUT /api/lease/{id}/submit — owner moves Draft → Submitted. */
@@ -99,25 +123,41 @@ export class LeaseService {
     );
   }
 
-  /** GET /api/lease/pending-templates — Admin only: leases in Submitted (2) awaiting template review, paginated. */
+  /**
+   * GET /api/lease/pending-templates — Admin only, paginated.
+   * `history=false` (default): leases in Submitted (2) awaiting template review, oldest first.
+   * `history=true`: templates already decided (past Submitted, or Rejected), newest first.
+   * NOTE: the `history` param requires a backend change — see instructions relayed alongside this change.
+   */
   getPendingTemplates(
     pageNumber = DEFAULT_PAGE_NUMBER,
     pageSize = DEFAULT_PAGE_SIZE,
+    history = false,
   ): Observable<PagedResult<LeaseResponse>> {
+    let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
+    if (history) params = params.set('history', true);
     return this.http.get<PagedResult<LeaseResponse>>(`${this.baseUrl}/pending-templates`, {
       ...WITH_CREDENTIALS,
-      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+      params,
     });
   }
 
-  /** GET /api/lease/pending-signed — Admin only: leases in TenantSigned (4) awaiting signed-agreement review, paginated. */
+  /**
+   * GET /api/lease/pending-signed — Admin only, paginated.
+   * `history=false` (default): leases in TenantSigned (4) awaiting signed-agreement review, oldest first.
+   * `history=true`: signed agreements already decided (Active, or Rejected), newest first.
+   * NOTE: the `history` param requires a backend change — see instructions relayed alongside this change.
+   */
   getPendingSigned(
     pageNumber = DEFAULT_PAGE_NUMBER,
     pageSize = DEFAULT_PAGE_SIZE,
+    history = false,
   ): Observable<PagedResult<LeaseResponse>> {
+    let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
+    if (history) params = params.set('history', true);
     return this.http.get<PagedResult<LeaseResponse>>(`${this.baseUrl}/pending-signed`, {
       ...WITH_CREDENTIALS,
-      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize),
+      params,
     });
   }
 

@@ -18,6 +18,7 @@ import {
 } from '../../core/services/lease-cancellation.service';
 import { LeaseService, LeaseResponse } from '../../core/services/lease.service';
 import { selectCurrentUser } from '../../store/auth/auth.selectors';
+import { SafeUrlPipe } from '../../shared/pipes/safe-url.pipe';
 import { extractApiError } from '../../core/api.config';
 
 @Component({
@@ -35,6 +36,7 @@ import { extractApiError } from '../../core/api.config';
     DividerModule,
     MessageModule,
     ProgressSpinnerModule,
+    SafeUrlPipe,
   ],
   templateUrl: './cancellation-detail.html',
   styleUrl: './cancellation-detail.css',

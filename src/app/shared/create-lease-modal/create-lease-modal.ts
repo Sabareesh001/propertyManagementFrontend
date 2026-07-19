@@ -4,13 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { DatePickerModule } from 'primeng/datepicker';
 import { DividerModule } from 'primeng/divider';
 import { MessageModule } from 'primeng/message';
 import { LeaseProposalResponse } from '../../core/services/lease-proposal.service';
-import { LeaseService } from '../../core/services/lease.service';
+import { LeaseService, LeaseResponse } from '../../core/services/lease.service';
 import { PropertyService } from '../../core/services/property.service';
 import { extractApiError } from '../../core/api.config';
+import { AgreementDocumentModalComponent } from '../agreement-document-modal/agreement-document-modal';
 
 @Component({
   selector: 'app-create-lease-modal',
@@ -21,9 +21,9 @@ import { extractApiError } from '../../core/api.config';
     DialogModule,
     ButtonModule,
     InputNumberModule,
-    DatePickerModule,
     DividerModule,
     MessageModule,
+    AgreementDocumentModalComponent,
   ],
   templateUrl: './create-lease-modal.html',
   styleUrl: './create-lease-modal.css',
@@ -32,16 +32,11 @@ export class CreateLeaseModalComponent implements OnChanges {
   @Input() visible = false;
   @Input() proposal: LeaseProposalResponse | null = null;
   @Output() visibleChange = new EventEmitter<boolean>();
-  @Output() created = new EventEmitter<void>();
+  @Output() created = new EventEmitter<LeaseResponse>();
 
   private leaseService = inject(LeaseService);
   private propertyService = inject(PropertyService);
 
-  today = new Date();
-  minEndDate = new Date(this.today.getFullYear(), this.today.getMonth() + 1, this.today.getDate() + 1);
-
-  startDate: Date | null = null;
-  endDate: Date | null = null;
   monthlyRent: number | null = null;
   upfrontPayment: number | null = null;
   securityDeposit: number | null = null;
@@ -51,6 +46,7 @@ export class CreateLeaseModalComponent implements OnChanges {
   uploading = signal(false);
   errorMessage = signal<string | null>(null);
   success = signal(false);
+  agreementViewerVisible = signal(false);
 
   ngOnChanges(): void {
     if (this.visible && this.proposal) {
@@ -60,8 +56,6 @@ export class CreateLeaseModalComponent implements OnChanges {
 
   private resetForm(): void {
     const p = this.proposal;
-    this.startDate = this.futureDate(p?.startDate ?? null);
-    this.endDate = this.parseDate(p?.endDate ?? null);
     this.monthlyRent = p?.monthlyRent ?? null;
     this.upfrontPayment = p?.upfrontPayment ?? null;
     this.securityDeposit = p?.securityDeposit ?? null;
@@ -70,30 +64,16 @@ export class CreateLeaseModalComponent implements OnChanges {
     this.success.set(false);
     this.submitting.set(false);
     this.uploading.set(false);
-    this.onStartDateChange();
   }
 
-  private parseDate(iso: string | null): Date | null {
-    return iso ? new Date(iso) : null;
+  formatDate(iso: string | null | undefined): string {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
-  /** Prefill the start date but never in the past (Create Lease rejects past dates). */
-  private futureDate(iso: string | null): Date | null {
-    const d = this.parseDate(iso);
-    if (!d || d < this.today) return null;
-    return d;
-  }
-
-  onStartDateChange(): void {
-    if (this.startDate) {
-      const next = new Date(this.startDate);
-      next.setMonth(next.getMonth() + 1);
-      next.setDate(next.getDate() + 1);
-      this.minEndDate = next;
-      if (this.endDate && this.endDate <= this.startDate) {
-        this.endDate = null;
-      }
-    }
+  openAgreementViewer(): void {
+    this.agreementViewerVisible.set(true);
   }
 
   onDocumentSelected(event: Event): void {
@@ -121,7 +101,7 @@ export class CreateLeaseModalComponent implements OnChanges {
   }
 
   get canSubmit(): boolean {
-    return !!this.proposal?.tenantId && !!this.proposal?.propertyId && !!this.startDate && !!this.endDate;
+    return !!this.proposal?.tenantId && !!this.proposal?.propertyId && !!this.proposal?.startDate && !!this.proposal?.endDate;
   }
 
   close(): void {
@@ -131,7 +111,7 @@ export class CreateLeaseModalComponent implements OnChanges {
 
   createLease(): void {
     const p = this.proposal;
-    if (!p || !p.tenantId || !p.propertyId || !this.startDate || !this.endDate) return;
+    if (!p || !p.tenantId || !p.propertyId || !p.startDate || !p.endDate) return;
 
     this.submitting.set(true);
     this.errorMessage.set(null);
@@ -140,30 +120,23 @@ export class CreateLeaseModalComponent implements OnChanges {
       tenantId: p.tenantId,
       propertyId: p.propertyId,
       proposalId: p.id,
-      startDate: this.toIsoDate(this.startDate),
-      endDate: this.toIsoDate(this.endDate),
+      startDate: p.startDate,
+      endDate: p.endDate,
       monthlyRent: this.monthlyRent,
       upfrontPayment: this.upfrontPayment,
       securityDeposit: this.securityDeposit,
       agreementDocumentUrl: this.agreementDocumentUrl,
     }).subscribe({
-      next: () => {
+      next: (lease) => {
         this.submitting.set(false);
         this.success.set(true);
-        this.created.emit();
+        this.created.emit(lease);
       },
       error: (err) => {
         this.submitting.set(false);
         this.errorMessage.set(extractApiError(err));
       },
     });
-  }
-
-  private toIsoDate(d: Date): string {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
   }
 
   formatCurrency(value: number | null): string {

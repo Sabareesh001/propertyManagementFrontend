@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -9,6 +9,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MenuModule } from 'primeng/menu';
 import { MessageService, ConfirmationService, MenuItem } from 'primeng/api';
 import { LeaseProposalService, LeaseProposalResponse } from '../../core/services/lease-proposal.service';
+import { LeaseResponse } from '../../core/services/lease.service';
 import { CreateLeaseModalComponent } from '../../shared/create-lease-modal/create-lease-modal';
 
 @Component({
@@ -33,6 +34,7 @@ export class ReceivedRequestsComponent implements OnInit {
   private leaseProposalService = inject(LeaseProposalService);
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
+  private router = inject(Router);
 
   proposals = signal<LeaseProposalResponse[]>([]);
   loading = signal(true);
@@ -142,8 +144,9 @@ export class ReceivedRequestsComponent implements OnInit {
     this.leaseModalVisible.set(true);
   }
 
-  onLeaseCreated(): void {
-    this.messageService.add({ severity: 'success', summary: 'Lease Created', detail: 'A draft lease has been created. Manage it from the Leases tab.' });
+  onLeaseCreated(lease: LeaseResponse): void {
+    this.leaseModalVisible.set(false);
+    this.router.navigate(['/leases', lease.id], { queryParams: { justCreated: '1' } });
   }
 
   confirmAccept(proposal: LeaseProposalResponse): void {

@@ -11,7 +11,7 @@
         severity="secondary"
         size="small"
         [outlined]="true"
-        [disabled]="loading() || error() || filteredCount() === 0"
+        [disabled]="loading() || error() || totalRecords() === 0"
         (onClick)="exportCsv()"
       />
       <p-button
@@ -52,8 +52,8 @@
           <input
             pInputText
             type="text"
-            [ngModel]="search()"
-            (ngModelChange)="search.set($event)"
+            [ngModel]="searchInput()"
+            (ngModelChange)="onSearchInput($event)"
             placeholder="Type, description, property, tenant, owner…"
             style="width: 100%"
           />
@@ -67,7 +67,7 @@
           optionLabel="label"
           optionValue="value"
           [ngModel]="type()"
-          (ngModelChange)="type.set($event)"
+          (ngModelChange)="setType($event)"
           [style]="{ 'min-width': '11rem' }"
         />
       </div>
@@ -79,7 +79,7 @@
           optionLabel="label"
           optionValue="value"
           [ngModel]="status()"
-          (ngModelChange)="status.set($event)"
+          (ngModelChange)="setStatus($event)"
           [style]="{ 'min-width': '11rem' }"
         />
       </div>
@@ -89,7 +89,7 @@
         <p-datepicker
           selectionMode="range"
           [ngModel]="dateRange()"
-          (ngModelChange)="dateRange.set($event)"
+          (ngModelChange)="setDateRange($event)"
           [readonlyInput]="true"
           [showButtonBar]="true"
           dateFormat="dd M yy"
@@ -102,7 +102,7 @@
         <label class="filter-label">Min amount</label>
         <p-inputnumber
           [ngModel]="amountMin()"
-          (ngModelChange)="amountMin.set($event)"
+          (ngModelChange)="setAmountMin($event)"
           mode="currency"
           currency="INR"
           locale="en-IN"
@@ -116,7 +116,7 @@
         <label class="filter-label">Max amount</label>
         <p-inputnumber
           [ngModel]="amountMax()"
-          (ngModelChange)="amountMax.set($event)"
+          (ngModelChange)="setAmountMax($event)"
           mode="currency"
           currency="INR"
           locale="en-IN"
@@ -128,7 +128,7 @@
 
       <div class="filter-field">
         <label class="filter-label">Outstanding only</label>
-        <p-toggleswitch [ngModel]="onlyOutstanding()" (ngModelChange)="onlyOutstanding.set($event)" />
+        <p-toggleswitch [ngModel]="onlyOutstanding()" (ngModelChange)="setOnlyOutstanding($event)" />
       </div>
 
       <div class="filter-actions">
@@ -148,28 +148,33 @@
     <div class="summary-strip">
       <div class="summary-item">
         <span class="label">Charges</span>
-        <span class="value">{{ filteredCount() }}</span>
+        <span class="value">{{ summary().count }}</span>
       </div>
       <div class="summary-item">
         <span class="label">Total Charged</span>
-        <span class="value">{{ money(totalCharged()) }}</span>
+        <span class="value">{{ money(summary().totalCharged) }}</span>
       </div>
       <div class="summary-item">
         <span class="label">Collected</span>
-        <span class="value">{{ money(totalCollected()) }}</span>
+        <span class="value">{{ money(summary().totalCollected) }}</span>
       </div>
       <div class="summary-item">
         <span class="label">Outstanding</span>
-        <span class="value">{{ money(totalOutstanding()) }}</span>
+        <span class="value">{{ money(summary().totalOutstanding) }}</span>
       </div>
     </div>
 
-    <!-- Table -->
+    <!-- Table (server-side: filtering, sorting and paging all run on the backend) -->
     <p-table
-      [value]="filtered()"
+      [value]="charges()"
       dataKey="id"
+      [lazy]="true"
+      [lazyLoadOnInit]="false"
+      (onLazyLoad)="onLazyLoad($event)"
       [paginator]="true"
-      [rows]="15"
+      [first]="first()"
+      [rows]="pageSize()"
+      [totalRecords]="totalRecords()"
       [rowsPerPageOptions]="[15, 30, 50, 100]"
       [showCurrentPageReport]="true"
       currentPageReportTemplate="Showing {first}–{last} of {totalRecords}"

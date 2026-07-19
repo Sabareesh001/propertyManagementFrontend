@@ -10,9 +10,13 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { DialogModule } from 'primeng/dialog';
 import { TextareaModule } from 'primeng/textarea';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { ConfirmationService } from 'primeng/api';
 import { PropertyDetailComponent } from '../../property-detail/property-detail';
 import { PropertyService, PropertyDetail } from '../../core/services/property.service';
+
+type ViewMode = 'pending' | 'history';
+type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast';
 
 @Component({
   selector: 'app-property-verifications',
@@ -29,6 +33,7 @@ import { PropertyService, PropertyDetail } from '../../core/services/property.se
     DialogModule,
     TextareaModule,
     ConfirmDialogModule,
+    SelectButtonModule,
     PropertyDetailComponent,
   ],
   providers: [ConfirmationService],
@@ -101,6 +106,16 @@ import { PropertyService, PropertyDetail } from '../../core/services/property.se
         />
       </div>
     } @else {
+      <div class="view-toggle">
+        <p-selectbutton
+          [options]="viewOptions"
+          [(ngModel)]="mode"
+          optionLabel="label"
+          optionValue="value"
+          (onChange)="load()"
+        />
+      </div>
+
       @if (loading()) {
         <div class="loading-state">
           <p-skeleton height="3rem" styleClass="mb-2" />
@@ -136,7 +151,7 @@ import { PropertyService, PropertyDetail } from '../../core/services/property.se
               <th style="text-align: right">Rent / mo</th>
               <th style="text-align: center">Listed</th>
               <th style="text-align: center">Status</th>
-              <th style="text-align: center">Actions</th>
+              <th style="text-align: center">{{ mode === 'history' ? 'Reviewed' : 'Actions' }}</th>
             </tr>
           </ng-template>
 
@@ -164,32 +179,43 @@ import { PropertyService, PropertyDetail } from '../../core/services/property.se
                 <span class="submitted-date">{{ formatDate(req.createdAt) }}</span>
               </td>
               <td style="text-align: center">
-                <p-tag value="Pending Review" severity="warn" icon="pi pi-clock" />
+                @if (mode === 'history') {
+                  <p-tag
+                    [value]="statusLabel(req.verificationStatusId)"
+                    [severity]="statusSeverity(req.verificationStatusId)"
+                    [pTooltip]="req.remarks ?? undefined"
+                    tooltipPosition="top"
+                  />
+                } @else {
+                  <p-tag value="Pending Review" severity="warn" icon="pi pi-clock" />
+                }
               </td>
               <td style="text-align: center">
                 <div class="action-buttons">
-                  <p-button
-                    icon="pi pi-check"
-                    severity="success"
-                    size="small"
-                    pTooltip="Approve"
-                    tooltipPosition="top"
-                    [rounded]="true"
-                    [text]="true"
-                    [loading]="actioningId() === req.id && actionType() === 'approve'"
-                    (onClick)="approve(req.id, req.title)"
-                  />
-                  <p-button
-                    icon="pi pi-times"
-                    severity="danger"
-                    size="small"
-                    pTooltip="Reject"
-                    tooltipPosition="top"
-                    [rounded]="true"
-                    [text]="true"
-                    [loading]="actioningId() === req.id && actionType() === 'reject'"
-                    (onClick)="openRejectDialog(req.id, req.title)"
-                  />
+                  @if (mode === 'pending') {
+                    <p-button
+                      icon="pi pi-check"
+                      severity="success"
+                      size="small"
+                      pTooltip="Approve"
+                      tooltipPosition="top"
+                      [rounded]="true"
+                      [text]="true"
+                      [loading]="actioningId() === req.id && actionType() === 'approve'"
+                      (onClick)="approve(req.id, req.title)"
+                    />
+                    <p-button
+                      icon="pi pi-times"
+                      severity="danger"
+                      size="small"
+                      pTooltip="Reject"
+                      tooltipPosition="top"
+                      [rounded]="true"
+                      [text]="true"
+                      [loading]="actioningId() === req.id && actionType() === 'reject'"
+                      (onClick)="openRejectDialog(req.id, req.title)"
+                    />
+                  }
                   <p-button
                     icon="pi pi-eye"
                     severity="info"
@@ -209,7 +235,9 @@ import { PropertyService, PropertyDetail } from '../../core/services/property.se
             <tr>
               <td colspan="7" style="text-align: center; padding: 2rem;">
                 <i class="pi pi-check-circle" style="font-size: 2rem; color: var(--p-green-500); display: block; margin-bottom: 0.5rem;"></i>
-                <span style="color: var(--p-text-muted-color);">No pending approval requests</span>
+                <span style="color: var(--p-text-muted-color);">
+                  {{ mode === 'history' ? 'No reviewed properties yet' : 'No pending approval requests' }}
+                </span>
               </td>
             </tr>
           </ng-template>
@@ -220,9 +248,17 @@ import { PropertyService, PropertyDetail } from '../../core/services/property.se
   styles: [`
     :host {
       display: flex;
+      flex-direction: column;
       flex: 1;
       min-height: 0;
       min-width: 0;
+    }
+
+    .view-toggle {
+      display: flex;
+      justify-content: flex-end;
+      padding: 0 0 0.75rem;
+      flex-shrink: 0;
     }
 
     :host ::ng-deep .transparent-table {
@@ -390,6 +426,12 @@ export class PropertyVerificationsComponent implements OnInit {
   private propertyService = inject(PropertyService);
   private confirmationService = inject(ConfirmationService);
 
+  mode: ViewMode = 'pending';
+  viewOptions = [
+    { label: 'Pending Review', value: 'pending' },
+    { label: 'History', value: 'history' },
+  ];
+
   requests = signal<PropertyDetail[]>([]);
   loading = signal(true);
   error = signal(false);
@@ -410,7 +452,7 @@ export class PropertyVerificationsComponent implements OnInit {
     this.loading.set(true);
     this.error.set(false);
     // Table already paginates client-side over the loaded set, so pull a large page (backend caps at 100).
-    this.propertyService.getPendingVerification(1, 100).subscribe({
+    this.propertyService.getPendingVerification(1, 100, this.mode === 'history').subscribe({
       next: (res) => {
         this.requests.set(res.items);
         this.loading.set(false);
@@ -510,5 +552,24 @@ export class PropertyVerificationsComponent implements OnInit {
       month: 'short',
       year: 'numeric',
     }).format(new Date(iso));
+  }
+
+  statusLabel(verificationStatusId: number | null): string {
+    switch (verificationStatusId) {
+      case 1: return 'Draft';
+      case 2: return 'Submitted';
+      case 3: return 'Verified';
+      case 4: return 'Rejected';
+      default: return 'Unknown';
+    }
+  }
+
+  statusSeverity(verificationStatusId: number | null): Severity {
+    switch (verificationStatusId) {
+      case 3: return 'success';
+      case 4: return 'danger';
+      case 2: return 'warn';
+      default: return 'secondary';
+    }
   }
 }

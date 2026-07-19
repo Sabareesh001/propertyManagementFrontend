@@ -107,7 +107,7 @@
               <p-select
                 id="cityId"
                 formControlName="cityId"
-                [options]="cities"
+                [options]="cities()"
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Select city"
@@ -191,6 +191,78 @@
               @for (msg of backendErrorsFor('securityDeposit') ?? []; track msg) {
                 <small class="field-error">{{ msg }}</small>
               }
+            </div>
+          </div>
+        </div>
+
+        <p-divider />
+
+        <!-- Section: Site Visit Preferences -->
+        <div class="form-section">
+          <h3 class="section-title">Site Visit Preferences</h3>
+
+          <div class="fields-row">
+            <div class="field">
+              <label class="field-label" for="visitPreferences">Allowed Visit Days <span class="required">*</span></label>
+              <p-select
+                id="visitPreferences"
+                formControlName="visitPreferences"
+                [options]="visitPreferenceOptions"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Select Preference"
+                styleClass="w-full"
+                [class.ng-invalid]="fieldError('visitPreferences')"
+                [class.ng-dirty]="fieldError('visitPreferences')"
+              />
+            </div>
+            
+            @if (form.get('visitPreferences')?.value === 'Specific') {
+              <div class="field field-grow">
+                <label class="field-label" for="specificVisitDays">Specific Days <span class="required">*</span></label>
+                <p-multiSelect
+                  id="specificVisitDays"
+                  formControlName="specificVisitDays"
+                  [options]="dayOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  defaultLabel="Select Days"
+                  styleClass="w-full"
+                  display="chip"
+                  [filter]="false"
+                  [showToggleAll]="false"
+                  [class.ng-invalid]="fieldError('specificVisitDays')"
+                  [class.ng-dirty]="fieldError('specificVisitDays')"
+                />
+                @if (fieldError('specificVisitDays') && form.get('specificVisitDays')?.hasError('required')) {
+                  <small class="field-error">Please select at least one day.</small>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="fields-row">
+            <div class="field">
+              <label class="field-label" for="visitStartTime">Start Time <span class="required">*</span></label>
+              <input 
+                id="visitStartTime" 
+                type="time" 
+                pInputText 
+                formControlName="visitStartTime"
+                [class.ng-invalid]="fieldError('visitStartTime')"
+                [class.ng-dirty]="fieldError('visitStartTime')"
+              />
+            </div>
+            <div class="field">
+              <label class="field-label" for="visitEndTime">End Time <span class="required">*</span></label>
+              <input 
+                id="visitEndTime" 
+                type="time" 
+                pInputText 
+                formControlName="visitEndTime"
+                [class.ng-invalid]="fieldError('visitEndTime')"
+                [class.ng-dirty]="fieldError('visitEndTime')"
+              />
             </div>
           </div>
         </div>
@@ -321,7 +393,7 @@
                       <div class="deed-info">
                         <span class="deed-number">{{ deed.documentNumber || 'No number' }}</span>
                         @if (deed.documentUrl) {
-                          <a [href]="deed.documentUrl" target="_blank" class="deed-link">View PDF</a>
+                          <a [href]="deed.documentUrl | safeUrl" target="_blank" class="deed-link">View PDF</a>
                         }
                       </div>
                     </div>
@@ -361,7 +433,7 @@
                       <div class="deed-info">
                         <span class="deed-number">{{ deed.documentNumber || 'No number' }}</span>
                         @if (deed.documentUrl) {
-                          <a [href]="deed.documentUrl" target="_blank" class="deed-link">View PDF</a>
+                          <a [href]="deed.documentUrl | safeUrl" target="_blank" class="deed-link">View PDF</a>
                         }
                       </div>
                       <p-button

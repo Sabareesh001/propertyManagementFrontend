@@ -96,7 +96,7 @@
       <h3 class="section-title"><i class="pi pi-align-left"></i> Description</h3>
       <p class="description-text">{{ complaint()!.description }}</p>
       @if (complaint()!.attachmentUrl) {
-        <a [href]="complaint()!.attachmentUrl!" target="_blank" rel="noopener" class="attachment-link">
+        <a [href]="complaint()!.attachmentUrl! | safeUrl" target="_blank" rel="noopener" class="attachment-link">
           <i class="pi pi-paperclip"></i> View attachment
         </a>
       }

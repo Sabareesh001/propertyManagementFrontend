@@ -193,6 +193,19 @@
                 (onClick)="openRentModal()"
               />
 
+              <p-button
+                label="Schedule Visit"
+                icon="pi pi-calendar"
+                iconPos="right"
+                [fluid]="true"
+                size="large"
+                severity="info"
+                class="visit-cta mt-3 block"
+                styleClass="mt-3"
+                [disabled]="!isAvailable"
+                (onClick)="openScheduleVisitModal()"
+              />
+
               @if (!isAvailable) {
                 <p class="cta-note cta-note--warn">
                   <i class="pi pi-info-circle"></i>
@@ -220,4 +233,11 @@
   [property]="property()"
   (visibleChange)="rentModalVisible.set($event)"
   (proposalSubmitted)="onProposalSubmitted()"
+/>
+
+<app-schedule-visit-modal
+  [visible]="scheduleVisitModalVisible()"
+  [property]="property()"
+  (visibleChange)="scheduleVisitModalVisible.set($event)"
+  (visitScheduled)="onVisitScheduled()"
 />

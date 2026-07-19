@@ -12,7 +12,9 @@ import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { LeaseService, LeaseResponse } from '../core/services/lease.service';
 import { SignLeaseModalComponent } from '../shared/sign-lease-modal/sign-lease-modal';
+import { AgreementDocumentModalComponent } from '../shared/agreement-document-modal/agreement-document-modal';
 import { selectCurrentUser } from '../store/auth/auth.selectors';
+import { SafeUrlPipe } from '../shared/pipes/safe-url.pipe';
 
 @Component({
   selector: 'app-leases',
@@ -27,6 +29,8 @@ import { selectCurrentUser } from '../store/auth/auth.selectors';
     ProgressSpinnerModule,
     MenuModule,
     SignLeaseModalComponent,
+    AgreementDocumentModalComponent,
+    SafeUrlPipe,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './leases.html',
@@ -49,6 +53,9 @@ export class LeasesComponent implements OnInit {
 
   signModalVisible = signal(false);
   signingLease = signal<LeaseResponse | null>(null);
+
+  agreementViewerVisible = signal(false);
+  agreementViewerUrl = signal<string | null>(null);
 
   filteredLeases = computed(() => {
     const status = this.selectedStatus();
@@ -138,8 +145,24 @@ export class LeasesComponent implements OnInit {
     return lease.statusId === 3 && !!user && lease.tenantId === user.id;
   }
 
+  /** Anyone who can load this lease and isn't its tenant is the owner. */
+  private isOwnerOf(lease: LeaseResponse): boolean {
+    const user = this.currentUser();
+    return !!user && lease.tenantId !== user.id;
+  }
+
+  /** Owner may delete a lease only while it's still a Draft. */
+  canDelete(lease: LeaseResponse): boolean {
+    return lease.statusId === 1 && this.isOwnerOf(lease);
+  }
+
   openLease(lease: LeaseResponse): void {
     this.router.navigate(['/leases', lease.id]);
+  }
+
+  openAgreementViewer(lease: LeaseResponse): void {
+    this.agreementViewerUrl.set(lease.agreementDocumentUrl ?? null);
+    this.agreementViewerVisible.set(true);
   }
 
   openSignModal(lease: LeaseResponse): void {
@@ -185,6 +208,32 @@ export class LeasesComponent implements OnInit {
       error: () => {
         this.actingId.set(null);
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to submit the lease.' });
+      },
+    });
+  }
+
+  confirmDelete(lease: LeaseResponse): void {
+    this.confirmationService.confirm({
+      message: 'Delete this draft lease? This cannot be undone.',
+      header: 'Delete Lease',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      accept: () => this.doDelete(lease),
+    });
+  }
+
+  private doDelete(lease: LeaseResponse): void {
+    this.actingId.set(lease.id);
+    this.leaseService.delete(lease.id).subscribe({
+      next: () => {
+        this.leases.update((list) => list.filter((l) => l.id !== lease.id));
+        this.actingId.set(null);
+        this.messageService.add({ severity: 'success', summary: 'Deleted', detail: 'The draft lease has been deleted.' });
+      },
+      error: () => {
+        this.actingId.set(null);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete the lease.' });
       },
     });
   }

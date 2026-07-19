@@ -19,6 +19,7 @@ import {
 import { LeaseService, LeaseResponse } from '../../core/services/lease.service';
 import { selectCurrentUser } from '../../store/auth/auth.selectors';
 import { extractApiError } from '../../core/api.config';
+import { SafeUrlPipe } from '../pipes/safe-url.pipe';
 
 /** A tenant-side lease presented in the "which property?" picker. */
 interface LeaseOption {
@@ -41,6 +42,7 @@ const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
     TextareaModule,
     MessageModule,
     ProgressSpinnerModule,
+    SafeUrlPipe,
   ],
   templateUrl: './file-complaint-modal.html',
   styleUrl: './file-complaint-modal.css',

@@ -83,16 +83,16 @@
             </div>
           </div>
 
-          @if (canCancel(proposal.statusId)) {
+          @if (canWithdraw(proposal.statusId)) {
             <div class="proposal-actions">
               <p-button
-                label="Cancel Proposal"
+                [label]="withdrawLabel(proposal.statusId)"
                 icon="pi pi-times"
                 severity="danger"
                 [outlined]="true"
                 size="small"
                 [loading]="cancellingId() === proposal.id"
-                (onClick)="confirmCancel(proposal)"
+                (onClick)="confirmWithdraw(proposal)"
               />
             </div>
           }

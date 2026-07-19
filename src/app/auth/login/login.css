@@ -208,6 +208,18 @@
   animation: fadeSlideIn 0.15s ease-out;
 }
 
+.forgot-password-link {
+  align-self: flex-end;
+  margin-top: 0.4rem;
+  font-size: 0.875rem;
+  color: var(--p-primary-color);
+  text-decoration: none;
+}
+
+.forgot-password-link:hover {
+  text-decoration: underline;
+}
+
 @keyframes fadeSlideIn {
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }

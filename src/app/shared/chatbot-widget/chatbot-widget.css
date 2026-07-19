@@ -1,0 +1,195 @@
+::ng-deep .p-button.chatbot-fab {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 1100;
+  width: 3.5rem;
+  height: 3.5rem;
+}
+
+::ng-deep .chatbot-drawer {
+  width: var(--chatbot-drawer-width, 26rem);
+  max-width: calc(100vw - 2rem);
+}
+
+.chatbot-resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 6px;
+  cursor: ew-resize;
+  z-index: 10;
+  touch-action: none;
+}
+
+.chatbot-resize-handle:hover,
+.chatbot-resize-handle--active {
+  background: var(--p-primary-color);
+  opacity: 0.5;
+}
+
+.chatbot-transcript {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.chatbot-empty-hint {
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+  margin: 0;
+}
+
+.chatbot-bubble-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.chatbot-bubble-row--user {
+  justify-content: flex-end;
+}
+
+::ng-deep .chatbot-avatar {
+  flex: 0 0 auto;
+  background: var(--p-primary-color);
+  color: var(--p-primary-contrast-color);
+}
+
+::ng-deep .chatbot-avatar--user {
+  background: color-mix(in srgb, var(--p-text-color) 15%, transparent);
+  color: var(--p-text-color);
+}
+
+.chatbot-bubble {
+  max-width: 78%;
+  min-width: 0;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.875rem;
+  border-bottom-left-radius: 0.25rem;
+  background: var(--p-content-background);
+  overflow-wrap: break-word;
+}
+
+.chatbot-bubble--user {
+  background: var(--p-primary-color);
+  border-bottom-left-radius: 0.875rem;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.chatbot-bubble--error {
+  background: color-mix(in srgb, var(--p-red-500) 12%, var(--p-content-background));
+  border: 1px solid color-mix(in srgb, var(--p-red-500) 25%, transparent);
+}
+
+.chatbot-bubble-text {
+  font-size: 0.875rem;
+  color: var(--p-text-color);
+  overflow-wrap: break-word;
+}
+
+.chatbot-bubble--user .chatbot-bubble-text {
+  color: var(--p-primary-contrast-color);
+}
+
+.chatbot-bubble--error .chatbot-bubble-text {
+  color: var(--p-red-500);
+}
+
+::ng-deep .chatbot-bubble-text > :first-child {
+  margin-top: 0;
+}
+
+::ng-deep .chatbot-bubble-text > :last-child {
+  margin-bottom: 0;
+}
+
+::ng-deep .chatbot-bubble-text ul,
+::ng-deep .chatbot-bubble-text ol {
+  padding-left: 1.25rem;
+  margin: 0.5rem 0;
+}
+
+::ng-deep .chatbot-bubble-text p {
+  margin: 0.5rem 0;
+}
+
+::ng-deep .chatbot-bubble-text code {
+  font-size: 0.8125rem;
+  background: color-mix(in srgb, var(--p-text-color) 10%, transparent);
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.3rem;
+}
+
+::ng-deep .chatbot-bubble--user .chatbot-bubble-text code {
+  background: color-mix(in srgb, var(--p-primary-contrast-color) 20%, transparent);
+}
+
+::ng-deep .chatbot-bubble-text a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.chatbot-typing-indicator {
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--p-content-background);
+}
+
+.chatbot-input-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.chatbot-textarea {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.chatbot-char-count {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+  margin-top: 0.25rem;
+  text-align: right;
+}
+
+@media (max-width: 768px) {
+  ::ng-deep .p-button.chatbot-fab {
+    bottom: 1rem;
+    right: 1rem;
+    width: 3rem;
+    height: 3rem;
+  }
+
+  ::ng-deep .chatbot-drawer {
+    width: 100vw !important;
+  }
+
+  .chatbot-resize-handle {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .chatbot-input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .chatbot-input-row p-button {
+    width: 100%;
+  }
+}

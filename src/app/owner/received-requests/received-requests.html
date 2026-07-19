@@ -5,7 +5,7 @@
   [visible]="leaseModalVisible()"
   [proposal]="leaseProposal()"
   (visibleChange)="leaseModalVisible.set($event)"
-  (created)="onLeaseCreated()"
+  (created)="onLeaseCreated($event)"
 />
 
 <div class="requests-container">

@@ -127,7 +127,7 @@
           @if (agreementDocumentUrl) {
             <div class="doc-chip">
               <i class="pi pi-file-pdf"></i>
-              <a [href]="agreementDocumentUrl" target="_blank" rel="noopener" class="doc-link">View uploaded document</a>
+              <a [href]="agreementDocumentUrl | safeUrl" target="_blank" rel="noopener" class="doc-link">View uploaded document</a>
               <p-button icon="pi pi-times" severity="secondary" [rounded]="true" [text]="true" size="small" (onClick)="clearAgreementDoc()" />
             </div>
           } @else {
@@ -138,7 +138,7 @@
             </label>
           }
         } @else if (cancellation()?.agreementDocumentUrl) {
-          <a [href]="cancellation()!.agreementDocumentUrl!" target="_blank" rel="noopener" class="doc-download">
+          <a [href]="cancellation()!.agreementDocumentUrl! | safeUrl" target="_blank" rel="noopener" class="doc-download">
             <i class="pi pi-file-pdf"></i>
             <span>View / download agreement</span>
             <i class="pi pi-external-link"></i>
@@ -156,7 +156,7 @@
           @if (signedAgreementDocumentUrl) {
             <div class="doc-chip">
               <i class="pi pi-verified"></i>
-              <a [href]="signedAgreementDocumentUrl" target="_blank" rel="noopener" class="doc-link">View uploaded document</a>
+              <a [href]="signedAgreementDocumentUrl | safeUrl" target="_blank" rel="noopener" class="doc-link">View uploaded document</a>
               <p-button icon="pi pi-times" severity="secondary" [rounded]="true" [text]="true" size="small" (onClick)="clearSignedDoc()" />
             </div>
           } @else {
@@ -170,7 +170,7 @@
       } @else if (cancellation()?.signedAgreementDocumentUrl) {
         <div class="field">
           <label class="field-label">Signed Agreement</label>
-          <a [href]="cancellation()!.signedAgreementDocumentUrl!" target="_blank" rel="noopener" class="doc-download">
+          <a [href]="cancellation()!.signedAgreementDocumentUrl! | safeUrl" target="_blank" rel="noopener" class="doc-download">
             <i class="pi pi-verified"></i>
             <span>View signed document</span>
             <i class="pi pi-external-link"></i>

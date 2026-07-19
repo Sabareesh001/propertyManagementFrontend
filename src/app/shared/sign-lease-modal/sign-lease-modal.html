@@ -41,11 +41,11 @@
       <div class="field">
         <label class="field-label">Agreement to sign</label>
         @if (lease?.agreementDocumentUrl) {
-          <a [href]="lease!.agreementDocumentUrl!" target="_blank" rel="noopener" class="doc-download">
+          <button type="button" class="doc-download" (click)="openAgreementViewer()">
             <i class="pi pi-file-pdf"></i>
-            <span>View / download agreement</span>
+            <span>View agreement</span>
             <i class="pi pi-external-link"></i>
-          </a>
+          </button>
         } @else {
           <span class="doc-missing"><i class="pi pi-file"></i> No agreement document available</span>
         }
@@ -59,7 +59,7 @@
         @if (signedAgreementDocumentUrl) {
           <div class="doc-chip">
             <i class="pi pi-verified"></i>
-            <a [href]="signedAgreementDocumentUrl" target="_blank" rel="noopener" class="doc-link">View uploaded document</a>
+            <a [href]="signedAgreementDocumentUrl | safeUrl" target="_blank" rel="noopener" class="doc-link">View uploaded document</a>
             <p-button
               icon="pi pi-times"
               severity="secondary"
@@ -107,3 +107,9 @@
   }
 
 </p-dialog>
+
+<app-agreement-document-modal
+  [(visible)]="agreementViewerVisible"
+  [documentUrl]="lease?.agreementDocumentUrl ?? null"
+  title="Lease Agreement"
+/>

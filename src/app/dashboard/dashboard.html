@@ -1,17 +1,100 @@
 <div class="dashboard-container">
   <div class="listings-header">
     <h2 class="section-title">Property Listings</h2>
-    <p-iconfield>
-      <p-inputicon styleClass="pi pi-search" />
-      <input
-        pInputText
-        type="text"
-        placeholder="Search by title or location…"
-        class="search-input"
-        [ngModel]="searchQuery()"
-        (ngModelChange)="searchQuery.set($event)"
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-field filter-grow">
+      <label class="filter-label">Search</label>
+      <p-iconfield iconPosition="left">
+        <p-inputicon styleClass="pi pi-search" />
+        <input
+          pInputText
+          type="text"
+          placeholder="Search by title or location…"
+          [ngModel]="searchInput()"
+          (ngModelChange)="onSearchInput($event)"
+          style="width: 100%"
+        />
+      </p-iconfield>
+    </div>
+
+    <div class="filter-field">
+      <label class="filter-label">City</label>
+      <p-multiselect
+        [options]="cityOptions()"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="cityIds()"
+        (ngModelChange)="setCities($event)"
+        placeholder="Any city"
+        [style]="{ 'min-width': '12rem' }"
       />
-    </p-iconfield>
+    </div>
+
+    <div class="filter-field">
+      <label class="filter-label">Min rent</label>
+      <p-inputnumber
+        [ngModel]="rentMin()"
+        (ngModelChange)="setRentMin($event)"
+        mode="currency"
+        currency="INR"
+        locale="en-IN"
+        [min]="0"
+        placeholder="0"
+        [style]="{ width: '9rem' }"
+      />
+    </div>
+
+    <div class="filter-field">
+      <label class="filter-label">Max rent</label>
+      <p-inputnumber
+        [ngModel]="rentMax()"
+        (ngModelChange)="setRentMax($event)"
+        mode="currency"
+        currency="INR"
+        locale="en-IN"
+        [min]="0"
+        placeholder="Any"
+        [style]="{ width: '9rem' }"
+      />
+    </div>
+
+    <div class="filter-field">
+      <label class="filter-label">Availability</label>
+      <p-select
+        [options]="availabilityOptions"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="availabilityStatusId()"
+        (ngModelChange)="setAvailability($event)"
+        [style]="{ 'min-width': '11rem' }"
+      />
+    </div>
+
+    <div class="filter-field">
+      <label class="filter-label">Sort by</label>
+      <p-select
+        [options]="sortOptions"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="sortBy()"
+        (ngModelChange)="setSort($event)"
+        [style]="{ 'min-width': '13rem' }"
+      />
+    </div>
+
+    <div class="filter-actions">
+      <p-button
+        icon="pi pi-filter-slash"
+        label="Clear"
+        severity="secondary"
+        [text]="true"
+        size="small"
+        [disabled]="!hasActiveFilters()"
+        (onClick)="resetFilters()"
+      />
+    </div>
   </div>
 
   @if (loading()) {
@@ -25,19 +108,19 @@
       <p class="empty-text">Couldn't load properties. Please check your connection and try again.</p>
       <p-button label="Retry" icon="pi pi-refresh" size="small" (onClick)="load()" />
     </div>
-  } @else if (filteredProperties().length === 0) {
+  } @else if (properties().length === 0) {
     <div class="empty-state">
       <i class="pi pi-search empty-icon"></i>
-      @if (searchQuery().trim()) {
-        <p class="empty-text">No properties match "<strong>{{ searchQuery() }}</strong>"</p>
+      @if (hasActiveFilters()) {
+        <p class="empty-text">No properties match the current filters.</p>
       } @else {
         <p class="empty-text">No properties are listed yet.</p>
       }
     </div>
   } @else {
     <div class="property-grid">
-      @for (property of filteredProperties(); track property.id) {
-        <app-property-card [property]="property" />
+      @for (property of properties(); track property.id) {
+        <app-property-card [property]="property" [showCompare]="true" />
       }
     </div>
     <app-pagination-controls
@@ -48,5 +131,31 @@
     />
   }
 </div>
+
+@if (compareService.selectionCount() > 0) {
+  <div class="compare-floating-bar">
+    <div class="compare-info">
+      <i class="pi pi-clone"></i>
+      <span>
+        <strong>{{ compareService.selectionCount() }}</strong> property{{ compareService.selectionCount() > 1 ? 'ies' : '' }} selected for comparison
+      </span>
+    </div>
+    <div class="compare-actions">
+      <p-button 
+        label="Clear" 
+        severity="secondary" 
+        [text]="true" 
+        (onClick)="compareService.clearSelection()" 
+      />
+      <p-button 
+        label="Compare Now" 
+        icon="pi pi-arrow-right" 
+        iconPos="right" 
+        [disabled]="!compareService.canCompare()" 
+        (onClick)="goToCompare()" 
+      />
+    </div>
+  </div>
+}
 
 <p-scrolltop size="large" [threshold]="400" />

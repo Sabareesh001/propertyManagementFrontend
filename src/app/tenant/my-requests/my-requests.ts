@@ -8,6 +8,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MenuModule } from 'primeng/menu';
 import { MessageService, ConfirmationService, MenuItem } from 'primeng/api';
+import { HttpErrorResponse } from '@angular/common/http';
 import { LeaseProposalService, LeaseProposalResponse } from '../../core/services/lease-proposal.service';
 
 @Component({
@@ -110,31 +111,56 @@ export class MyRequestsComponent implements OnInit {
     }
   }
 
-  canCancel(statusId: number | null): boolean {
-    return statusId === 1 || statusId === 2;
+  // Draft (1) and Submitted (2) are always withdrawable. Approved (3) is
+  // withdrawable only while the owner hasn't created an active lease — the DTO
+  // can't tell us that here, so we show the button and let the API be the
+  // source of truth (it returns 400 if a lease is already in progress).
+  canWithdraw(statusId: number | null): boolean {
+    return statusId === 1 || statusId === 2 || statusId === 3;
   }
 
-  confirmCancel(proposal: LeaseProposalResponse): void {
+  // "Withdraw" reads better for backing out of an accepted (Approved) request;
+  // Draft/Submitted proposals are simply cancelled.
+  withdrawLabel(statusId: number | null): string {
+    return statusId === 3 ? 'Withdraw' : 'Cancel Proposal';
+  }
+
+  confirmWithdraw(proposal: LeaseProposalResponse): void {
+    const isApproved = proposal.statusId === 3;
     this.confirmationService.confirm({
-      message: 'Are you sure you want to cancel this proposal?',
-      header: 'Cancel Proposal',
+      message: isApproved
+        ? 'Withdraw this accepted proposal? The owner will no longer be able to create a lease from it.'
+        : 'Are you sure you want to cancel this proposal?',
+      header: isApproved ? 'Withdraw Proposal' : 'Cancel Proposal',
       icon: 'pi pi-exclamation-triangle',
       acceptButtonStyleClass: 'p-button-danger',
-      accept: () => this.doCancel(proposal),
+      acceptLabel: isApproved ? 'Withdraw' : 'Cancel Proposal',
+      accept: () => this.doWithdraw(proposal),
     });
   }
 
-  private doCancel(proposal: LeaseProposalResponse): void {
+  private doWithdraw(proposal: LeaseProposalResponse): void {
     this.cancellingId.set(proposal.id);
     this.leaseProposalService.cancel(proposal.id).subscribe({
       next: (updated) => {
         this.proposals.update(list => list.map(p => p.id === updated.id ? updated : p));
         this.cancellingId.set(null);
-        this.messageService.add({ severity: 'success', summary: 'Cancelled', detail: 'Your proposal has been cancelled.' });
+        this.messageService.add({ severity: 'success', summary: 'Withdrawn', detail: 'Your proposal has been withdrawn.' });
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.cancellingId.set(null);
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to cancel the proposal.' });
+        if (err.status === 400) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Cannot Withdraw',
+            detail: err.error?.message ?? 'This proposal can no longer be withdrawn because a lease is already in progress.',
+          });
+          this.load(); // re-sync — a lease likely just started, so the button state corrects itself
+        } else if (err.status === 403) {
+          this.messageService.add({ severity: 'error', summary: 'Not Allowed', detail: 'You are not allowed to withdraw this proposal.' });
+        } else {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to withdraw the proposal.' });
+        }
       },
     });
   }

@@ -10,19 +10,25 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { DialogModule } from 'primeng/dialog';
 import { TextareaModule } from 'primeng/textarea';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { ConfirmationService } from 'primeng/api';
 import { forkJoin, of, map, catchError, switchMap } from 'rxjs';
 import {
   UserVerificationService,
   UserVerificationResponse,
+  VerificationStatus,
   verificationDocumentTypeName,
 } from '../../core/services/user-verification.service';
 import { AuthService } from '../../core/services/auth.service';
+import { SafeUrlPipe } from '../../shared/pipes/safe-url.pipe';
 
 interface PendingRow extends UserVerificationResponse {
   userName: string;
   userEmail: string;
 }
+
+type ViewMode = 'pending' | 'history';
+type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast';
 
 @Component({
   selector: 'app-user-verifications',
@@ -39,6 +45,8 @@ interface PendingRow extends UserVerificationResponse {
     DialogModule,
     TextareaModule,
     ConfirmDialogModule,
+    SelectButtonModule,
+    SafeUrlPipe,
   ],
   providers: [ConfirmationService],
   template: `
@@ -92,6 +100,16 @@ interface PendingRow extends UserVerificationResponse {
       </ng-template>
     </p-dialog>
 
+    <div class="view-toggle">
+      <p-selectbutton
+        [options]="viewOptions"
+        [(ngModel)]="mode"
+        optionLabel="label"
+        optionValue="value"
+        (onChange)="load()"
+      />
+    </div>
+
     @if (loading()) {
       <div class="loading-state">
         <p-skeleton height="3rem" styleClass="mb-2" />
@@ -125,7 +143,7 @@ interface PendingRow extends UserVerificationResponse {
             <th>Documents</th>
             <th style="text-align: center">Submitted</th>
             <th style="text-align: center">Status</th>
-            <th style="text-align: center">Actions</th>
+            <th style="text-align: center">{{ mode === 'history' ? 'Reviewed' : 'Actions' }}</th>
           </tr>
         </ng-template>
 
@@ -150,7 +168,7 @@ interface PendingRow extends UserVerificationResponse {
                 @for (doc of req.documents; track doc.id) {
                   <a
                     class="document-link"
-                    [href]="doc.documentUrl"
+                    [href]="doc.documentUrl | safeUrl"
                     target="_blank"
                     rel="noopener"
                     [pTooltip]="'No. ' + doc.documentNumber"
@@ -166,33 +184,46 @@ interface PendingRow extends UserVerificationResponse {
               <span class="submitted-date">{{ formatDate(req.createdAt) }}</span>
             </td>
             <td style="text-align: center">
-              <p-tag value="Pending Review" severity="warn" icon="pi pi-clock" />
+              @if (mode === 'history') {
+                <p-tag
+                  [value]="req.status"
+                  [severity]="statusSeverity(req.status)"
+                  [pTooltip]="req.remarks ?? undefined"
+                  tooltipPosition="top"
+                />
+              } @else {
+                <p-tag value="Pending Review" severity="warn" icon="pi pi-clock" />
+              }
             </td>
             <td style="text-align: center">
-              <div class="action-buttons">
-                <p-button
-                  icon="pi pi-check"
-                  severity="success"
-                  size="small"
-                  pTooltip="Approve"
-                  tooltipPosition="top"
-                  [rounded]="true"
-                  [text]="true"
-                  [loading]="actioningId() === req.id && actionType() === 'approve'"
-                  (onClick)="approve(req)"
-                />
-                <p-button
-                  icon="pi pi-times"
-                  severity="danger"
-                  size="small"
-                  pTooltip="Reject"
-                  tooltipPosition="top"
-                  [rounded]="true"
-                  [text]="true"
-                  [loading]="actioningId() === req.id && actionType() === 'reject'"
-                  (onClick)="openRejectDialog(req.id)"
-                />
-              </div>
+              @if (mode === 'pending') {
+                <div class="action-buttons">
+                  <p-button
+                    icon="pi pi-check"
+                    severity="success"
+                    size="small"
+                    pTooltip="Approve"
+                    tooltipPosition="top"
+                    [rounded]="true"
+                    [text]="true"
+                    [loading]="actioningId() === req.id && actionType() === 'approve'"
+                    (onClick)="approve(req)"
+                  />
+                  <p-button
+                    icon="pi pi-times"
+                    severity="danger"
+                    size="small"
+                    pTooltip="Reject"
+                    tooltipPosition="top"
+                    [rounded]="true"
+                    [text]="true"
+                    [loading]="actioningId() === req.id && actionType() === 'reject'"
+                    (onClick)="openRejectDialog(req.id)"
+                  />
+                </div>
+              } @else {
+                <span class="submitted-date">{{ formatDate(req.updatedAt) }}</span>
+              }
             </td>
           </tr>
         </ng-template>
@@ -201,7 +232,9 @@ interface PendingRow extends UserVerificationResponse {
           <tr>
             <td colspan="5" style="text-align: center; padding: 2rem;">
               <i class="pi pi-check-circle" style="font-size: 2rem; color: var(--p-green-500); display: block; margin-bottom: 0.5rem;"></i>
-              <span style="color: var(--p-text-muted-color);">No pending verification requests</span>
+              <span style="color: var(--p-text-muted-color);">
+                {{ mode === 'history' ? 'No reviewed verification requests yet' : 'No pending verification requests' }}
+              </span>
             </td>
           </tr>
         </ng-template>
@@ -211,9 +244,17 @@ interface PendingRow extends UserVerificationResponse {
   styles: [`
     :host {
       display: flex;
+      flex-direction: column;
       flex: 1;
       min-height: 0;
       min-width: 0;
+    }
+
+    .view-toggle {
+      display: flex;
+      justify-content: flex-end;
+      padding: 0 0 0.75rem;
+      flex-shrink: 0;
     }
 
     :host ::ng-deep .transparent-table {
@@ -388,6 +429,12 @@ export class UserVerificationsComponent implements OnInit {
   private authService = inject(AuthService);
   private confirmationService = inject(ConfirmationService);
 
+  mode: ViewMode = 'pending';
+  viewOptions = [
+    { label: 'Pending Review', value: 'pending' },
+    { label: 'History', value: 'history' },
+  ];
+
   requests = signal<PendingRow[]>([]);
   loading = signal(true);
   error = signal(false);
@@ -409,7 +456,7 @@ export class UserVerificationsComponent implements OnInit {
     this.loading.set(true);
     this.error.set(false);
     this.verificationService
-      .getPending(1, 100)
+      .getPending(1, 100, this.mode === 'history')
       .pipe(
         switchMap((res) => {
           const pending = res.items;
@@ -512,5 +559,14 @@ export class UserVerificationsComponent implements OnInit {
       month: 'short',
       year: 'numeric',
     }).format(new Date(iso));
+  }
+
+  statusSeverity(status: VerificationStatus): Severity {
+    switch (status) {
+      case 'Verified': return 'success';
+      case 'Rejected': return 'danger';
+      case 'Pending': return 'warn';
+      default: return 'secondary';
+    }
   }
 }

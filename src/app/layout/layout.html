@@ -25,11 +25,10 @@
           <p-tablist>
             <p-tab value="0"><i class="pi pi-home"></i> Dashboard</p-tab>
             @if (isLoggedIn()) {
-              <p-tab value="1"><i class="pi pi-file-edit"></i> My Requests</p-tab>
-            }
-            @if (isLoggedIn()) {
-              <p-tab value="2"><i class="pi pi-file-check"></i> Leases</p-tab>
-              <p-tab value="3"><i class="pi pi-flag"></i> My Complaints</p-tab>
+              <p-tab value="2"><i class="pi pi-file-edit"></i> My Requests</p-tab>
+              <p-tab value="3"><i class="pi pi-map"></i> Site Visits</p-tab>
+              <p-tab value="7"><i class="pi pi-file-check"></i> Leases</p-tab>
+              <p-tab value="8"><i class="pi pi-flag"></i> My Complaints</p-tab>
             }
           </p-tablist>
         </p-tabs>
@@ -201,4 +200,8 @@
       <router-outlet />
     </main>
   </div>
+
+  @if (isLoggedIn()) {
+    <app-chatbot-widget />
+  }
 </div>

@@ -1,0 +1,75 @@
+<p-button
+  styleClass="chatbot-fab"
+  icon="pi pi-comments"
+  [rounded]="true"
+  size="large"
+  (onClick)="toggle()"
+  [attr.aria-label]="isOpen() ? 'Close support chat' : 'Open support chat'"
+/>
+
+<p-drawer
+  [(visible)]="isOpen"
+  position="right"
+  header="Support Assistant"
+  styleClass="chatbot-drawer"
+>
+  <div
+    class="chatbot-resize-handle"
+    (mousedown)="startResize($event)"
+    [class.chatbot-resize-handle--active]="isResizing()"
+  ></div>
+  <div class="chatbot-transcript">
+    @if (messages().length === 0) {
+      <p class="chatbot-empty-hint">Ask a question about your leases, payments, or the platform.</p>
+    }
+    @for (msg of messages(); track $index) {
+      <div class="chatbot-bubble-row" [class.chatbot-bubble-row--user]="msg.role === 'user'">
+        @if (msg.role === 'bot') {
+          <p-avatar icon="pi pi-comments" shape="circle" size="normal" styleClass="chatbot-avatar chatbot-avatar--bot" />
+        }
+        <div
+          class="chatbot-bubble"
+          [class.chatbot-bubble--user]="msg.role === 'user'"
+          [class.chatbot-bubble--error]="msg.isError"
+        >
+          <div class="chatbot-bubble-text" [innerHTML]="msg.html"></div>
+        </div>
+        @if (msg.role === 'user') {
+          <p-avatar icon="pi pi-user" shape="circle" size="normal" styleClass="chatbot-avatar chatbot-avatar--user" />
+        }
+      </div>
+    }
+    @if (loading()) {
+      <div class="chatbot-bubble-row">
+        <p-avatar icon="pi pi-comments" shape="circle" size="normal" styleClass="chatbot-avatar chatbot-avatar--bot" />
+        <div class="chatbot-bubble chatbot-typing-indicator">
+          <i class="pi pi-spin pi-spinner"></i>
+          Thinking&hellip;
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="chatbot-input-row">
+    <textarea
+      pTextarea
+      [ngModel]="question()"
+      (ngModelChange)="question.set($event)"
+      [maxlength]="maxLength"
+      [disabled]="loading()"
+      placeholder="Ask a question&hellip;"
+      rows="2"
+      class="chatbot-textarea"
+      (keydown.enter)="onEnterKey($event)"
+    ></textarea>
+    <p-button
+      icon="pi pi-send"
+      size="small"
+      [disabled]="!canSend()"
+      [loading]="loading()"
+      (onClick)="send()"
+      [attr.aria-label]="'Send message'"
+    />
+  </div>
+  <span class="chatbot-char-count">{{ charCount() }}/{{ maxLength }}</span>
+</p-drawer>

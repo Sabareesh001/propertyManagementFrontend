@@ -17,15 +17,8 @@
       <h3 class="success-title">Lease Created!</h3>
       <p class="success-body">
         A draft lease for <strong>Property #{{ proposal?.propertyId }}</strong> has been created.
-        Add an agreement document and submit it for admin review from the Leases page.
+        Taking you to the lease page…
       </p>
-      <p-button
-        label="Close"
-        icon="pi pi-times"
-        severity="secondary"
-        [fluid]="true"
-        (onClick)="close()"
-      />
     </div>
   }
 
@@ -43,48 +36,23 @@
 
       <p-divider />
 
-      <!-- Dates -->
+      <!-- Dates (locked to the accepted proposal) -->
       <div class="field-group">
         <div class="field">
           <label class="field-label">Start Date</label>
-          <p-datepicker
-            [(ngModel)]="startDate"
-            (ngModelChange)="onStartDateChange()"
-            [minDate]="today"
-            dateFormat="dd M yy"
-            placeholder="Select start date"
-            [fluid]="true"
-            [showIcon]="true"
-            appendTo="body"
-          />
+          <div class="readonly-value">{{ formatDate(proposal?.startDate) }}</div>
         </div>
 
         <div class="field">
           <label class="field-label">End Date</label>
-          <p-datepicker
-            [(ngModel)]="endDate"
-            [minDate]="minEndDate"
-            dateFormat="dd M yy"
-            placeholder="Select end date"
-            [fluid]="true"
-            [showIcon]="true"
-            [disabled]="!startDate"
-            appendTo="body"
-          />
+          <div class="readonly-value">{{ formatDate(proposal?.endDate) }}</div>
         </div>
       </div>
 
       <!-- Financials -->
       <div class="field">
-        <label class="field-label">Monthly Rent</label>
-        <p-inputnumber
-          [(ngModel)]="monthlyRent"
-          mode="currency"
-          currency="INR"
-          locale="en-IN"
-          [min]="0"
-          [fluid]="true"
-        />
+        <label class="field-label">Monthly Rent <span class="optional">(locked to proposal)</span></label>
+        <div class="readonly-value">{{ formatCurrency(monthlyRent) }}</div>
       </div>
 
       <div class="field-group">
@@ -121,7 +89,7 @@
         @if (agreementDocumentUrl) {
           <div class="doc-chip">
             <i class="pi pi-file-pdf"></i>
-            <a [href]="agreementDocumentUrl" target="_blank" rel="noopener" class="doc-link">View uploaded document</a>
+            <button type="button" class="doc-link link-button" (click)="openAgreementViewer()">View uploaded document</button>
             <p-button
               icon="pi pi-times"
               severity="secondary"
@@ -138,6 +106,9 @@
             <input type="file" accept="application/pdf" (change)="onDocumentSelected($event)" [disabled]="uploading()" hidden />
           </label>
         }
+        <button type="button" class="rules-preview-link" (click)="openAgreementViewer()">
+          <i class="pi pi-shield"></i> Preview rules &amp; regulations
+        </button>
       </div>
 
       @if (errorMessage()) {
@@ -168,3 +139,9 @@
   }
 
 </p-dialog>
+
+<app-agreement-document-modal
+  [(visible)]="agreementViewerVisible"
+  [documentUrl]="agreementDocumentUrl"
+  title="Lease Agreement"
+/>
