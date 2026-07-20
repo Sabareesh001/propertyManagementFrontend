@@ -35,6 +35,7 @@ export interface UserResponse {
   token?: string;
   accessToken?: string;
   jwtToken?: string;
+  refreshToken?: string;
 }
 
 export interface LoginRequest {
@@ -67,6 +68,8 @@ export class AuthService {
         map((response) => {
           const user = response.body as UserResponse;
           const authHeader = response.headers.get('Authorization') || response.headers.get('authorization');
+          const refreshHeader = response.headers.get('X-Refresh-Token') || response.headers.get('x-refresh-token');
+
           let token = user?.token ?? user?.accessToken ?? user?.jwtToken;
           if (!token && authHeader) {
             token = authHeader.replace(/^Bearer\s+/i, '');
@@ -74,15 +77,25 @@ export class AuthService {
           if (token && user) {
             user.token = token;
           }
+
+          let refreshToken = user?.refreshToken;
+          if (!refreshToken && refreshHeader) {
+            refreshToken = refreshHeader;
+          }
+          if (refreshToken && user) {
+            user.refreshToken = refreshToken;
+          }
           return user;
         }),
       );
   }
 
-  /** POST /api/user/refresh-token — rotates the refresh_token cookie and re-issues jwt_token. */
+  /** POST /api/user/refresh-token — rotates the refresh_token and re-issues jwt_token. */
   refreshToken(): Observable<UserResponse> {
+    const storedRefreshToken = localStorage.getItem('refresh_token');
+    const body = storedRefreshToken ? { refreshToken: storedRefreshToken } : {};
     return this.http
-      .post<UserResponse>(`${this.baseUrl}/refresh-token`, {}, {
+      .post<UserResponse>(`${this.baseUrl}/refresh-token`, body, {
         ...WITH_CREDENTIALS,
         observe: 'response',
       })
@@ -90,12 +103,22 @@ export class AuthService {
         map((response) => {
           const user = response.body as UserResponse;
           const authHeader = response.headers.get('Authorization') || response.headers.get('authorization');
+          const refreshHeader = response.headers.get('X-Refresh-Token') || response.headers.get('x-refresh-token');
+
           let token = user?.token ?? user?.accessToken ?? user?.jwtToken;
           if (!token && authHeader) {
             token = authHeader.replace(/^Bearer\s+/i, '');
           }
           if (token && user) {
             user.token = token;
+          }
+
+          let refreshToken = user?.refreshToken ?? storedRefreshToken;
+          if (refreshHeader) {
+            refreshToken = refreshHeader;
+          }
+          if (refreshToken && user) {
+            user.refreshToken = refreshToken;
           }
           return user;
         }),

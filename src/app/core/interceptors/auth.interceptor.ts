@@ -18,7 +18,17 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
 
   const getAuthReq = (request: typeof req) => {
-    const token = localStorage.getItem('jwt_token');
+    let token = localStorage.getItem('jwt_token');
+    if (!token) {
+      try {
+        const raw = localStorage.getItem('auth_user');
+        if (raw) {
+          const user = JSON.parse(raw);
+          token = user?.token ?? user?.accessToken ?? user?.jwtToken;
+        }
+      } catch {}
+    }
+
     if (token && !request.headers.has('Authorization')) {
       return request.clone({
         setHeaders: { Authorization: `Bearer ${token}` },

@@ -105,10 +105,24 @@ export class NotificationService {
   connect(): void {
     if (this.hubConnection) return;
 
+    const getToken = () => {
+      let token = localStorage.getItem('jwt_token');
+      if (!token) {
+        try {
+          const raw = localStorage.getItem('auth_user');
+          if (raw) {
+            const user = JSON.parse(raw);
+            token = user?.token ?? user?.accessToken ?? user?.jwtToken;
+          }
+        } catch {}
+      }
+      return token ?? '';
+    };
+
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl(`${getApiBaseUrl()}/hubs/notifications`, {
         withCredentials: true,
-        accessTokenFactory: () => localStorage.getItem('jwt_token') ?? '',
+        accessTokenFactory: getToken,
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
       .configureLogging(signalR.LogLevel.Warning)
