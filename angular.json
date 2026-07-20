@@ -20,11 +20,16 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "assets": [
-              {
-                "glob": "**/*",
-                "input": "public"
-              }
-            ],
+  {
+    "glob": "**/*",
+    "input": "public"
+  },
+  {
+    "glob": "staticwebapp.config.json",
+    "input": "public",
+    "output": "/"
+  }
+],
             "styles": [
               "src/styles.css"
             ]
