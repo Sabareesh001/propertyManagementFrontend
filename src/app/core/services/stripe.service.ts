@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
+import { getApiBaseUrl, WITH_CREDENTIALS } from '../api.config';
 
 /** Response of POST /api/stripe/connect/onboard (StripeOnboardingResponseDto). */
 export interface StripeOnboardingResponse {
@@ -21,7 +21,7 @@ export interface StripeAccountStatus {
 @Injectable({ providedIn: 'root' })
 export class StripeService {
   private http = inject(HttpClient);
-  private readonly baseUrl = `${API_BASE_URL}/api/stripe/connect`;
+  private get baseUrl() { return `${getApiBaseUrl()}/api/stripe/connect`; }
 
   /** POST /api/stripe/connect/onboard — start Stripe Connect onboarding for the owner. */
   onboard(): Observable<StripeOnboardingResponse> {

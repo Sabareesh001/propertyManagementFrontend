@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
+import { getApiBaseUrl, WITH_CREDENTIALS } from '../api.config';
 import { PropertyDetail } from './property.service';
 import { UserResponse } from './auth.service';
 
@@ -33,7 +33,7 @@ export interface UpdateSiteVisitStatusDto {
 @Injectable({ providedIn: 'root' })
 export class SiteVisitService {
   private http = inject(HttpClient);
-  private readonly baseUrl = `${API_BASE_URL}/api/sitevisit`;
+  private get baseUrl() { return `${getApiBaseUrl()}/api/sitevisit`; }
 
   requestVisit(propertyId: number, dto: SiteVisitRequestDto): Observable<SiteVisitResponseDto> {
     return this.http.post<SiteVisitResponseDto>(`${this.baseUrl}/property/${propertyId}`, dto, WITH_CREDENTIALS);

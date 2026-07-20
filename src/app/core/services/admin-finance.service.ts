@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
+import { getApiBaseUrl, WITH_CREDENTIALS } from '../api.config';
 import { ChargeAllocationResponse } from './charge.service';
 import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, PagedResult } from '../models/paged-result.model';
 
@@ -117,7 +117,7 @@ export const PAYMENT_STATUSES: ReadonlyArray<{ id: number; name: string }> = [
 @Injectable({ providedIn: 'root' })
 export class AdminFinanceService {
   private http = inject(HttpClient);
-  private readonly baseUrl = `${API_BASE_URL}/api/admin`;
+  private get baseUrl() { return `${getApiBaseUrl()}/api/admin`; }
 
   /** Append the payment filter params shared by the list and summary endpoints (only when set). */
   private paymentParams(f: AdminPaymentFilters, params: HttpParams): HttpParams {

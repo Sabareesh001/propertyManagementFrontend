@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import * as signalR from '@microsoft/signalr';
-import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
+import { getApiBaseUrl, WITH_CREDENTIALS } from '../api.config';
 import { PagedResult } from '../models/paged-result.model';
 
 /** Mirrors the backend NotificationType enum. */
@@ -71,7 +71,7 @@ const ROUTE_BY_NOTIFICATION_TYPE: Record<NotificationType, NotificationRoute> = 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
   private http = inject(HttpClient);
-  private readonly baseUrl = `${API_BASE_URL}/api/notification`;
+  private get baseUrl() { return `${getApiBaseUrl()}/api/notification`; }
   private hubConnection?: signalR.HubConnection;
 
   readonly notifications = signal<NotificationDto[]>([]);
@@ -106,7 +106,7 @@ export class NotificationService {
     if (this.hubConnection) return;
 
     this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`${API_BASE_URL}/hubs/notifications`, { withCredentials: true })
+      .withUrl(`${getApiBaseUrl()}/hubs/notifications`, { withCredentials: true })
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
       .configureLogging(signalR.LogLevel.Warning)
       .build();

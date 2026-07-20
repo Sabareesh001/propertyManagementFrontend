@@ -3,7 +3,7 @@
  * All feature services build their endpoints from this constant so the
  * host/port lives in exactly one place.
  */
-export const API_BASE_URL = 'http://localhost:5104';
+export const API_BASE_URL = 'http://52.140.62.79/';
 
 /** Default HttpClient options for authenticated calls — sends the `jwt_token` cookie. */
 export const WITH_CREDENTIALS = { withCredentials: true } as const;

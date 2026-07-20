@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
+import { getApiBaseUrl, WITH_CREDENTIALS } from '../api.config';
 import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, PagedResult } from '../models/paged-result.model';
 
 /** Body for POST /api/leasecancellation/requests. */
@@ -75,7 +75,7 @@ export interface LeaseCancellationResponse {
 @Injectable({ providedIn: 'root' })
 export class LeaseCancellationService {
   private http = inject(HttpClient);
-  private readonly baseUrl = `${API_BASE_URL}/api/leasecancellation`;
+  private get baseUrl() { return `${getApiBaseUrl()}/api/leasecancellation`; }
 
   // ── Cancellation requests (tenant-initiated) ──────────────────────────
 

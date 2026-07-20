@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
+import { getApiBaseUrl, WITH_CREDENTIALS } from '../api.config';
 import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, PagedResult } from '../models/paged-result.model';
 
 export interface CreateLeaseProposalPayload {
@@ -42,7 +42,7 @@ export interface LeaseProposalResponse {
 @Injectable({ providedIn: 'root' })
 export class LeaseProposalService {
   private http = inject(HttpClient);
-  private readonly baseUrl = `${API_BASE_URL}/api/leaseproposal`;
+  private get baseUrl() { return `${getApiBaseUrl()}/api/leaseproposal`; }
 
   create(payload: CreateLeaseProposalPayload): Observable<LeaseProposalResponse> {
     return this.http.post<LeaseProposalResponse>(this.baseUrl, payload, WITH_CREDENTIALS);

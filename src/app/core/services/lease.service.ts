@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
+import { getApiBaseUrl, WITH_CREDENTIALS } from '../api.config';
 import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, PagedResult } from '../models/paged-result.model';
 
 /** A document attached to a lease at creation — see DocumentResponseDto. */
@@ -61,7 +61,7 @@ export interface LeaseResponse {
 @Injectable({ providedIn: 'root' })
 export class LeaseService {
   private http = inject(HttpClient);
-  private readonly baseUrl = `${API_BASE_URL}/api/lease`;
+  private get baseUrl() { return `${getApiBaseUrl()}/api/lease`; }
 
   /** POST /api/lease — owner creates a lease from an approved proposal. */
   create(payload: CreateLeasePayload): Observable<LeaseResponse> {
@@ -108,7 +108,7 @@ export class LeaseService {
     const form = new FormData();
     form.append('file', file);
     return this.http.post<{ url: string }>(
-      `${API_BASE_URL}/api/userverification/upload-document`,
+      `${getApiBaseUrl()}/api/userverification/upload-document`,
       form,
       WITH_CREDENTIALS,
     );

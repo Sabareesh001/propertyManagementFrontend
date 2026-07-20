@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
+import { getApiBaseUrl, WITH_CREDENTIALS } from '../api.config';
 import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, PagedResult } from '../models/paged-result.model';
 
 /** One message in a complaint's conversation thread. Matches the backend ComplaintCommentDto. */
@@ -108,7 +108,7 @@ export function complaintPriorityName(id: number | null): string {
 @Injectable({ providedIn: 'root' })
 export class ComplaintService {
   private http = inject(HttpClient);
-  private readonly baseUrl = `${API_BASE_URL}/api/complaint`;
+  private get baseUrl() { return `${getApiBaseUrl()}/api/complaint`; }
 
   /** POST /api/complaint — tenant files a complaint against one of their leases. */
   create(payload: CreateComplaintPayload): Observable<ComplaintResponse> {

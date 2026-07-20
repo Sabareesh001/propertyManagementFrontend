@@ -101,7 +101,7 @@ export interface PropertyFilters {
 @Injectable({ providedIn: 'root' })
 export class PropertyService {
   private http = inject(HttpClient);
-  private readonly baseUrl = `${API_BASE_URL}/api/property`;
+  private get baseUrl() { return `${API_BASE_URL}/api/property`; }
 
   /** GET /api/property — all properties (public), paginated, with optional filters. */
   getAll(

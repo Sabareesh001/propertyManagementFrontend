@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
+import { getApiBaseUrl, WITH_CREDENTIALS } from '../api.config';
 
 export interface RegisterRequest {
   email: string;
@@ -46,7 +46,7 @@ export interface VerifyEmailResponse {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly baseUrl = `${API_BASE_URL}/api/user`;
+  private get baseUrl() { return `${getApiBaseUrl()}/api/user`; }
 
   constructor(private http: HttpClient) {}
 

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, shareReplay } from 'rxjs';
-import { API_BASE_URL } from '../api.config';
+import { getApiBaseUrl } from '../api.config';
 
 export interface City {
   id: number;
@@ -11,7 +11,7 @@ export interface City {
 @Injectable({ providedIn: 'root' })
 export class CityService {
   private http = inject(HttpClient);
-  private readonly baseUrl = `${API_BASE_URL}/api/city`;
+  private get baseUrl() { return `${getApiBaseUrl()}/api/city`; }
 
   private cities$ = this.http.get<City[]>(this.baseUrl).pipe(shareReplay(1));
 

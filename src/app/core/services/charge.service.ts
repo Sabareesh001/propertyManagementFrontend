@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_BASE_URL, WITH_CREDENTIALS } from '../api.config';
+import { getApiBaseUrl, WITH_CREDENTIALS } from '../api.config';
 import { DEFAULT_PAGE_NUMBER, PagedResult } from '../models/paged-result.model';
 
 /** Matches the backend ChargeResponseDto. */
@@ -99,7 +99,7 @@ export const STRIPE_PAYMENT_METHOD_ID = 7;
 @Injectable({ providedIn: 'root' })
 export class ChargeService {
   private http = inject(HttpClient);
-  private readonly baseUrl = `${API_BASE_URL}/api/lease`;
+  private get baseUrl() { return `${getApiBaseUrl()}/api/lease`; }
 
   /** GET /api/lease/{leaseId}/charges — all charges on a lease, paginated (pageSize 100 by default since this is a single-lease list). */
   getCharges(
@@ -145,7 +145,7 @@ export class ChargeService {
   /** POST /api/stripe/lease/{leaseId}/payments/intent — tenant starts a Stripe payment for charges. */
   createPaymentIntent(leaseId: string, payload: PaymentIntentPayload): Observable<PaymentIntentResponse> {
     return this.http.post<PaymentIntentResponse>(
-      `${API_BASE_URL}/api/stripe/lease/${leaseId}/payments/intent`,
+      `${getApiBaseUrl()}/api/stripe/lease/${leaseId}/payments/intent`,
       payload,
       WITH_CREDENTIALS,
     );
