@@ -1,9 +1,13 @@
 /**
  * Base URL for the Property Management backend API.
- * All feature services build their endpoints from this constant so the
- * host/port lives in exactly one place.
+ * The frontend runs over HTTPS in production, so the backend scheme must match
+ * to avoid mixed-content blocking in the browser.
  */
-export const API_BASE_URL = 'http://52.140.62.79/';
+const API_HOST = '52.140.62.79';
+const API_PROTOCOL =
+  typeof location !== 'undefined' && location.protocol === 'https:' ? 'https:' : 'http:';
+
+export const API_BASE_URL = `${API_PROTOCOL}//${API_HOST}/`;
 
 export function getApiBaseUrl(): string {
   return API_BASE_URL;
