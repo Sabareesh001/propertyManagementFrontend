@@ -1,11 +1,9 @@
 /**
  * Base URL for the Property Management backend API.
- * The AKS backend IP (52.140.62.79) currently only supports HTTP.
+ * All feature services build their endpoints from this constant so the
+ * host/port lives in exactly one place.
  */
-const RAW_HOST = '52.140.62.79';
-const CLEAN_HOST = RAW_HOST.replace(/^https?:\/\//, '').replace(/\/+$/, '');
-
-export const API_BASE_URL = `http://${CLEAN_HOST}`;
+export const API_BASE_URL = 'https://propmanage.southindia.cloudapp.azure.com';
 
 export function getApiBaseUrl(): string {
   return API_BASE_URL;
