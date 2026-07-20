@@ -1,13 +1,11 @@
 /**
  * Base URL for the Property Management backend API.
- * The frontend runs over HTTPS in production, so the backend scheme must match
- * to avoid mixed-content blocking in the browser.
+ * The AKS backend IP (52.140.62.79) currently only supports HTTP.
  */
-const API_HOST = 'http://52.140.62.79';
-const API_PROTOCOL =
-  typeof location !== 'undefined' && location.protocol === 'https:' ? 'https:' : 'http:';
+const RAW_HOST = '52.140.62.79';
+const CLEAN_HOST = RAW_HOST.replace(/^https?:\/\//, '').replace(/\/+$/, '');
 
-export const API_BASE_URL = `${API_PROTOCOL}//${API_HOST}/`;
+export const API_BASE_URL = `http://${CLEAN_HOST}`;
 
 export function getApiBaseUrl(): string {
   return API_BASE_URL;
