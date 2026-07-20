@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { getApiBaseUrl, WITH_CREDENTIALS } from '../api.config';
 
 export interface RegisterRequest {
@@ -58,12 +58,48 @@ export class AuthService {
   }
 
   login(data: LoginRequest): Observable<UserResponse> {
-    return this.http.post<UserResponse>(`${this.baseUrl}/login`, data, WITH_CREDENTIALS);
+    return this.http
+      .post<UserResponse>(`${this.baseUrl}/login`, data, {
+        ...WITH_CREDENTIALS,
+        observe: 'response',
+      })
+      .pipe(
+        map((response) => {
+          const user = response.body as UserResponse;
+          const authHeader = response.headers.get('Authorization') || response.headers.get('authorization');
+          let token = user?.token ?? user?.accessToken ?? user?.jwtToken;
+          if (!token && authHeader) {
+            token = authHeader.replace(/^Bearer\s+/i, '');
+          }
+          if (token && user) {
+            user.token = token;
+          }
+          return user;
+        }),
+      );
   }
 
   /** POST /api/user/refresh-token — rotates the refresh_token cookie and re-issues jwt_token. */
   refreshToken(): Observable<UserResponse> {
-    return this.http.post<UserResponse>(`${this.baseUrl}/refresh-token`, {}, WITH_CREDENTIALS);
+    return this.http
+      .post<UserResponse>(`${this.baseUrl}/refresh-token`, {}, {
+        ...WITH_CREDENTIALS,
+        observe: 'response',
+      })
+      .pipe(
+        map((response) => {
+          const user = response.body as UserResponse;
+          const authHeader = response.headers.get('Authorization') || response.headers.get('authorization');
+          let token = user?.token ?? user?.accessToken ?? user?.jwtToken;
+          if (!token && authHeader) {
+            token = authHeader.replace(/^Bearer\s+/i, '');
+          }
+          if (token && user) {
+            user.token = token;
+          }
+          return user;
+        }),
+      );
   }
 
   /** POST /api/user/revoke-token — invalidates the refresh token server-side and clears both cookies. */
