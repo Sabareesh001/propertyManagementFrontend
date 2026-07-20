@@ -37,6 +37,10 @@ export class AuthEffects {
         ofType(AuthActions.loginSuccess),
         tap(({ user }) => {
           localStorage.setItem('auth_user', JSON.stringify(user));
+          const token = user.token ?? user.accessToken ?? user.jwtToken;
+          if (token) {
+            localStorage.setItem('jwt_token', token);
+          }
           const isAdmin = user.roles?.some((r) => r.id === 3);
           this.router.navigate([isAdmin ? '/admin/verifications/property' : '/dashboard']);
           this.notifications.connect();
@@ -69,6 +73,7 @@ export class AuthEffects {
         ),
         tap(() => {
           localStorage.removeItem('auth_user');
+          localStorage.removeItem('jwt_token');
           this.notifications.disconnect();
           this.router.navigate(['/auth/login']);
         }),

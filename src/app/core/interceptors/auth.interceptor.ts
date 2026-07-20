@@ -17,7 +17,19 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const store = inject(Store);
   const auth = inject(AuthService);
 
-  return next(req).pipe(
+  const getAuthReq = (request: typeof req) => {
+    const token = localStorage.getItem('jwt_token');
+    if (token && !request.headers.has('Authorization')) {
+      return request.clone({
+        setHeaders: { Authorization: `Bearer ${token}` },
+      });
+    }
+    return request;
+  };
+
+  const authReq = getAuthReq(req);
+
+  return next(authReq).pipe(
     catchError((err: unknown) => {
       const isExpiredTokenError =
         err instanceof HttpErrorResponse &&
@@ -29,21 +41,29 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => err);
       }
 
-      const retriedReq = req.clone({ context: req.context.set(IS_RETRY, true) });
+      const getRetriedReq = () => {
+        const base = req.clone({ context: req.context.set(IS_RETRY, true) });
+        return getAuthReq(base);
+      };
 
       if (!isRefreshing) {
         isRefreshing = true;
         refreshedSubject.next(null);
 
         return auth.refreshToken().pipe(
-          switchMap(() => {
+          switchMap((res) => {
             isRefreshing = false;
+            const newToken = res?.token ?? res?.accessToken ?? res?.jwtToken;
+            if (newToken) {
+              localStorage.setItem('jwt_token', newToken);
+            }
             refreshedSubject.next(true);
-            return next(retriedReq);
+            return next(getRetriedReq());
           }),
           catchError((refreshErr) => {
             isRefreshing = false;
             refreshedSubject.next(false);
+            localStorage.removeItem('jwt_token');
             store.dispatch(AuthActions.logout());
             return throwError(() => refreshErr);
           }),
@@ -53,7 +73,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       return refreshedSubject.pipe(
         filter((ready) => ready !== null),
         take(1),
-        switchMap((success) => (success ? next(retriedReq) : throwError(() => err))),
+        switchMap((success) => (success ? next(getRetriedReq()) : throwError(() => err))),
       );
     }),
   );

@@ -32,6 +32,9 @@ export interface UserResponse {
   verificationStatusId: number | null;
   activeStatusId: number | null;
   emailVerified: boolean;
+  token?: string;
+  accessToken?: string;
+  jwtToken?: string;
 }
 
 export interface LoginRequest {
