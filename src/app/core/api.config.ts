@@ -3,7 +3,7 @@
  * The frontend runs over HTTPS in production, so the backend scheme must match
  * to avoid mixed-content blocking in the browser.
  */
-const API_HOST = '52.140.62.79';
+const API_HOST = 'http://52.140.62.79';
 const API_PROTOCOL =
   typeof location !== 'undefined' && location.protocol === 'https:' ? 'https:' : 'http:';
 
