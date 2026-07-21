@@ -163,29 +163,53 @@ export class PayChargesModalComponent implements OnChanges {
 
   private async mountPaymentElement(intent: PaymentIntentResponse): Promise<void> {
     try {
+      if (!intent.publishableKey || !intent.publishableKey.trim()) {
+        throw new Error('Stripe publishable key was not provided by the server. Please ensure Stripe configuration is set.');
+      }
+
       this.stripe = await loadStripe(intent.publishableKey);
-      if (!this.stripe) throw new Error('Stripe.js failed to load');
+      if (!this.stripe) {
+        throw new Error('Stripe.js failed to initialize. Please check network connection or publishable key.');
+      }
 
       this.intent.set(intent);
       this.creatingIntent.set(false);
       this.mountingElement.set(true);
       this.step.set('pay');
 
-      // Wait a tick so the step-2 container renders before mounting.
+      // Wait for Angular to render step-2 container in DOM before mounting.
       setTimeout(() => {
-        if (!this.stripe || !this.paymentElementRef) return;
-        this.elements = this.stripe.elements({
-          clientSecret: intent.clientSecret,
-          appearance: { theme: this.themeService.isDark() ? 'night' : 'stripe' },
-        });
-        const element = this.elements.create('payment');
-        element.on('ready', () => this.mountingElement.set(false));
-        element.mount(this.paymentElementRef.nativeElement);
-      });
-    } catch {
+        try {
+          if (!this.stripe) return;
+          if (!this.paymentElementRef?.nativeElement) {
+            throw new Error('Stripe payment form container was not found in the DOM.');
+          }
+
+          this.elements = this.stripe.elements({
+            clientSecret: intent.clientSecret,
+            appearance: { theme: this.themeService.isDark() ? 'night' : 'stripe' },
+          });
+
+          const element = this.elements.create('payment');
+          element.on('ready', () => this.mountingElement.set(false));
+          element.on('loaderror', (event) => {
+            this.mountingElement.set(false);
+            this.errorMessage.set(event.error.message || 'Could not load the Stripe payment form.');
+          });
+          element.mount(this.paymentElementRef.nativeElement);
+        } catch (err: any) {
+          this.mountingElement.set(false);
+          this.errorMessage.set(
+            err?.message || 'Could not load the Stripe payment form. Please try again.',
+          );
+        }
+      }, 50);
+    } catch (err: any) {
       this.creatingIntent.set(false);
       this.mountingElement.set(false);
-      this.errorMessage.set('Could not load the Stripe payment form. Please try again.');
+      this.errorMessage.set(
+        err?.message || 'Could not load the Stripe payment form. Please try again.',
+      );
     }
   }
 
@@ -195,23 +219,30 @@ export class PayChargesModalComponent implements OnChanges {
     this.paying.set(true);
     this.errorMessage.set(null);
 
-    const { error, paymentIntent } = await this.stripe.confirmPayment({
-      elements: this.elements,
-      redirect: 'if_required',
-    });
+    try {
+      const { error, paymentIntent } = await this.stripe.confirmPayment({
+        elements: this.elements,
+        redirect: 'if_required',
+      });
 
-    this.paying.set(false);
+      this.paying.set(false);
 
-    if (error) {
-      this.errorMessage.set(error.message ?? 'The payment could not be completed.');
-      return;
-    }
+      if (error) {
+        this.errorMessage.set(error.message ?? 'The payment could not be completed.');
+        return;
+      }
 
-    if (paymentIntent?.status === 'succeeded' || paymentIntent?.status === 'processing') {
-      this.paid.emit(this.intent()?.paymentId ?? '');
-      this.visibleChange.emit(false);
-    } else {
-      this.errorMessage.set('The payment was not completed. Please try again.');
+      if (paymentIntent?.status === 'succeeded' || paymentIntent?.status === 'processing') {
+        this.paid.emit(this.intent()?.paymentId ?? '');
+        this.visibleChange.emit(false);
+      } else {
+        this.errorMessage.set('The payment was not completed. Please try again.');
+      }
+    } catch (err: any) {
+      this.paying.set(false);
+      this.errorMessage.set(
+        err?.message ?? 'An unexpected error occurred while confirming payment. Please try again.',
+      );
     }
   }
 
