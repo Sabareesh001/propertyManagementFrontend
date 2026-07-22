@@ -3,7 +3,7 @@
  * All feature services build their endpoints from this constant so the
  * host/port lives in exactly one place.
  */
-export const API_BASE_URL = 'http://localhost:5104';
+export const API_BASE_URL = 'https://propmanage.southindia.cloudapp.azure.com';
 
 export function getApiBaseUrl(): string {
   return API_BASE_URL;
