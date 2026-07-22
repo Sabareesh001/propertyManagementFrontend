@@ -135,6 +135,8 @@
   z-index: 3;
   padding: 0.25rem 0.625rem 0.25rem 0.5rem;
   border-radius: 999px;
+  background: rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(6px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
