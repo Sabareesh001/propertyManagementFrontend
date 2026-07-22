@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
@@ -60,7 +60,7 @@ type ChargeFilter = 'all' | 'outstanding' | 'paid' | 'overdue';
   templateUrl: './lease-detail.html',
   styleUrl: './lease-detail.css',
 })
-export class LeaseDetailComponent implements OnInit {
+export class LeaseDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private leaseService = inject(LeaseService);
   private chargeService = inject(ChargeService);
@@ -80,6 +80,7 @@ export class LeaseDetailComponent implements OnInit {
 
   addChargeVisible = signal(false);
   payChargesVisible = signal(false);
+  private paymentPollInterval: any = null;
 
   uploadingDocument = signal(false);
   documentError = signal<string | null>(null);
@@ -165,6 +166,12 @@ export class LeaseDetailComponent implements OnInit {
     this.load();
   }
 
+  ngOnDestroy(): void {
+    if (this.paymentPollInterval) {
+      clearInterval(this.paymentPollInterval);
+    }
+  }
+
   load(): void {
     this.loading.set(true);
     this.error.set(false);
@@ -227,13 +234,45 @@ export class LeaseDetailComponent implements OnInit {
     });
   }
 
-  onPaymentComplete(): void {
+  onPaymentComplete(paymentId?: string): void {
     this.messageService.add({
       severity: 'success',
       summary: 'Payment Successful',
       detail: 'Your payment was processed by Stripe. Charges will update shortly.',
     });
     this.refreshChargesAndPayments();
+
+    if (this.paymentPollInterval) {
+      clearInterval(this.paymentPollInterval);
+    }
+
+    let pollCount = 0;
+    const maxPolls = 10;
+
+    this.paymentPollInterval = setInterval(() => {
+      pollCount++;
+      forkJoin({
+        charges: this.chargeService
+          .getCharges(this.leaseId)
+          .pipe(map((res) => res.items), catchError(() => of(this.charges()))),
+        payments: this.chargeService
+          .getPayments(this.leaseId)
+          .pipe(map((res) => res.items), catchError(() => of(this.payments()))),
+      }).subscribe(({ charges, payments }) => {
+        this.charges.set(this.sortCharges(charges));
+        this.payments.set(this.sortPayments(payments));
+
+        const match = payments.find((p) => p.id === paymentId);
+        const isUpdated = paymentId
+          ? (match && match.statusId !== 1)
+          : !payments.some((p) => p.statusId === 1);
+
+        if (isUpdated || pollCount >= maxPolls) {
+          clearInterval(this.paymentPollInterval);
+          this.paymentPollInterval = null;
+        }
+      });
+    }, 2000);
   }
 
   openAgreementViewer(): void {

@@ -11,7 +11,7 @@
   [(visible)]="payChargesVisible"
   [leaseId]="leaseId"
   [charges]="payableCharges()"
-  (paid)="onPaymentComplete()"
+  (paid)="onPaymentComplete($event)"
 />
 
 <app-agreement-document-modal
